@@ -762,18 +762,3 @@ npx shadcn-ui@latest add button input card table dialog calendar
    - ✅ Integração com outros calendários
    - ✅ Acesso offline via Google Calendar
 
----
-
-## 💡 Principais Mudanças
-
-### ❌ **REMOVIDO:**
-- Módulo completo de Profissionais
-- Sistema de comissões
-- Gestão de fornecedores
-- Notificações WhatsApp/SMS
-- Automação de comunicação
-
-### ✅ **ADICIONADO/MELHORADO:**
-- Integração completa com Google Calendar
-- Sistema de convites automáticos
-- Sincronização bidirec
