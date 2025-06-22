@@ -1,140 +1,374 @@
-# Sistema de Gestão Estética 
+💆‍♀️ Sistema de Gestão Estética Completo - Next.js
 
-## 📋 Escopo do Projeto
+Transforme sua clínica de estética em um negócio digital profissional
+Da planilha ao sistema completo: gestão financeira inteligente, agendamento sincronizado com Google Calendar, controle de estoque e muito mais.
 
-### Funcionalidades Principais
+🎯 Visão Geral do Sistema
+O Que Este Sistema Resolve
+ANTES (Google Sheets):
 
-- **Dashboard Financeiro**: Métricas em tempo real, gráficos interativos, indicadores de performance
-- **Controle de Atendimentos**: Registro, edição e histórico completo de procedimentos
-- **Análise de Rentabilidade**: Breakdown por procedimento, margens de lucro, rankings
-- **Fluxo de Caixa**: Controle semanal/mensal de entradas e saídas
-- **Gestão de Clientes**: Cadastro completo, histórico de atendimentos, aniversários
-- **Metas e Projeções**: Definição de objetivos, acompanhamento trimestral
-- **🎯 Distribuição de Lucros**: Sistema automático de divisão de lucros por categorias
-- **Sistema de Comissões**: Cálculo automático baseado em metas
+❌ Dados espalhados em múltiplas planilhas
+❌ Cálculos manuais propensos a erros
+❌ Agendamentos desorganizados
+❌ Controle de estoque inexistente
+❌ Análises limitadas e demoradas
+❌ Acesso apenas no computador
 
-### Melhorias vs Google Sheets
+DEPOIS (Sistema Profissional):
 
-- Interface moderna e responsiva
-- Gráficos interativos avançados
-- Notificações push para metas
-- Backup automático em nuvem
-- Acesso offline parcial
-- Calendário integrado para agendamentos
-- Relatórios PDF exportáveis
-- **Distribuição automática de lucros**
+✅ Dashboard unificado em tempo real
+✅ Cálculos automáticos e precisos
+✅ Agendamento integrado com Google Calendar
+✅ Controle total do estoque
+✅ Insights avançados e automáticos
+✅ Acesso em qualquer dispositivo
 
-## 🏗️ Arquitetura Técnica
 
-### Stack Tecnológica
+📋 Funcionalidades Principais
+1. 📊 DASHBOARD FINANCEIRO INTELIGENTE
+Métricas em Tempo Real:
 
-- **Frontend**: Next.js 14 (App Router)
-- **Styling**: Tailwind CSS + shadcn/ui
-- **Database**: Supabase (PostgreSQL gratuito)
-- **Authentication**: Supabase Auth
-- **Charts**: Recharts ou Chart.js
-- **PDF Generation**: jsPDF ou React-PDF
-- **State Management**: Zustand ou React Query
-- **Deployment**: Vercel (gratuito)
+Receita diária/semanal/mensal
+Lucro líquido com distribuição automática
+Ticket médio por cliente
+Taxa de conversão de agendamentos
+ROI por procedimento
+Projeções baseadas em histórico
 
-### Banco de Dados Gratuito - Supabase
+Gráficos Interativos:
 
-**Por que Supabase:**
-- 500MB de armazenamento gratuito
-- 2GB de bandwidth mensal
-- Autenticação integrada
-- Real-time subscriptions
-- API REST automática
-- Dashboard administrativo
+Evolução de receita (linha temporal)
+Distribuição de lucros (pizza)
+Performance por procedimento (barras)
+Fluxo de caixa projetado (área)
+Sazonalidade do negócio (heat map)
 
-## 🗄️ Estrutura do Banco de Dados
+2. 📅 SISTEMA DE AGENDAMENTO COM GOOGLE CALENDAR
+Integração Total com Google Calendar:
 
-### Tabelas Principais
+Sincronização bidirecional automática
+Agendamentos aparecem no Google Calendar e no sistema
+Clientes recebem convites do Google Calendar
+Confirmação automática via Google Calendar
+Notificações nativas do Google
 
-```sql
--- Usuários (via Supabase Auth)
+Calendário Visual Integrado:
+
+Interface sincronizada com Google Calendar
+Visualização por dia/semana/mês
+Cores por tipo de procedimento
+Bloqueio automático de conflitos
+Tempo de duração automático por procedimento
+
+Gestão de Agendamentos:
+
+Criação de eventos no Google Calendar
+Envio automático de convites para clientes
+Sistema de confirmação via Google
+Reagendamento sincronizado
+Histórico completo de agendamentos
+
+3. 📦 CONTROLE DE ESTOQUE SIMPLIFICADO
+Gestão Completa de Produtos:
+
+Cadastro de produtos e materiais
+Entrada/saída automática por procedimento
+Alertas de estoque mínimo
+Controle de validade de produtos
+Histórico completo de movimentações
+
+Análises de Estoque:
+
+Giro de estoque por produto
+Custo real por procedimento
+Previsão de necessidades
+Análise ABC de produtos
+Relatório de desperdícios
+
+Controle de Custos:
+
+Cálculo automático de custo por atendimento
+Margem de lucro por procedimento
+Relatórios de consumo
+Alertas de produtos vencidos
+
+4. 🎯 CRM E RELACIONAMENTO COM CLIENTES
+Segmentação Automática:
+
+Clientes VIP (maior valor gasto)
+Clientes em risco (sem retorno há 60+ dias)
+Novos clientes (primeiros 90 dias)
+Clientes sazonais
+Score de propensão à compra
+
+Campanhas via Google Calendar:
+
+Agendamentos de retorno automáticos
+Lembretes de aniversário via calendar
+Campanhas de reativação
+Follow-up pós-atendimento
+Programa de indicação
+
+Histórico Completo:
+
+Todos os atendimentos realizados
+Eventos do calendar sincronizados
+Preferências e observações
+Evolução do perfil do cliente
+Lifetime value (LTV)
+
+5. 💰 GESTÃO FINANCEIRA COMPLETA
+🎯 Distribuição Automática de Lucros:
+Configuração Padrão Inteligente:
+┌─────────────────────────┬──────────┬─────────────┐
+│ Destino                 │ Valor    │ % do Lucro  │
+├─────────────────────────┼──────────┼─────────────┤
+│ Pró-labore (Salário)    │ R$ 2.840 │    60%      │
+│ Reserva Equipamentos    │ R$ 947   │    20%      │
+│ Reserva Emergência      │ R$ 473   │    10%      │
+│ Investimento/Marketing  │ R$ 473   │    10%      │
+└─────────────────────────┴──────────┴─────────────┘
+Fluxo de Caixa Inteligente:
+
+Projeção de 90 dias automatizada
+Análise de sazonalidade
+Alertas de liquidez
+Planejamento tributário básico
+Controle de contas a pagar/receber
+
+Precificação Dinâmica:
+
+Sugestão de preços baseada em demanda
+Análise de elasticidade
+Promoções para horários vazios
+Comparativo com mercado
+Simulador de cenários
+
+6. 📈 ANÁLISES E RELATÓRIOS AVANÇADOS
+Dashboards Executivos:
+
+KPIs principais do negócio
+Comparativos mês a mês
+Análise de tendências
+Metas vs realizado
+Benchmarks do setor
+
+Relatórios Automáticos:
+
+Relatório mensal de performance
+Análise de rentabilidade por procedimento
+Relatório de clientes (retenção, churn)
+Análise de estoque e custos
+Relatório fiscal simplificado
+
+
+🏗️ Arquitetura Técnica Avançada
+Stack Tecnológica Premium
+typescriptFrontend:     Next.js 14 (App Router) + TypeScript
+Styling:      Tailwind CSS + shadcn/ui + Framer Motion
+Database:     Supabase (PostgreSQL) + Redis Cache
+Auth:         Supabase Auth + Google OAuth
+Calendar:     Google Calendar API v3
+Charts:       Recharts + D3.js para gráficos avançados
+PDF:          React-PDF + jsPDF
+State:        Zustand + React Query (TanStack)
+Realtime:     Supabase Realtime
+Deploy:       Vercel Edge Functions
+Mobile:       PWA com offline-first
+🗄️ Estrutura Simplificada do Banco de Dados
+sql-- ============ CORE TABLES ============
+
+-- Usuários e Autenticação
 users (
   id: uuid PRIMARY KEY,
-  email: varchar,
-  created_at: timestamp
+  email: varchar UNIQUE,
+  google_calendar_id: varchar,
+  google_access_token: text,
+  google_refresh_token: text,
+  created_at: timestamp,
+  updated_at: timestamp
 )
 
--- Perfil do negócio
+-- Perfil do Negócio
 business_profile (
   id: uuid PRIMARY KEY,
   user_id: uuid REFERENCES users(id),
-  business_name: varchar,
+  business_name: varchar NOT NULL,
   cnpj: varchar,
-  monthly_goal: decimal,
-  attendance_goal: integer
+  phone: varchar,
+  address: jsonb,
+  business_hours: jsonb,
+  google_calendar_settings: jsonb,
+  settings: jsonb,
+  created_at: timestamp
+)
+
+-- ============ PROCEDIMENTOS E SERVIÇOS ============
+
+-- Categorias de Procedimentos
+procedure_categories (
+  id: uuid PRIMARY KEY,
+  user_id: uuid REFERENCES users(id),
+  name: varchar NOT NULL,
+  description: text,
+  color: varchar,
+  is_active: boolean DEFAULT true
 )
 
 -- Procedimentos
 procedures (
   id: uuid PRIMARY KEY,
   user_id: uuid REFERENCES users(id),
-  name: varchar,
-  price: decimal,
-  cost: decimal,
-  is_active: boolean
+  category_id: uuid REFERENCES procedure_categories(id),
+  name: varchar NOT NULL,
+  description: text,
+  price: decimal(10,2) NOT NULL,
+  cost: decimal(10,2) DEFAULT 0,
+  duration_minutes: integer DEFAULT 60,
+  is_active: boolean DEFAULT true,
+  created_at: timestamp
 )
+
+-- ============ CLIENTES E CRM ============
 
 -- Clientes
 clients (
   id: uuid PRIMARY KEY,
   user_id: uuid REFERENCES users(id),
-  name: varchar,
-  whatsapp: varchar,
+  name: varchar NOT NULL,
   email: varchar,
+  phone: varchar,
+  cpf: varchar,
   birthday: date,
+  address: jsonb,
+  preferences: text,
+  observations: text,
+  status: client_status_enum DEFAULT 'active',
+  segment: client_segment_enum,
+  first_visit: date,
   last_visit: date,
-  total_spent: decimal,
-  status: enum('active', 'inactive', 'blocked')
+  total_spent: decimal(10,2) DEFAULT 0,
+  total_visits: integer DEFAULT 0,
+  ltv_score: decimal(5,2),
+  created_at: timestamp,
+  updated_at: timestamp
 )
 
--- Atendimentos
-attendances (
+-- Segmentação de Clientes
+client_segments (
+  id: uuid PRIMARY KEY,
+  client_id: uuid REFERENCES clients(id),
+  segment_type: segment_type_enum,
+  score: decimal(5,2),
+  criteria: jsonb,
+  valid_until: timestamp,
+  created_at: timestamp
+)
+
+-- ============ AGENDAMENTOS COM GOOGLE CALENDAR ============
+
+-- Agendamentos
+appointments (
   id: uuid PRIMARY KEY,
   user_id: uuid REFERENCES users(id),
   client_id: uuid REFERENCES clients(id),
   procedure_id: uuid REFERENCES procedures(id),
-  date: timestamp,
-  value: decimal,
-  product_cost: decimal,
-  payment_method: enum('pix', 'cash', 'debit', 'credit'),
-  status: enum('completed', 'scheduled', 'cancelled'),
-  observations: text
+  google_event_id: varchar, -- ID do evento no Google Calendar
+  scheduled_datetime: timestamp NOT NULL,
+  duration_minutes: integer,
+  status: appointment_status_enum DEFAULT 'scheduled',
+  notes: text,
+  google_meet_link: varchar,
+  calendar_synced: boolean DEFAULT false,
+  created_at: timestamp,
+  updated_at: timestamp
 )
 
--- Custos fixos
+-- ============ ATENDIMENTOS ============
+
+-- Atendimentos Realizados
+attendances (
+  id: uuid PRIMARY KEY,
+  user_id: uuid REFERENCES users(id),
+  appointment_id: uuid REFERENCES appointments(id),
+  client_id: uuid REFERENCES clients(id),
+  procedure_id: uuid REFERENCES procedures(id),
+  date: timestamp NOT NULL,
+  value: decimal(10,2) NOT NULL,
+  discount: decimal(10,2) DEFAULT 0,
+  product_cost: decimal(10,2) DEFAULT 0,
+  payment_method: payment_method_enum,
+  payment_status: payment_status_enum DEFAULT 'pending',
+  observations: text,
+  rating: integer CHECK (rating >= 1 AND rating <= 5),
+  created_at: timestamp
+)
+
+-- ============ ESTOQUE SIMPLIFICADO ============
+
+-- Produtos
+products (
+  id: uuid PRIMARY KEY,
+  user_id: uuid REFERENCES users(id),
+  name: varchar NOT NULL,
+  description: text,
+  sku: varchar,
+  category: varchar,
+  unit: varchar DEFAULT 'un',
+  cost_price: decimal(10,2) NOT NULL,
+  current_stock: decimal(10,3) DEFAULT 0,
+  min_stock: decimal(10,3) DEFAULT 0,
+  expiry_date: date,
+  is_active: boolean DEFAULT true,
+  created_at: timestamp
+)
+
+-- Movimentações de Estoque
+stock_movements (
+  id: uuid PRIMARY KEY,
+  user_id: uuid REFERENCES users(id),
+  product_id: uuid REFERENCES products(id),
+  movement_type: stock_movement_enum,
+  quantity: decimal(10,3) NOT NULL,
+  unit_cost: decimal(10,2),
+  reference_id: uuid, -- pode referenciar attendance
+  reference_type: varchar,
+  notes: text,
+  created_at: timestamp
+)
+
+-- Uso de Produtos em Procedimentos
+procedure_products (
+  id: uuid PRIMARY KEY,
+  procedure_id: uuid REFERENCES procedures(id),
+  product_id: uuid REFERENCES products(id),
+  quantity_used: decimal(10,3) NOT NULL,
+  created_at: timestamp
+)
+
+-- ============ FINANCEIRO ============
+
+-- Custos Fixos
 fixed_costs (
   id: uuid PRIMARY KEY,
   user_id: uuid REFERENCES users(id),
-  name: varchar,
-  value: decimal,
+  name: varchar NOT NULL,
+  description: text,
   category: varchar,
-  due_date: integer -- dia do mês
+  amount: decimal(10,2) NOT NULL,
+  due_day: integer, -- dia do mês
+  is_active: boolean DEFAULT true,
+  created_at: timestamp
 )
 
--- Metas trimestrais
-quarterly_goals (
-  id: uuid PRIMARY KEY,
-  user_id: uuid REFERENCES users(id),
-  year: integer,
-  quarter: integer,
-  revenue_goal: decimal,
-  attendance_goal: integer,
-  growth_percentage: decimal
-)
-
--- 🎯 Configuração de Distribuição de Lucros
+-- Configuração de Distribuição de Lucros
 profit_distribution_config (
   id: uuid PRIMARY KEY,
   user_id: uuid REFERENCES users(id),
-  category: varchar, -- 'pro_labore', 'equipment_reserve', 'emergency_reserve', 'investment'
-  percentage: decimal,
+  category: profit_category_enum,
+  percentage: decimal(5,2) NOT NULL,
   description: varchar,
-  is_active: boolean,
+  is_active: boolean DEFAULT true,
   created_at: timestamp,
   updated_at: timestamp
 )
@@ -143,259 +377,380 @@ profit_distribution_config (
 profit_distributions (
   id: uuid PRIMARY KEY,
   user_id: uuid REFERENCES users(id),
-  period_month: integer,
-  period_year: integer,
-  total_profit: decimal,
-  pro_labore_amount: decimal,
-  equipment_reserve_amount: decimal,
-  emergency_reserve_amount: decimal,
-  investment_amount: decimal,
+  period_month: integer NOT NULL,
+  period_year: integer NOT NULL,
+  total_revenue: decimal(10,2),
+  total_costs: decimal(10,2),
+  total_profit: decimal(10,2),
+  pro_labore_amount: decimal(10,2),
+  equipment_reserve_amount: decimal(10,2),
+  emergency_reserve_amount: decimal(10,2),
+  investment_amount: decimal(10,2),
   created_at: timestamp
 )
-```
 
-## 📱 Estrutura do Projeto Next.js
+-- Metas e Objetivos
+goals (
+  id: uuid PRIMARY KEY,
+  user_id: uuid REFERENCES users(id),
+  goal_type: goal_type_enum,
+  period_type: period_type_enum,
+  target_value: decimal(10,2),
+  current_value: decimal(10,2) DEFAULT 0,
+  period_start: date,
+  period_end: date,
+  is_active: boolean DEFAULT true,
+  created_at: timestamp
+)
 
-### Organização de Pastas
+-- ============ INTEGRAÇÃO GOOGLE CALENDAR ============
 
-```
+-- Configurações de Sincronização
+calendar_sync_settings (
+  id: uuid PRIMARY KEY,
+  user_id: uuid REFERENCES users(id),
+  calendar_id: varchar NOT NULL,
+  default_color: varchar,
+  auto_create_events: boolean DEFAULT true,
+  send_invites: boolean DEFAULT true,
+  remind_minutes_before: integer DEFAULT 60,
+  created_at: timestamp,
+  updated_at: timestamp
+)
+
+-- Log de Sincronização
+sync_log (
+  id: uuid PRIMARY KEY,
+  user_id: uuid REFERENCES users(id),
+  action: varchar NOT NULL, -- 'create', 'update', 'delete'
+  google_event_id: varchar,
+  appointment_id: uuid REFERENCES appointments(id),
+  status: varchar, -- 'success', 'error'
+  error_message: text,
+  synced_at: timestamp
+)
+
+-- ============ ANALYTICS E MÉTRICAS ============
+
+-- Métricas do Negócio
+business_metrics (
+  id: uuid PRIMARY KEY,
+  user_id: uuid REFERENCES users(id),
+  metric_name: varchar NOT NULL,
+  metric_value: decimal(15,4),
+  period_date: date,
+  period_type: varchar,
+  metadata: jsonb,
+  created_at: timestamp
+)
+
+-- Cache de Relatórios
+report_cache (
+  id: uuid PRIMARY KEY,
+  user_id: uuid REFERENCES users(id),
+  report_type: varchar NOT NULL,
+  parameters: jsonb,
+  data: jsonb,
+  generated_at: timestamp,
+  expires_at: timestamp
+)
+
+-- ============ ENUMS ============
+
+CREATE TYPE client_status_enum AS ENUM ('active', 'inactive', 'blocked');
+CREATE TYPE client_segment_enum AS ENUM ('vip', 'regular', 'new', 'at_risk', 'lost');
+CREATE TYPE segment_type_enum AS ENUM ('value', 'frequency', 'recency', 'behavior');
+CREATE TYPE appointment_status_enum AS ENUM ('scheduled', 'confirmed', 'completed', 'cancelled', 'no_show');
+CREATE TYPE payment_method_enum AS ENUM ('cash', 'pix', 'debit', 'credit', 'installment');
+CREATE TYPE payment_status_enum AS ENUM ('pending', 'paid', 'cancelled', 'refunded');
+CREATE TYPE stock_movement_enum AS ENUM ('in', 'out', 'adjustment', 'expired', 'loss');
+CREATE TYPE profit_category_enum AS ENUM ('pro_labore', 'equipment_reserve', 'emergency_reserve', 'investment');
+CREATE TYPE goal_type_enum AS ENUM ('revenue', 'profit', 'clients', 'appointments', 'procedures');
+CREATE TYPE period_type_enum AS ENUM ('daily', 'weekly', 'monthly', 'quarterly', 'yearly');
+
+📱 Estrutura Simplificada do Projeto
 src/
 ├── app/
 │   ├── (auth)/
-│   │   ├── login/
-│   │   └── register/
+│   │   ├── login/page.tsx
+│   │   ├── register/page.tsx
+│   │   └── connect-calendar/page.tsx    # Conectar Google Calendar
 │   ├── dashboard/
-│   │   ├── page.tsx
+│   │   ├── page.tsx                     # Dashboard principal
 │   │   └── components/
+│   │       ├── MetricsCards.tsx
+│   │       ├── RevenueChart.tsx
+│   │       ├── ProfitDistributionChart.tsx
+│   │       └── QuickActions.tsx
+│   ├── agendamentos/
+│   │   ├── page.tsx                     # Lista de agendamentos
+│   │   ├── calendario/page.tsx          # Calendário integrado
+│   │   ├── novo/page.tsx               # Novo agendamento + Google Calendar
+│   │   ├── [id]/
+│   │   │   ├── page.tsx                # Detalhes do agendamento
+│   │   │   └── editar/page.tsx         # Editar agendamento
+│   │   └── configuracao/page.tsx       # Config Google Calendar
 │   ├── atendimentos/
-│   │   ├── page.tsx
-│   │   ├── novo/
-│   │   └── [id]/
+│   │   ├── page.tsx                     # Lista de atendimentos
+│   │   ├── novo/page.tsx               # Novo atendimento
+│   │   ├── [id]/page.tsx               # Detalhes
+│   │   └── relatorio/page.tsx          # Relatório de atendimentos
 │   ├── clientes/
+│   │   ├── page.tsx                     # Lista de clientes
+│   │   ├── novo/page.tsx               # Cadastro
+│   │   ├── [id]/
+│   │   │   ├── page.tsx                # Perfil do cliente
+│   │   │   └── historico/page.tsx      # Histórico
+│   │   ├── segmentos/page.tsx          # Segmentação
+│   │   └── campanhas/page.tsx          # Campanhas de marketing
+│   ├── estoque/
+│   │   ├── page.tsx                     # Controle de estoque
+│   │   ├── produtos/
+│   │   │   ├── page.tsx                # Lista de produtos
+│   │   │   └── [id]/page.tsx           # Detalhes do produto
+│   │   ├── movimentacoes/page.tsx      # Histórico de movimentações
+│   │   └── relatorios/page.tsx         # Relatórios de estoque
 │   ├── financeiro/
-│   ├── distribuicao-lucros/      # 🎯 Nova seção
-│   │   ├── page.tsx
-│   │   ├── configuracao/
-│   │   └── historico/
+│   │   ├── page.tsx                     # Overview financeiro
+│   │   ├── fluxo-caixa/page.tsx        # Fluxo de caixa
+│   │   ├── custos-fixos/page.tsx       # Gestão de custos
+│   │   ├── metas/page.tsx              # Metas e objetivos
+│   │   └── projecoes/page.tsx          # Projeções financeiras
+│   ├── distribuicao-lucros/
+│   │   ├── page.tsx                     # Dashboard de distribuição
+│   │   ├── configuracao/page.tsx       # Configurar percentuais
+│   │   ├── historico/page.tsx          # Histórico de distribuições
+│   │   └── simulador/page.tsx          # Simulador de cenários
+│   ├── procedimentos/
+│   │   ├── page.tsx                     # Lista de procedimentos
+│   │   ├── categorias/page.tsx         # Categorias
+│   │   ├── rentabilidade/page.tsx      # Análise de rentabilidade
+│   │   └── precificacao/page.tsx       # Sugestões de preço
 │   ├── relatorios/
-│   └── configuracoes/
+│   │   ├── page.tsx                     # Central de relatórios
+│   │   ├── executivo/page.tsx          # Relatório executivo
+│   │   ├── clientes/page.tsx           # Relatórios de cliente
+│   │   ├── financeiro/page.tsx         # Relatórios financeiros
+│   │   └── operacional/page.tsx        # Relatórios operacionais
+│   ├── configuracoes/
+│   │   ├── page.tsx                     # Configurações gerais
+│   │   ├── perfil/page.tsx             # Perfil do negócio
+│   │   ├── calendar/page.tsx           # Config Google Calendar
+│   │   └── backup/page.tsx             # Backup e exportação
+│   └── api/
+│       ├── auth/[...nextauth]/route.ts
+│       ├── google-calendar/
+│       │   ├── connect/route.ts
+│       │   ├── sync/route.ts
+│       │   └── webhook/route.ts
+│       └── reports/
+│           ├── pdf/route.ts
+│           └── excel/route.ts
 ├── components/
-│   ├── ui/ (shadcn/ui)
-│   ├── charts/
+│   ├── ui/                              # shadcn/ui components
+│   ├── layout/
+│   │   ├── Sidebar.tsx
+│   │   ├── Header.tsx
+│   │   ├── Navigation.tsx
+│   │   └── MobileMenu.tsx
+│   ├── dashboard/
+│   │   ├── MetricsCard.tsx
+│   │   ├── Chart.tsx
+│   │   └── RecentActivity.tsx
+│   ├── calendar/
+│   │   ├── GoogleCalendarView.tsx       # Integração Google Calendar
+│   │   ├── AppointmentModal.tsx
+│   │   ├── CalendarSync.tsx
+│   │   └── TimeSlots.tsx
 │   ├── forms/
-│   ├── profit-distribution/      # 🎯 Componentes específicos
-│   └── layout/
+│   │   ├── ClientForm.tsx
+│   │   ├── AppointmentForm.tsx
+│   │   ├── ProcedureForm.tsx
+│   │   └── ProductForm.tsx
+│   ├── tables/
+│   │   ├── DataTable.tsx
+│   │   ├── ClientTable.tsx
+│   │   └── AppointmentTable.tsx
+│   ├── charts/
+│   │   ├── RevenueChart.tsx
+│   │   ├── ProfitChart.tsx
+│   │   └── ProcedureChart.tsx
+│   ├── profit-distribution/
+│   │   ├── DistributionConfig.tsx
+│   │   ├── DistributionChart.tsx
+│   │   ├── DistributionHistory.tsx
+│   │   └── DistributionSimulator.tsx
+│   ├── google-calendar/
+│   │   ├── CalendarConnection.tsx
+│   │   ├── SyncStatus.tsx
+│   │   └── EventManagement.tsx
+│   ├── reports/
+│   │   ├── ReportBuilder.tsx
+│   │   ├── PDFExport.tsx
+│   │   └── ExcelExport.tsx
+│   └── common/
+│       ├── LoadingSpinner.tsx
+│       ├── ErrorBoundary.tsx
+│       ├── SearchBar.tsx
+│       └── DatePicker.tsx
 ├── lib/
 │   ├── supabase/
+│   │   ├── client.ts
+│   │   ├── server.ts
+│   │   └── types.ts
+│   ├── google-calendar/
+│   │   ├── client.ts
+│   │   ├── auth.ts
+│   │   ├── events.ts
+│   │   └── sync.ts
 │   ├── utils/
-│   └── validations/
-├── hooks/
+│   │   ├── calculations.ts
+│   │   ├── formatting.ts
+│   │   ├── validations.ts
+│   │   └── constants.ts
+│   ├── services/
+│   │   ├── clientService.ts
+│   │   ├── appointmentService.ts
+│   │   ├── financialService.ts
+│   │   ├── stockService.ts
+│   │   └── calendarService.ts
+│   └── hooks/
+│       ├── useClients.ts
+│       ├── useAppointments.ts
+│       ├── useFinancials.ts
+│       └── useGoogleCalendar.ts
+├── store/
+│   ├── useAuthStore.ts
+│   ├── useClientStore.ts
+│   ├── useAppointmentStore.ts
+│   ├── useCalendarStore.ts
+│   └── useSettingsStore.ts
 ├── types/
-└── store/
-```
+│   ├── auth.ts
+│   ├── client.ts
+│   ├── appointment.ts
+│   ├── financial.ts
+│   └── google-calendar.ts
+└── styles/
+    ├── globals.css
+    └── components.css
 
-### Componentes Principais
-
-- **DashboardCards**: Métricas principais (receita, lucro, atendimentos)
-- **RevenueChart**: Gráfico de receitas por período
-- **ProcedureRanking**: Ranking de procedimentos mais rentáveis
-- **CashFlowChart**: Fluxo de caixa semanal/mensal
-- **AttendanceForm**: Formulário de registro de atendimentos
-- **ClientTable**: Tabela de clientes com filtros
-- **GoalProgress**: Barras de progresso das metas
-- **🎯 ProfitDistributionChart**: Gráfico de pizza da distribuição de lucros
-- **🎯 ProfitDistributionConfig**: Configuração de percentuais
-- **🎯 ProfitDistributionHistory**: Histórico mensal de distribuições
-
-## 🎯 Módulo de Distribuição de Lucros
-
-### Funcionalidades
-
-#### Configuração Padrão
-```
-Destino                    | Valor    | % do Lucro
----------------------------|----------|------------
-Pró-labore (Salário)      | R$ 2.839,80 | 60%
-Reserva Equipamentos      | R$ 946,60   | 20%
-Reserva Emergência        | R$ 473,30   | 10%
-Investimento/Crescimento  | R$ 473,30   | 10%
-```
-
-#### Características Técnicas
-
-- **Cálculo Automático**: Com base no lucro líquido mensal
-- **Configuração Flexível**: Usuário pode ajustar percentuais
-- **Histórico Completo**: Registro de todas as distribuições
-- **Visualização Gráfica**: Gráficos de pizza e barras
-- **Relatórios**: Exportação de relatórios de distribuição
-- **Alertas**: Notificações quando lucro está baixo para distribuição
-
-#### Interface do Usuário
-
-1. **Dashboard Principal**
-   - Card com resumo da última distribuição
-   - Indicador visual dos valores por categoria
-
-2. **Página de Configuração**
-   - Sliders para ajustar percentuais
-   - Preview em tempo real dos valores
-   - Botão para salvar configuração
-
-3. **Página de Histórico**
-   - Tabela com distribuições mensais
-   - Gráficos de evolução por categoria
-   - Filtros por período
-
-4. **Relatórios**
-   - PDF com distribuição mensal
-   - Comparativo anual
-   - Projeções baseadas em metas
-
-## 🚀 Plano de Implementação
-
-### Fase 1: Setup Inicial (Semana 1)
-
-**Configuração do Projeto**
-- Criar projeto Next.js com TypeScript
-- Configurar Tailwind CSS e shadcn/ui
-- Setup do Supabase (database + auth)
-
-**Autenticação**
-- Páginas de login/registro
-- Middleware de proteção de rotas
-- Integração com Supabase Auth
-
-**Layout Base**
-- Sidebar responsiva
-- Header com perfil do usuário
-- Navegação principal
-
-### Fase 2: Dashboard e Dados (Semana 2)
-
-**Estrutura do Banco**
-- Criar tabelas no Supabase
-- Configurar políticas RLS (Row Level Security)
-- Seeds de dados iniciais
-
-**Dashboard Principal**
-- Cards de métricas principais
-- Gráficos básicos de receita
-- Integração com dados reais
-
-**Gerenciamento de Procedimentos**
-- CRUD de procedimentos
-- Cálculo automático de margens
-
-### Fase 3: Atendimentos e Clientes (Semana 3)
-
-**Sistema de Atendimentos**
-- Formulário de novo atendimento
-- Lista com filtros e busca
-- Edição e cancelamento
-
-**Gestão de Clientes**
-- Cadastro completo de clientes
-- Histórico de atendimentos
-- Alertas de aniversário
-
-**Validações e UX**
-- Formulários com validação
-- Loading states
-- Mensagens de erro/sucesso
-
-### Fase 4: Distribuição de Lucros e Análises (Semana 4)
-
-**🎯 Sistema de Distribuição de Lucros**
-- Configuração de percentuais
-- Cálculo automático mensal
-- Interface de visualização
-- Histórico de distribuições
-
-**Análise Financeira**
-- Fluxo de caixa detalhado
-- Rentabilidade por procedimento
-- Comparativos mensais
-
-**Sistema de Metas**
-- Definição de objetivos
-- Acompanhamento visual
-- Projeções trimestrais
-
-### Fase 5: Refinamentos (Semana 5)
-
-**Otimizações**
-- Performance e SEO
-- Responsividade mobile
-- Acessibilidade
-
-**Funcionalidades Extras**
-- Backup automático
-- Notificações push
-- Modo offline parcial
-
-**Deploy e Testes**
-- Deploy na Vercel
-- Testes de integração
-- Documentação
-
-## 💰 Custos (Gratuitos)
-
-### Serviços Utilizados
-
-- **Supabase**: Tier gratuito (500MB, 2GB bandwidth)
-- **Vercel**: Tier gratuito (deploy ilimitado)
-- **Next.js**: Open source
-- **Tailwind CSS**: Open source
-- **shadcn/ui**: Open source
-
-### Limites do Tier Gratuito
-
-- **Supabase**: ~1000 usuários ativos
-- **Vercel**: 100GB bandwidth mensal
-- Sem limitações de funcionalidades principais
-
-## 🔧 Configuração Step-by-Step
-
-### 1. Preparação do Ambiente
-```bash
+🚀 Plano de Implementação Atualizado
+FASE 1: FUNDAÇÃO (Semanas 1-2)
+Semana 1: Setup e Infraestrutura
+bash# Configuração inicial
 npx create-next-app@latest gestao-estetica --typescript --tailwind --app
 cd gestao-estetica
-npm install @supabase/supabase-js zustand recharts lucide-react
+
+# Instalação de dependências
+npm install @supabase/supabase-js @supabase/auth-helpers-nextjs
+npm install zustand @tanstack/react-query
+npm install recharts lucide-react date-fns
+npm install framer-motion @radix-ui/react-dialog
+npm install react-hook-form @hookform/resolvers zod
+npm install googleapis google-auth-library
+npm install jspdf html2canvas react-pdf
+
+# Setup do shadcn/ui
 npx shadcn-ui@latest init
-```
+npx shadcn-ui@latest add button input card table dialog calendar
+Semana 2: Autenticação e Google Calendar
 
-### 2. Setup do Supabase
-- Criar conta no Supabase
-- Novo projeto "gestao-estetica"
-- Copiar URL e anon key
-- Configurar variáveis de ambiente
+✅ Sistema de autenticação com Google OAuth
+✅ Conexão com Google Calendar API
+✅ Layout responsivo com sidebar
+✅ Setup do Supabase com RLS
+✅ Configuração inicial do Google Calendar
 
-### 3. Configuração do Banco
-- Executar SQL para criar tabelas
-- Configurar RLS policies
-- Inserir dados de exemplo
+FASE 2: CORE DO SISTEMA (Semanas 3-5)
+Semana 3: Dashboard e Métricas
 
-### 4. Desenvolvimento Iterativo
-- Implementar feature por feature
-- Testar constantemente
-- Deploy contínuo na Vercel
+✅ Dashboard principal com KPIs
+✅ Gráficos de receita e lucro
+✅ Cards de métricas em tempo real
+✅ Filtros por período
 
-## 📊 Benefícios da Migração
+Semana 4: Gestão de Clientes
 
-### Para o Usuário
+✅ CRUD completo de clientes
+✅ Histórico de atendimentos
+✅ Sistema de segmentação
+✅ Campanhas básicas
 
-- **Interface Moderna**: UX muito superior ao Google Sheets
-- **Mobilidade**: Aplicação responsiva, funciona em qualquer dispositivo
-- **Automação**: Menos trabalho manual, mais insights automáticos
-- **Segurança**: Dados protegidos com autenticação moderna
-- **Escalabilidade**: Suporta crescimento do negócio
-- **🎯 Gestão Financeira**: Distribuição automática e inteligente dos lucros
+Semana 5: Procedimentos e Atendimentos
 
-### Para o Negócio
+✅ Cadastro de procedimentos
+✅ Registro de atendimentos
+✅ Cálculo de custos e margens
+✅ Análise de rentabilidade
 
-- **Profissionalização**: Sistema próprio vs planilha genérica
-- **Insights Avançados**: Análises que não são possíveis no Sheets
-- **Integração**: Possibilidade de conectar com outros sistemas
-- **Backup Automático**: Dados sempre seguros
-- **Customização**: Funcionalidades específicas para estética
-- **🎯 Planejamento Financeiro**: Visão clara da distribuição de recursos
+FASE 3: RECURSOS AVANÇADOS (Semanas 6-8)
+Semana 6: Sistema de Agendamento + Google Calendar
+
+✅ Integração completa com Google Calendar
+✅ Sincronização bidirecional
+✅ Envio automático de convites
+✅ Interface de calendário integrada
+
+Semana 7: Controle de Estoque Simplificado
+
+✅ Cadastro de produtos
+✅ Movimentações automáticas
+✅ Alertas de estoque mínimo
+✅ Relatórios de consumo
+
+Semana 8: Distribuição de Lucros
+
+✅ Configuração de percentuais
+✅ Cálculo automático mensal
+✅ Histórico e projeções
+✅ Simulador de cenários
+
+FASE 4: OTIMIZAÇÃO E RELATÓRIOS (Semanas 9-10)
+Semana 9: CRM Avançado
+
+✅ Segmentação automática de clientes
+✅ Campanhas via Google Calendar
+✅ Follow-up automatizado
+✅ Análise de LTV
+
+Semana 10: Relatórios e Dashboard Final
+
+✅ Sistema completo de relatórios
+✅ Exportação para PDF/Excel
+✅ Dashboard executivo
+✅ Otimizações finais
+
+
+🔧 Configuração do Google Calendar
+Fluxo de Integração:
+
+Conexão Inicial:
+
+Usuário autoriza acesso ao Google Calendar
+Sistema obtém tokens de acesso
+Configuração de calendário padrão
+
+
+Criação de Agendamentos:
+
+Usuário cria agendamento no sistema
+Sistema cria evento no Google Calendar
+Cliente recebe convite automaticamente
+Confirmação via Google Calendar
+
+
+Sincronização:
+
+Eventos criados/editados no Google Calendar sincronizam no sistema
+Status de confirmação atualizado automaticamente
+Notificações nativas do Google
+
+
+Benefícios:
+
+✅ Clientes recebem convites profissionais
+✅ Confirmação via Google (mais confiável)
+✅ Lembretes automáticos do Google
+✅ Integração com outros calendários
+✅ Acesso offline via Google Calendar
