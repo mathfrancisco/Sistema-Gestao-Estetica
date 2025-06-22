@@ -1,124 +1,122 @@
-💆‍♀️ Sistema de Gestão Estética Completo - Next.js
+# 💆‍♀️ Sistema de Gestão Estética Completo 
 
-Transforme sua clínica de estética em um negócio digital profissional
-Da planilha ao sistema completo: gestão financeira inteligente, agendamento sincronizado com Google Calendar, controle de estoque e muito mais.
+> **Transforme sua clínica de estética em um negócio digital profissional**
+> 
+> Da planilha ao sistema completo: gestão financeira inteligente, agendamento sincronizado com Google Calendar, controle de estoque e muito mais.
 
-🎯 Visão Geral do Sistema
-O Que Este Sistema Resolve
-ANTES (Google Sheets):
+## 🎯 Visão Geral do Sistema
 
-❌ Dados espalhados em múltiplas planilhas
-❌ Cálculos manuais propensos a erros
-❌ Agendamentos desorganizados
-❌ Controle de estoque inexistente
-❌ Análises limitadas e demoradas
-❌ Acesso apenas no computador
+### O Que Este Sistema Resolve
 
-DEPOIS (Sistema Profissional):
+**ANTES (Google Sheets):**
+- ❌ Dados espalhados em múltiplas planilhas
+- ❌ Cálculos manuais propensos a erros
+- ❌ Agendamentos desorganizados
+- ❌ Controle de estoque inexistente
+- ❌ Análises limitadas e demoradas
+- ❌ Acesso apenas no computador
 
-✅ Dashboard unificado em tempo real
-✅ Cálculos automáticos e precisos
-✅ Agendamento integrado com Google Calendar
-✅ Controle total do estoque
-✅ Insights avançados e automáticos
-✅ Acesso em qualquer dispositivo
+**DEPOIS (Sistema Profissional):**
+- ✅ Dashboard unificado em tempo real
+- ✅ Cálculos automáticos e precisos
+- ✅ Agendamento integrado com Google Calendar
+- ✅ Controle total do estoque
+- ✅ Insights avançados e automáticos
+- ✅ Acesso em qualquer dispositivo
 
+---
 
-📋 Funcionalidades Principais
-1. 📊 DASHBOARD FINANCEIRO INTELIGENTE
-Métricas em Tempo Real:
+## 📋 Funcionalidades Principais
 
-Receita diária/semanal/mensal
-Lucro líquido com distribuição automática
-Ticket médio por cliente
-Taxa de conversão de agendamentos
-ROI por procedimento
-Projeções baseadas em histórico
+### 1. 📊 **DASHBOARD FINANCEIRO INTELIGENTE**
 
-Gráficos Interativos:
+**Métricas em Tempo Real:**
+- Receita diária/semanal/mensal
+- Lucro líquido com distribuição automática
+- Ticket médio por cliente
+- Taxa de conversão de agendamentos
+- ROI por procedimento
+- Projeções baseadas em histórico
 
-Evolução de receita (linha temporal)
-Distribuição de lucros (pizza)
-Performance por procedimento (barras)
-Fluxo de caixa projetado (área)
-Sazonalidade do negócio (heat map)
+**Gráficos Interativos:**
+- Evolução de receita (linha temporal)
+- Distribuição de lucros (pizza)
+- Performance por procedimento (barras)
+- Fluxo de caixa projetado (área)
+- Sazonalidade do negócio (heat map)
 
-2. 📅 SISTEMA DE AGENDAMENTO COM GOOGLE CALENDAR
-Integração Total com Google Calendar:
+### 2. 📅 **SISTEMA DE AGENDAMENTO COM GOOGLE CALENDAR**
 
-Sincronização bidirecional automática
-Agendamentos aparecem no Google Calendar e no sistema
-Clientes recebem convites do Google Calendar
-Confirmação automática via Google Calendar
-Notificações nativas do Google
+**Integração Total com Google Calendar:**
+- Sincronização bidirecional automática
+- Agendamentos aparecem no Google Calendar e no sistema
+- Clientes recebem convites do Google Calendar
+- Confirmação automática via Google Calendar
+- Notificações nativas do Google
 
-Calendário Visual Integrado:
+**Calendário Visual Integrado:**
+- Interface sincronizada com Google Calendar
+- Visualização por dia/semana/mês
+- Cores por tipo de procedimento
+- Bloqueio automático de conflitos
+- Tempo de duração automático por procedimento
 
-Interface sincronizada com Google Calendar
-Visualização por dia/semana/mês
-Cores por tipo de procedimento
-Bloqueio automático de conflitos
-Tempo de duração automático por procedimento
+**Gestão de Agendamentos:**
+- Criação de eventos no Google Calendar
+- Envio automático de convites para clientes
+- Sistema de confirmação via Google
+- Reagendamento sincronizado
+- Histórico completo de agendamentos
 
-Gestão de Agendamentos:
+### 3. 📦 **CONTROLE DE ESTOQUE SIMPLIFICADO**
 
-Criação de eventos no Google Calendar
-Envio automático de convites para clientes
-Sistema de confirmação via Google
-Reagendamento sincronizado
-Histórico completo de agendamentos
+**Gestão Completa de Produtos:**
+- Cadastro de produtos e materiais
+- Entrada/saída automática por procedimento
+- Alertas de estoque mínimo
+- Controle de validade de produtos
+- Histórico completo de movimentações
 
-3. 📦 CONTROLE DE ESTOQUE SIMPLIFICADO
-Gestão Completa de Produtos:
+**Análises de Estoque:**
+- Giro de estoque por produto
+- Custo real por procedimento
+- Previsão de necessidades
+- Análise ABC de produtos
+- Relatório de desperdícios
 
-Cadastro de produtos e materiais
-Entrada/saída automática por procedimento
-Alertas de estoque mínimo
-Controle de validade de produtos
-Histórico completo de movimentações
+**Controle de Custos:**
+- Cálculo automático de custo por atendimento
+- Margem de lucro por procedimento
+- Relatórios de consumo
+- Alertas de produtos vencidos
 
-Análises de Estoque:
+### 4. 🎯 **CRM E RELACIONAMENTO COM CLIENTES**
 
-Giro de estoque por produto
-Custo real por procedimento
-Previsão de necessidades
-Análise ABC de produtos
-Relatório de desperdícios
+**Segmentação Automática:**
+- Clientes VIP (maior valor gasto)
+- Clientes em risco (sem retorno há 60+ dias)
+- Novos clientes (primeiros 90 dias)
+- Clientes sazonais
+- Score de propensão à compra
 
-Controle de Custos:
+**Campanhas via Google Calendar:**
+- Agendamentos de retorno automáticos
+- Lembretes de aniversário via calendar
+- Campanhas de reativação
+- Follow-up pós-atendimento
+- Programa de indicação
 
-Cálculo automático de custo por atendimento
-Margem de lucro por procedimento
-Relatórios de consumo
-Alertas de produtos vencidos
+**Histórico Completo:**
+- Todos os atendimentos realizados
+- Eventos do calendar sincronizados
+- Preferências e observações
+- Evolução do perfil do cliente
+- Lifetime value (LTV)
 
-4. 🎯 CRM E RELACIONAMENTO COM CLIENTES
-Segmentação Automática:
+### 5. 💰 **GESTÃO FINANCEIRA COMPLETA**
 
-Clientes VIP (maior valor gasto)
-Clientes em risco (sem retorno há 60+ dias)
-Novos clientes (primeiros 90 dias)
-Clientes sazonais
-Score de propensão à compra
-
-Campanhas via Google Calendar:
-
-Agendamentos de retorno automáticos
-Lembretes de aniversário via calendar
-Campanhas de reativação
-Follow-up pós-atendimento
-Programa de indicação
-
-Histórico Completo:
-
-Todos os atendimentos realizados
-Eventos do calendar sincronizados
-Preferências e observações
-Evolução do perfil do cliente
-Lifetime value (LTV)
-
-5. 💰 GESTÃO FINANCEIRA COMPLETA
-🎯 Distribuição Automática de Lucros:
+**🎯 Distribuição Automática de Lucros:**
+```
 Configuração Padrão Inteligente:
 ┌─────────────────────────┬──────────┬─────────────┐
 │ Destino                 │ Valor    │ % do Lucro  │
@@ -128,43 +126,46 @@ Configuração Padrão Inteligente:
 │ Reserva Emergência      │ R$ 473   │    10%      │
 │ Investimento/Marketing  │ R$ 473   │    10%      │
 └─────────────────────────┴──────────┴─────────────┘
-Fluxo de Caixa Inteligente:
+```
 
-Projeção de 90 dias automatizada
-Análise de sazonalidade
-Alertas de liquidez
-Planejamento tributário básico
-Controle de contas a pagar/receber
+**Fluxo de Caixa Inteligente:**
+- Projeção de 90 dias automatizada
+- Análise de sazonalidade
+- Alertas de liquidez
+- Planejamento tributário básico
+- Controle de contas a pagar/receber
 
-Precificação Dinâmica:
+**Precificação Dinâmica:**
+- Sugestão de preços baseada em demanda
+- Análise de elasticidade
+- Promoções para horários vazios
+- Comparativo com mercado
+- Simulador de cenários
 
-Sugestão de preços baseada em demanda
-Análise de elasticidade
-Promoções para horários vazios
-Comparativo com mercado
-Simulador de cenários
+### 6. 📈 **ANÁLISES E RELATÓRIOS AVANÇADOS**
 
-6. 📈 ANÁLISES E RELATÓRIOS AVANÇADOS
-Dashboards Executivos:
+**Dashboards Executivos:**
+- KPIs principais do negócio
+- Comparativos mês a mês
+- Análise de tendências
+- Metas vs realizado
+- Benchmarks do setor
 
-KPIs principais do negócio
-Comparativos mês a mês
-Análise de tendências
-Metas vs realizado
-Benchmarks do setor
+**Relatórios Automáticos:**
+- Relatório mensal de performance
+- Análise de rentabilidade por procedimento
+- Relatório de clientes (retenção, churn)
+- Análise de estoque e custos
+- Relatório fiscal simplificado
 
-Relatórios Automáticos:
+---
 
-Relatório mensal de performance
-Análise de rentabilidade por procedimento
-Relatório de clientes (retenção, churn)
-Análise de estoque e custos
-Relatório fiscal simplificado
+## 🏗️ Arquitetura Técnica Avançada
 
+### Stack Tecnológica Premium
 
-🏗️ Arquitetura Técnica Avançada
-Stack Tecnológica Premium
-typescriptFrontend:     Next.js 14 (App Router) + TypeScript
+```typescript
+Frontend:     Next.js 14 (App Router) + TypeScript
 Styling:      Tailwind CSS + shadcn/ui + Framer Motion
 Database:     Supabase (PostgreSQL) + Redis Cache
 Auth:         Supabase Auth + Google OAuth
@@ -175,8 +176,12 @@ State:        Zustand + React Query (TanStack)
 Realtime:     Supabase Realtime
 Deploy:       Vercel Edge Functions
 Mobile:       PWA com offline-first
-🗄️ Estrutura Simplificada do Banco de Dados
-sql-- ============ CORE TABLES ============
+```
+
+### 🗄️ Estrutura Simplificada do Banco de Dados
+
+```sql
+-- ============ CORE TABLES ============
 
 -- Usuários e Autenticação
 users (
@@ -467,8 +472,13 @@ CREATE TYPE stock_movement_enum AS ENUM ('in', 'out', 'adjustment', 'expired', '
 CREATE TYPE profit_category_enum AS ENUM ('pro_labore', 'equipment_reserve', 'emergency_reserve', 'investment');
 CREATE TYPE goal_type_enum AS ENUM ('revenue', 'profit', 'clients', 'appointments', 'procedures');
 CREATE TYPE period_type_enum AS ENUM ('daily', 'weekly', 'monthly', 'quarterly', 'yearly');
+```
 
-📱 Estrutura Simplificada do Projeto
+---
+
+## 📱 Estrutura Simplificada do Projeto
+
+```
 src/
 ├── app/
 │   ├── (auth)/
@@ -634,11 +644,17 @@ src/
 └── styles/
     ├── globals.css
     └── components.css
+```
 
-🚀 Plano de Implementação Atualizado
-FASE 1: FUNDAÇÃO (Semanas 1-2)
-Semana 1: Setup e Infraestrutura
-bash# Configuração inicial
+---
+
+## 🚀 Plano de Implementação Atualizado
+
+### **FASE 1: FUNDAÇÃO (Semanas 1-2)**
+
+#### Semana 1: Setup e Infraestrutura
+```bash
+# Configuração inicial
 npx create-next-app@latest gestao-estetica --typescript --tailwind --app
 cd gestao-estetica
 
@@ -654,103 +670,110 @@ npm install jspdf html2canvas react-pdf
 # Setup do shadcn/ui
 npx shadcn-ui@latest init
 npx shadcn-ui@latest add button input card table dialog calendar
-Semana 2: Autenticação e Google Calendar
+```
 
-✅ Sistema de autenticação com Google OAuth
-✅ Conexão com Google Calendar API
-✅ Layout responsivo com sidebar
-✅ Setup do Supabase com RLS
-✅ Configuração inicial do Google Calendar
+#### Semana 2: Autenticação e Google Calendar
+- ✅ Sistema de autenticação com Google OAuth
+- ✅ Conexão com Google Calendar API
+- ✅ Layout responsivo com sidebar
+- ✅ Setup do Supabase com RLS
+- ✅ Configuração inicial do Google Calendar
 
-FASE 2: CORE DO SISTEMA (Semanas 3-5)
-Semana 3: Dashboard e Métricas
+### **FASE 2: CORE DO SISTEMA (Semanas 3-5)**
 
-✅ Dashboard principal com KPIs
-✅ Gráficos de receita e lucro
-✅ Cards de métricas em tempo real
-✅ Filtros por período
+#### Semana 3: Dashboard e Métricas
+- ✅ Dashboard principal com KPIs
+- ✅ Gráficos de receita e lucro
+- ✅ Cards de métricas em tempo real
+- ✅ Filtros por período
 
-Semana 4: Gestão de Clientes
+#### Semana 4: Gestão de Clientes
+- ✅ CRUD completo de clientes
+- ✅ Histórico de atendimentos
+- ✅ Sistema de segmentação
+- ✅ Campanhas básicas
 
-✅ CRUD completo de clientes
-✅ Histórico de atendimentos
-✅ Sistema de segmentação
-✅ Campanhas básicas
+#### Semana 5: Procedimentos e Atendimentos
+- ✅ Cadastro de procedimentos
+- ✅ Registro de atendimentos
+- ✅ Cálculo de custos e margens
+- ✅ Análise de rentabilidade
 
-Semana 5: Procedimentos e Atendimentos
+### **FASE 3: RECURSOS AVANÇADOS (Semanas 6-8)**
 
-✅ Cadastro de procedimentos
-✅ Registro de atendimentos
-✅ Cálculo de custos e margens
-✅ Análise de rentabilidade
+#### Semana 6: Sistema de Agendamento + Google Calendar
+- ✅ Integração completa com Google Calendar
+- ✅ Sincronização bidirecional
+- ✅ Envio automático de convites
+- ✅ Interface de calendário integrada
 
-FASE 3: RECURSOS AVANÇADOS (Semanas 6-8)
-Semana 6: Sistema de Agendamento + Google Calendar
+#### Semana 7: Controle de Estoque Simplificado
+- ✅ Cadastro de produtos
+- ✅ Movimentações automáticas
+- ✅ Alertas de estoque mínimo
+- ✅ Relatórios de consumo
 
-✅ Integração completa com Google Calendar
-✅ Sincronização bidirecional
-✅ Envio automático de convites
-✅ Interface de calendário integrada
+#### Semana 8: Distribuição de Lucros
+- ✅ Configuração de percentuais
+- ✅ Cálculo automático mensal
+- ✅ Histórico e projeções
+- ✅ Simulador de cenários
 
-Semana 7: Controle de Estoque Simplificado
+### **FASE 4: OTIMIZAÇÃO E RELATÓRIOS (Semanas 9-10)**
 
-✅ Cadastro de produtos
-✅ Movimentações automáticas
-✅ Alertas de estoque mínimo
-✅ Relatórios de consumo
+#### Semana 9: CRM Avançado
+- ✅ Segmentação automática de clientes
+- ✅ Campanhas via Google Calendar
+- ✅ Follow-up automatizado
+- ✅ Análise de LTV
 
-Semana 8: Distribuição de Lucros
+#### Semana 10: Relatórios e Dashboard Final
+- ✅ Sistema completo de relatórios
+- ✅ Exportação para PDF/Excel
+- ✅ Dashboard executivo
+- ✅ Otimizações finais
 
-✅ Configuração de percentuais
-✅ Cálculo automático mensal
-✅ Histórico e projeções
-✅ Simulador de cenários
+---
 
-FASE 4: OTIMIZAÇÃO E RELATÓRIOS (Semanas 9-10)
-Semana 9: CRM Avançado
+## 🔧 Configuração do Google Calendar
 
-✅ Segmentação automática de clientes
-✅ Campanhas via Google Calendar
-✅ Follow-up automatizado
-✅ Análise de LTV
+### Fluxo de Integração:
 
-Semana 10: Relatórios e Dashboard Final
+1. **Conexão Inicial:**
+   - Usuário autoriza acesso ao Google Calendar
+   - Sistema obtém tokens de acesso
+   - Configuração de calendário padrão
 
-✅ Sistema completo de relatórios
-✅ Exportação para PDF/Excel
-✅ Dashboard executivo
-✅ Otimizações finais
+2. **Criação de Agendamentos:**
+   - Usuário cria agendamento no sistema
+   - Sistema cria evento no Google Calendar
+   - Cliente recebe convite automaticamente
+   - Confirmação via Google Calendar
 
+3. **Sincronização:**
+   - Eventos criados/editados no Google Calendar sincronizam no sistema
+   - Status de confirmação atualizado automaticamente
+   - Notificações nativas do Google
 
-🔧 Configuração do Google Calendar
-Fluxo de Integração:
+4. **Benefícios:**
+   - ✅ Clientes recebem convites profissionais
+   - ✅ Confirmação via Google (mais confiável)
+   - ✅ Lembretes automáticos do Google
+   - ✅ Integração com outros calendários
+   - ✅ Acesso offline via Google Calendar
 
-Conexão Inicial:
+---
 
-Usuário autoriza acesso ao Google Calendar
-Sistema obtém tokens de acesso
-Configuração de calendário padrão
+## 💡 Principais Mudanças
 
+### ❌ **REMOVIDO:**
+- Módulo completo de Profissionais
+- Sistema de comissões
+- Gestão de fornecedores
+- Notificações WhatsApp/SMS
+- Automação de comunicação
 
-Criação de Agendamentos:
-
-Usuário cria agendamento no sistema
-Sistema cria evento no Google Calendar
-Cliente recebe convite automaticamente
-Confirmação via Google Calendar
-
-
-Sincronização:
-
-Eventos criados/editados no Google Calendar sincronizam no sistema
-Status de confirmação atualizado automaticamente
-Notificações nativas do Google
-
-
-Benefícios:
-
-✅ Clientes recebem convites profissionais
-✅ Confirmação via Google (mais confiável)
-✅ Lembretes automáticos do Google
-✅ Integração com outros calendários
-✅ Acesso offline via Google Calendar
+### ✅ **ADICIONADO/MELHORADO:**
+- Integração completa com Google Calendar
+- Sistema de convites automáticos
+- Sincronização bidirec
