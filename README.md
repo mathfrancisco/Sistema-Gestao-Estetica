@@ -619,7 +619,7 @@ src/
 │   │   ├── validations.ts
 │   │   └── constants.ts
 │   ├── services/
-│   │   ├── clientService.ts
+│   │   ├── client.service.ts
 │   │   ├── appointmentService.ts
 │   │   ├── financialService.ts
 │   │   ├── stockService.ts

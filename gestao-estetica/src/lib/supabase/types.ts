@@ -24,6 +24,8 @@ export type Database = {
         Tables: {
             users: {
                 Row: {
+                    avatar_url: string;
+                    full_name: string;
                     id: string
                     email: string
                     google_calendar_id: string | null

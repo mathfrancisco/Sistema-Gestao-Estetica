@@ -2,18 +2,18 @@
 import { supabase } from '@/lib/supabase/client'
 import type { Database } from '@/lib/supabase/types'
 
-type Attendance = Database['public']['Tables']['attendances']['Row']
-type AttendanceInsert = Database['public']['Tables']['attendances']['Insert']
-type AttendanceUpdate = Database['public']['Tables']['attendances']['Update']
+export type Attendance = Database['public']['Tables']['attendances']['Row']
+export type AttendanceInsert = Database['public']['Tables']['attendances']['Insert']
+export type AttendanceUpdate = Database['public']['Tables']['attendances']['Update']
 type PaymentMethod = Database['public']['Enums']['payment_method_enum']
 type PaymentStatus = Database['public']['Enums']['payment_status_enum']
-type ProfitDistribution = Database['public']['Tables']['profit_distributions']['Row']
-type ProfitDistributionInsert = Database['public']['Tables']['profit_distributions']['Insert']
-type ProfitDistributionUpdate = Database['public']['Tables']['profit_distributions']['Update']
-type ProfitDistributionConfig = Database['public']['Tables']['profit_distribution_config']['Row']
-type ProfitDistributionConfigInsert = Database['public']['Tables']['profit_distribution_config']['Insert']
-type ProfitDistributionConfigUpdate = Database['public']['Tables']['profit_distribution_config']['Update']
-type ProfitCategory = Database['public']['Enums']['profit_category_enum']
+export type ProfitDistribution = Database['public']['Tables']['profit_distributions']['Row']
+export type ProfitDistributionInsert = Database['public']['Tables']['profit_distributions']['Insert']
+export type ProfitDistributionUpdate = Database['public']['Tables']['profit_distributions']['Update']
+export type ProfitDistributionConfig = Database['public']['Tables']['profit_distribution_config']['Row']
+export type ProfitDistributionConfigInsert = Database['public']['Tables']['profit_distribution_config']['Insert']
+export type ProfitDistributionConfigUpdate = Database['public']['Tables']['profit_distribution_config']['Update']
+export type ProfitCategory = Database['public']['Enums']['profit_category_enum']
 
 export interface FinancialFilters {
     paymentStatus?: PaymentStatus
