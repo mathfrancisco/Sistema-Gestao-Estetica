@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Calendar, CheckCircle, AlertCircle, Loader2, ArrowRight, RefreshCw, Shield } from 'lucide-react'
 import { useAuthStore } from '@/store/useAuthStore'
 import { toast } from 'sonner'
-import {useGoogleCalendar} from "@/lib/hooks/useGoogleCalendar";
+import { useGoogleCalendar } from "@/lib/hooks/useGoogleCalendar"
 
 export default function ConnectCalendarPage() {
     const [isConnecting, setIsConnecting] = useState(false)
@@ -24,10 +24,10 @@ export default function ConnectCalendarPage() {
         checkAuthentication
     } = useGoogleCalendar()
 
-    // Processar código de autorização do Google
+    // Process Google authorization code
     useEffect(() => {
         const processGoogleAuth = async () => {
-            if (code && !isConnecting) {
+            if (code && !isConnecting && user) {
                 setIsConnecting(true)
 
                 try {
@@ -35,7 +35,7 @@ export default function ConnectCalendarPage() {
 
                     if (success) {
                         toast.success('Google Calendar conectado com sucesso!')
-                        // Atualizar o auth store
+                        // Update auth store
                         await initialize()
                         router.push('/dashboard')
                     } else {
@@ -51,18 +51,18 @@ export default function ConnectCalendarPage() {
         }
 
         processGoogleAuth()
-    }, [code, authenticateUser, initialize, router, isConnecting])
+    }, [code, authenticateUser, initialize, router, isConnecting, user])
 
-    // Verificar erro na URL
+    // Check for error in URL
     useEffect(() => {
         if (error) {
             toast.error('Erro na autorização do Google Calendar')
         }
     }, [error])
 
-    const handleConnectCalendar = () => {
+    const handleConnectCalendar = async () => {
         try {
-            const authUrl = getAuthUrl()
+            const authUrl = await getAuthUrl()
             if (authUrl) {
                 window.location.href = authUrl
             } else {
@@ -85,43 +85,47 @@ export default function ConnectCalendarPage() {
     // Loading state
     if (loading || isConnecting) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 flex items-center justify-center p-4">
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
                 <div className="text-center">
-                    <Loader2 className="w-12 h-12 animate-spin text-purple-600 mx-auto mb-4" />
-                    <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                        {isConnecting ? 'Conectando calendário...' : 'Carregando...'}
-                    </h2>
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+                        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        {isConnecting ? 'Conectando calendário...' : 'Verificando conexão...'}
+                    </h3>
                     <p className="text-gray-600">
-                        {isConnecting ? 'Processando autorização do Google' : 'Aguarde um momento'}
+                        {isConnecting
+                            ? 'Processando autorização do Google Calendar'
+                            : 'Por favor, aguarde'
+                        }
                     </p>
                 </div>
             </div>
         )
     }
 
-    // Already connected
-    if (isAuthenticated) {
+    // Already connected state
+    if (isAuthenticated && !code) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 flex items-center justify-center p-4">
-                <div className="w-full max-w-md">
-                    <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-6">
-                            <CheckCircle className="w-8 h-8 text-green-600" />
+            <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 flex items-center justify-center">
+                <div className="max-w-md w-full mx-auto px-6">
+                    <div className="text-center">
+                        <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-6">
+                            <CheckCircle className="w-10 h-10 text-green-600" />
                         </div>
 
-                        <h1 className="text-2xl font-bold text-gray-900 mb-4">
+                        <h1 className="text-2xl font-bold text-gray-900 mb-3">
                             Calendário Conectado!
                         </h1>
 
                         <p className="text-gray-600 mb-8">
-                            Seu Google Calendar já está sincronizado com o EstéticaPro.
-                            Agora você pode gerenciar seus agendamentos em ambas as plataformas.
+                            Seu Google Calendar já está conectado e pronto para uso.
                         </p>
 
-                        <div className="space-y-4">
+                        <div className="space-y-3">
                             <button
                                 onClick={() => router.push('/dashboard')}
-                                className="w-full flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all"
+                                className="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                             >
                                 Ir para Dashboard
                                 <ArrowRight className="ml-2 w-5 h-5" />
@@ -129,7 +133,7 @@ export default function ConnectCalendarPage() {
 
                             <button
                                 onClick={handleRetry}
-                                className="w-full flex items-center justify-center px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all"
+                                className="w-full inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                             >
                                 <RefreshCw className="mr-2 w-5 h-5" />
                                 Verificar Conexão
@@ -141,121 +145,130 @@ export default function ConnectCalendarPage() {
         )
     }
 
-    // Not connected - show connection flow
+    // Connect calendar flow
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 flex items-center justify-center p-4">
-            <div className="w-full max-w-md">
-                <div className="bg-white rounded-2xl shadow-xl p-8">
-                    {/* Header */}
-                    <div className="text-center mb-8">
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full mb-6">
-                            <Calendar className="w-8 h-8 text-white" />
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+            <div className="max-w-2xl mx-auto px-6 py-12">
+                {/* Header */}
+                <div className="text-center mb-12">
+                    <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-100 rounded-full mb-6">
+                        <Calendar className="w-10 h-10 text-blue-600" />
+                    </div>
+
+                    <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                        Conecte seu Google Calendar
+                    </h1>
+
+                    <p className="text-lg text-gray-600 max-w-lg mx-auto">
+                        Sincronize seus horários e automatize o agendamento de consultas para uma gestão mais eficiente.
+                    </p>
+                </div>
+
+                {/* Error state */}
+                {error && (
+                    <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="flex items-center">
+                            <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
+                            <span className="text-red-700 font-medium">
+                                Erro na autorização
+                            </span>
                         </div>
+                        <p className="text-red-600 text-sm mt-1">
+                            Ocorreu um erro ao conectar com o Google Calendar. Tente novamente.
+                        </p>
+                    </div>
+                )}
 
-                        <h1 className="text-2xl font-bold text-gray-900 mb-4">
-                            Conecte seu Google Calendar
-                        </h1>
-
-                        <p className="text-gray-600 mb-6">
-                            Sincronize seus agendamentos automaticamente e nunca mais perca um compromisso.
+                {/* Benefits */}
+                <div className="grid md:grid-cols-2 gap-6 mb-12">
+                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                            <Calendar className="w-6 h-6 text-blue-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                            Sincronização Automática
+                        </h3>
+                        <p className="text-gray-600">
+                            Seus agendamentos aparecerão automaticamente no Google Calendar, evitando conflitos de horário.
                         </p>
                     </div>
 
-                    {/* Benefits */}
-                    <div className="space-y-4 mb-8">
-                        <div className="flex items-start space-x-3">
-                            <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                            <div>
-                                <h3 className="font-medium text-gray-900">Sincronização Automática</h3>
-                                <p className="text-sm text-gray-600">
-                                    Agendamentos criados no EstéticaPro aparecem no seu Google Calendar
-                                </p>
-                            </div>
+                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                        <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                            <CheckCircle className="w-6 h-6 text-green-600" />
                         </div>
-
-                        <div className="flex items-start space-x-3">
-                            <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                            <div>
-                                <h3 className="font-medium text-gray-900">Lembretes Automáticos</h3>
-                                <p className="text-sm text-gray-600">
-                                    Seus clientes recebem convites e lembretes pelo Google
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-start space-x-3">
-                            <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                            <div>
-                                <h3 className="font-medium text-gray-900">Acesso Mobile</h3>
-                                <p className="text-sm text-gray-600">
-                                    Visualize seus agendamentos em qualquer dispositivo
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Error Message */}
-                    {error && (
-                        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                            <div className="flex items-center">
-                                <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
-                                <p className="text-sm text-red-800">
-                                    Erro na autorização. Tente novamente.
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Action Buttons */}
-                    <div className="space-y-4">
-                        <button
-                            onClick={handleConnectCalendar}
-                            disabled={isConnecting}
-                            className="w-full flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                        >
-                            {isConnecting ? (
-                                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                            ) : (
-                                <Calendar className="w-5 h-5 mr-2" />
-                            )}
-                            Conectar Google Calendar
-                        </button>
-
-                        <button
-                            onClick={handleSkip}
-                            className="w-full px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all"
-                        >
-                            Pular por agora
-                        </button>
-                    </div>
-
-                    {/* Security Note */}
-                    <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <div className="flex items-start space-x-3">
-                            <Shield className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
-                            <div>
-                                <h4 className="text-sm font-medium text-blue-900 mb-1">
-                                    Seus dados estão seguros
-                                </h4>
-                                <p className="text-xs text-blue-800">
-                                    Utilizamos autenticação OAuth2 do Google. Não armazenamos
-                                    suas credenciais e você pode revogar o acesso a qualquer momento.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Support Link */}
-                    <div className="mt-6 text-center">
-                        <p className="text-xs text-gray-500">
-                            Precisa de ajuda?{' '}
-                            <a
-                                href="/suporte"
-                                className="text-purple-600 hover:text-purple-700 underline"
-                            >
-                                Entre em contato conosco
-                            </a>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                            Disponibilidade em Tempo Real
+                        </h3>
+                        <p className="text-gray-600">
+                            Verifique automaticamente sua disponibilidade antes de confirmar novos agendamentos.
                         </p>
+                    </div>
+
+                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                        <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                            <Shield className="w-6 h-6 text-purple-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                            Seguro e Privado
+                        </h3>
+                        <p className="text-gray-600">
+                            Seus dados são protegidos e você pode desconectar a qualquer momento.
+                        </p>
+                    </div>
+
+                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                        <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                            <ArrowRight className="w-6 h-6 text-orange-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                            Integração Simples
+                        </h3>
+                        <p className="text-gray-600">
+                            Processo rápido e fácil de configuração em apenas alguns cliques.
+                        </p>
+                    </div>
+                </div>
+
+                {/* Action buttons */}
+                <div className="space-y-4">
+                    <button
+                        onClick={handleConnectCalendar}
+                        disabled={loading}
+                        className="w-full inline-flex items-center justify-center px-8 py-4 border border-transparent text-lg font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                        {loading ? (
+                            <>
+                                <Loader2 className="mr-3 w-5 h-5 animate-spin" />
+                                Conectando...
+                            </>
+                        ) : (
+                            <>
+                                <Calendar className="mr-3 w-5 h-5" />
+                                Conectar Google Calendar
+                            </>
+                        )}
+                    </button>
+
+                    <button
+                        onClick={handleSkip}
+                        className="w-full inline-flex items-center justify-center px-8 py-3 border border-gray-300 text-base font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                    >
+                        Pular por agora
+                    </button>
+                </div>
+
+                {/* Privacy note */}
+                <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-start">
+                        <Shield className="w-5 h-5 text-gray-500 mt-0.5 mr-3 flex-shrink-0" />
+                        <div className="text-sm text-gray-600">
+                            <p className="font-medium mb-1">Sua privacidade é importante</p>
+                            <p>
+                                Acessamos apenas as informações necessárias para sincronizar seus agendamentos.
+                                Você pode revogar o acesso a qualquer momento nas configurações.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

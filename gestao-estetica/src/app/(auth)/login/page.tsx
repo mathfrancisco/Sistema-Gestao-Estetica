@@ -52,7 +52,7 @@ export default function LoginPage() {
                 await initialize()
 
                 toast.success('Login realizado com sucesso!')
-                router.push('/dashboard')
+                router.push('/connect-calendar')
             }
         } catch (error: any) {
             console.error('Erro no login:', error)
