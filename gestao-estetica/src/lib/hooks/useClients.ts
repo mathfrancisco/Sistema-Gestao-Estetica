@@ -2,7 +2,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { useClientStore } from '@/store/useClientStore'
-import type { Database } from '@/lib/supabase/types'
+import type { Database } from '@/lib/database/supabase/types'
 import { toast } from 'sonner'
 import {ClientFilters, ClientService, ClientsPaginationOptions} from "@/lib/services/client.service";
 

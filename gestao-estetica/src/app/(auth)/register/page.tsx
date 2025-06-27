@@ -8,7 +8,7 @@ import { Eye, EyeOff, Mail, Lock, User, UserPlus, Loader2 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { supabase } from '@/lib/supabase/client'
+import { supabase } from '@/lib/database/supabase/client'
 import { toast } from 'sonner'
 import Header from "@/components/layout/header"
 import Footer from "@/components/layout/footer"

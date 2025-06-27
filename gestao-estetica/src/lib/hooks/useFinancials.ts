@@ -16,7 +16,7 @@ import {
 } from '../services/financial.service'
 import type {
     PaymentStatus,
-} from '@/lib/supabase/types'
+} from '@/lib/database/supabase/types'
 
 interface UseFinancialsState {
     // Attendances
@@ -32,7 +32,9 @@ interface UseFinancialsState {
     // Financial Reports
     financialSummary: FinancialSummary | null
     monthlyReport: MonthlyFinancialReport | null
-    revenueByPeriod: Array<{ date: string; revenue: number; transactions: number }>
+    revenueByPeriod: Array<{
+        profit: number;
+        date: string; revenue: number; transactions: number }>
 
     // Profit Distribution
     profitConfigs: ProfitDistributionConfig[]
@@ -315,9 +317,14 @@ export function useFinancials(): UseFinancialsState & UseFinancialsActions {
 
             const revenue = await FinancialService.getRevenueByPeriod(startDate, endDate, groupBy, userId)
 
+            const revenueWithProfit = revenue.map(item => ({
+                ...item,
+                profit: item.revenue
+            }))
+
             setState(prev => ({
                 ...prev,
-                revenueByPeriod: revenue,
+                revenueByPeriod: revenueWithProfit,
                 isLoadingReports: false
             }))
         } catch (error) {

@@ -1,6 +1,6 @@
 // lib/services/client.service.ts
-import { supabase } from '@/lib/supabase/client'
-import type { Database } from '@/lib/supabase/types'
+import { supabase } from '@/lib/database/supabase/client'
+import type { Database } from '@/lib/database/supabase/types'
 
 type Client = Database['public']['Tables']['clients']['Row']
 type ClientInsert = Database['public']['Tables']['clients']['Insert']
@@ -157,6 +157,7 @@ export class ClientService {
     }
 
     static async getClientStats(userId?: string): Promise<{
+        clientsBySegment: { segment: string, count: number }[]
         total: number
         active: number
         inactive: number
@@ -178,34 +179,36 @@ export class ClientService {
             throw new Error(`Erro ao buscar estatísticas de clientes: ${error.message}`)
         }
 
-        const stats = data?.reduce((acc, client) => {
-            acc.total++
+        // Contadores gerais
+        let total = 0, active = 0, inactive = 0, vip = 0, atRisk = 0, novo = 0
+        const segmentMap: Record<string, number> = {}
 
-            if (client.status === 'active') acc.active++
-            if (client.status === 'inactive') acc.inactive++
+        data?.forEach(client => {
+            total++
+            if (client.status === 'active') active++
+            if (client.status === 'inactive') inactive++
+            if (client.segment === 'vip') vip++
+            if (client.segment === 'at_risk') atRisk++
+            if (client.segment === 'new') novo++
+            if (client.segment) {
+                segmentMap[client.segment] = (segmentMap[client.segment] || 0) + 1
+            }
+        })
 
-            if (client.segment === 'vip') acc.vip++
-            if (client.segment === 'at_risk') acc.atRisk++
-            if (client.segment === 'new') acc.new++
+        const clientsBySegment = Object.entries(segmentMap).map(([segment, count]) => ({
+            segment,
+            count
+        }))
 
-            return acc
-        }, {
-            total: 0,
-            active: 0,
-            inactive: 0,
-            vip: 0,
-            atRisk: 0,
-            new: 0
-        }) || {
-            total: 0,
-            active: 0,
-            inactive: 0,
-            vip: 0,
-            atRisk: 0,
-            new: 0
+        return {
+            clientsBySegment,
+            total,
+            active,
+            inactive,
+            vip,
+            atRisk,
+            new: novo
         }
-
-        return stats
     }
 
     static async searchClients(query: string, limit: number = 10): Promise<Client[]> {

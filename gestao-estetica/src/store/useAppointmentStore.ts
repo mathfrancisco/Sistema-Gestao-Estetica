@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Database } from '@/lib/supabase/types'
+import type { Database } from '@/lib/database/supabase/types'
 
 type Appointment = Database['public']['Tables']['appointments']['Row']
 type AppointmentInsert = Database['public']['Tables']['appointments']['Insert']

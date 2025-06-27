@@ -1,6 +1,6 @@
 // lib/services/stockService.ts
-import { supabase } from '@/lib/supabase/client'
-import type { Database } from '@/lib/supabase/types'
+import { supabase } from '@/lib/database/supabase/client'
+import type { Database } from '@/lib/database/supabase/types'
 
 type Product = Database['public']['Tables']['products']['Row']
 type ProductInsert = Database['public']['Tables']['products']['Insert']

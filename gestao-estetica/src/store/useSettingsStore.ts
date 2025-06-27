@@ -1,7 +1,7 @@
 // store/useSettingsStore.ts
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Database } from '@/lib/supabase/types'
+import type { Database } from '@/lib/database/supabase/types'
 
 type BusinessProfile = Database['public']['Tables']['business_profile']['Row']
 type ProfitDistributionConfig = Database['public']['Tables']['profit_distribution_config']['Row']

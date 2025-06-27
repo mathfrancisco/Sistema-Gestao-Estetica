@@ -1,9 +1,9 @@
 // store/useAuthStore.ts
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { supabase } from '@/lib/supabase/client'
+import { supabase } from '@/lib/database/supabase/client'
 import type { User, Session } from '@supabase/supabase-js'
-import type { Database } from '@/lib/supabase/types'
+import type { Database } from '@/lib/database/supabase/types'
 
 type UserProfile = Database['public']['Tables']['users']['Row']
 type BusinessProfile = Database['public']['Tables']['business_profile']['Row']

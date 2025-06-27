@@ -1,7 +1,7 @@
 // hooks/useAppointments.ts
 import { useState, useEffect, useCallback, useMemo } from 'react'
 
-import type { Database } from '@/lib/supabase/types'
+import type { Database } from '@/lib/database/supabase/types'
 import {
     AppointmentFilters,
     AppointmentService,

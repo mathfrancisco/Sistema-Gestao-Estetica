@@ -21,16 +21,19 @@ import {
     BarChart,
     Target,
     TrendingUp,
-    FileHeart,
+    FileText,
     Tags,
     Briefcase,
     Wallet,
-    ReceiptText,
+    Receipt,
     Database,
     LineChart,
     PlusCircle,
     History,
     Activity,
+    Sparkles,
+    Menu,
+    X
 } from 'lucide-react';
 import { cn } from '@/lib/utils/utils';
 import { Button } from '@/components/ui/button';
@@ -66,7 +69,7 @@ const menuItems: MenuItem[] = [
         submenu: [
             { title: 'Calendário', href: '/agendamentos/calendario', icon: Calendar, badge: null },
             { title: 'Novo Agendamento', href: '/agendamentos/novo', icon: PlusCircle, badge: null },
-            { title: 'Configuração', href: '/agendamentos/configuracao', icon: Settings, badge: null }
+            { title: 'Configurações', href: '/agendamentos/configuracao', icon: Settings, badge: null }
         ]
     },
     {
@@ -76,7 +79,7 @@ const menuItems: MenuItem[] = [
         badge: null,
         submenu: [
             { title: 'Novo Atendimento', href: '/atendimentos/novo', icon: PlusCircle, badge: null },
-            { title: 'Relatório', href: '/atendimentos/relatorio', icon: FileHeart, badge: null }
+            { title: 'Relatórios', href: '/atendimentos/relatorio', icon: FileText, badge: null }
         ]
     },
     {
@@ -98,7 +101,7 @@ const menuItems: MenuItem[] = [
         submenu: [
             { title: 'Produtos', href: '/estoque/produtos', icon: ShoppingBag, badge: null },
             { title: 'Movimentações', href: '/estoque/movimentacoes', icon: Activity, badge: null },
-            { title: 'Relatórios', href: '/estoque/relatorios', icon: FileHeart, badge: null }
+            { title: 'Relatórios', href: '/estoque/relatorios', icon: FileText, badge: null }
         ]
     },
     {
@@ -119,7 +122,7 @@ const menuItems: MenuItem[] = [
         badge: null,
         submenu: [
             { title: 'Fluxo de Caixa', href: '/financeiro/fluxo-caixa', icon: Wallet, badge: null },
-            { title: 'Custos Fixos', href: '/financeiro/custos-fixos', icon: ReceiptText, badge: null },
+            { title: 'Custos Fixos', href: '/financeiro/custos-fixos', icon: Receipt, badge: null },
             { title: 'Metas', href: '/financeiro/metas', icon: Target, badge: null },
             { title: 'Projeções', href: '/financeiro/projecoes', icon: LineChart, badge: null }
         ]
@@ -171,6 +174,8 @@ const bottomMenuItems: MenuItem[] = [
 
 export function Sidebar({ className, onNavigate }: SidebarProps) {
     const pathname = usePathname();
+    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isMobileOpen, setIsMobileOpen] = useState(false);
     const {
         user,
         userProfile,
@@ -193,6 +198,7 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
 
     const handleNavigation = () => {
         onNavigate?.();
+        setIsMobileOpen(false);
     };
 
     const handleSignOut = async () => {
@@ -212,9 +218,6 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
                 .toUpperCase()
                 .slice(0, 2);
         }
-        else if (typeof userProfile?.full_name === 'boolean' && userProfile.full_name === true) {
-            return "TB";
-        }
         if (user?.email) {
             return user.email.charAt(0).toUpperCase();
         }
@@ -229,10 +232,6 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
             return user.email.split('@')[0];
         }
         return 'Usuário';
-    };
-
-    const getEmail = () => {
-        return user?.email || 'email@exemplo.com';
     };
 
     const getBusinessName = () => {
@@ -255,28 +254,41 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
                         <button
                             onClick={() => toggleSubmenu(item.title)}
                             className={cn(
-                                "w-full flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary hover:bg-muted",
-                                active && "bg-muted text-primary font-medium"
+                                "w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 hover:bg-slate-100 group",
+                                active ? "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 shadow-sm border border-blue-100" : "text-slate-600 hover:text-slate-900",
+                                isCollapsed && "justify-center px-2"
                             )}
                         >
-                            <Icon className="h-4 w-4" />
-                            <span className="flex-1 text-left">{item.title}</span>
-                            {item.badge && (
-                                <Badge
-                                    variant={isBottomMenu ? "destructive" : "secondary"}
-                                    className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
-                                >
-                                    {item.badge}
-                                </Badge>
+                            <div className={cn(
+                                "p-1.5 rounded-lg transition-colors duration-200",
+                                active ? "bg-blue-100" : "group-hover:bg-slate-200"
+                            )}>
+                                <Icon className={cn(
+                                    "h-4 w-4 transition-colors duration-200",
+                                    active ? "text-blue-600" : "text-slate-500 group-hover:text-slate-700"
+                                )} />
+                            </div>
+                            {!isCollapsed && (
+                                <>
+                                    <span className="flex-1 text-left">{item.title}</span>
+                                    {item.badge && (
+                                        <Badge
+                                            variant={isBottomMenu ? "destructive" : "secondary"}
+                                            className="ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs bg-blue-100 text-blue-700 border-0"
+                                        >
+                                            {item.badge}
+                                        </Badge>
+                                    )}
+                                    {isSubmenuOpen ?
+                                        <ChevronDown className="h-3 w-3 text-slate-400" /> :
+                                        <ChevronRight className="h-3 w-3 text-slate-400" />
+                                    }
+                                </>
                             )}
-                            {isSubmenuOpen ?
-                                <ChevronDown className="h-4 w-4" /> :
-                                <ChevronRight className="h-4 w-4" />
-                            }
                         </button>
 
-                        {isSubmenuOpen && (
-                            <div className="ml-6 pl-2 border-l space-y-1">
+                        {isSubmenuOpen && !isCollapsed && (
+                            <div className="ml-3 pl-4 border-l border-slate-200 space-y-1">
                                 {item.submenu?.map(subItem => {
                                     const SubIcon = subItem.icon;
                                     const isSubActive = pathname === subItem.href;
@@ -287,16 +299,19 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
                                             href={subItem.href}
                                             onClick={handleNavigation}
                                             className={cn(
-                                                "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary hover:bg-muted",
-                                                isSubActive && "bg-muted text-primary font-medium"
+                                                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-slate-100 group",
+                                                isSubActive ? "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 shadow-sm" : "text-slate-600 hover:text-slate-900"
                                             )}
                                         >
-                                            <SubIcon className="h-4 w-4" />
+                                            <SubIcon className={cn(
+                                                "h-3 w-3 transition-colors duration-200",
+                                                isSubActive ? "text-blue-600" : "text-slate-400 group-hover:text-slate-600"
+                                            )} />
                                             <span className="flex-1">{subItem.title}</span>
                                             {subItem.badge && (
                                                 <Badge
-                                                    variant={isBottomMenu ? "destructive" : "secondary"}
-                                                    className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
+                                                    variant="secondary"
+                                                    className="ml-auto flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-xs"
                                                 >
                                                     {subItem.badge}
                                                 </Badge>
@@ -312,19 +327,35 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
                         href={item.href}
                         onClick={handleNavigation}
                         className={cn(
-                            "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary hover:bg-muted",
-                            active && "bg-muted text-primary font-medium"
+                            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 hover:bg-slate-100 group",
+                            active ? "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 shadow-sm border border-blue-100" : "text-slate-600 hover:text-slate-900",
+                            isCollapsed && "justify-center px-2"
                         )}
                     >
-                        <Icon className="h-4 w-4" />
-                        <span className="flex-1">{item.title}</span>
-                        {item.badge && (
-                            <Badge
-                                variant={isBottomMenu ? "destructive" : "secondary"}
-                                className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
-                            >
-                                {item.badge}
-                            </Badge>
+                        <div className={cn(
+                            "p-1.5 rounded-lg transition-colors duration-200",
+                            active ? "bg-blue-100" : "group-hover:bg-slate-200"
+                        )}>
+                            <Icon className={cn(
+                                "h-4 w-4 transition-colors duration-200",
+                                active ? "text-blue-600" : "text-slate-500 group-hover:text-slate-700"
+                            )} />
+                        </div>
+                        {!isCollapsed && (
+                            <>
+                                <span className="flex-1">{item.title}</span>
+                                {item.badge && (
+                                    <Badge
+                                        variant={isBottomMenu ? "destructive" : "secondary"}
+                                        className={cn(
+                                            "ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs border-0",
+                                            isBottomMenu ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"
+                                        )}
+                                    >
+                                        {item.badge}
+                                    </Badge>
+                                )}
+                            </>
                         )}
                     </Link>
                 )}
@@ -332,77 +363,164 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
         );
     };
 
-    return (
-        <div className={cn("flex h-full max-h-screen flex-col gap-2 bg-background border-r", className)}>
+    const sidebarContent = (
+        <div className="flex h-full flex-col bg-white border-r border-slate-200 shadow-xl">
             {/* Header */}
-            <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-                <Link href="/" className="flex items-center gap-2 font-semibold">
-                    <div className="h-6 w-6 rounded bg-gradient-to-r from-pink-500 to-purple-600" />
-                    <span className="text-sm font-bold">{getBusinessName()}</span>
+            <div className={cn(
+                "flex items-center border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white",
+                isCollapsed ? "h-16 px-4 justify-center" : "h-16 px-6 justify-between"
+            )}>
+                <Link href="/dashboard" className="flex items-center gap-3 font-semibold">
+                    <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+                        <Sparkles className="h-4 w-4 text-white" />
+                    </div>
+                    {!isCollapsed && (
+                        <span className="text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                            {getBusinessName()}
+                        </span>
+                    )}
                 </Link>
+                {!isCollapsed && (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setIsCollapsed(true)}
+                        className="h-8 w-8 hover:bg-slate-100 lg:hidden"
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
+                )}
+            </div>
+
+            {/* Collapse Button - Desktop */}
+            <div className="hidden lg:flex items-center justify-end p-2 border-b border-slate-200">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsCollapsed(!isCollapsed)}
+                    className="h-8 w-8 hover:bg-slate-100"
+                >
+                    {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </Button>
             </div>
 
             {/* Navigation */}
-            <div className="flex-1 overflow-auto">
-                <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
+            <div className="flex-1 overflow-y-auto scrollbar-hide">
+                <nav className={cn("space-y-2 p-4", isCollapsed && "px-2")}>
                     {/* Main Menu */}
-                    <div className="space-y-1 py-2">
+                    <div className="space-y-1">
                         {menuItems.map(item => renderMenuItem(item))}
                     </div>
 
                     {/* Divider */}
-                    <div className="border-t my-2" />
+                    <div className="border-t border-slate-200 my-4" />
 
                     {/* Bottom Menu */}
-                    <div className="space-y-1 py-2">
+                    <div className="space-y-1">
                         {bottomMenuItems.map(item => renderMenuItem(item, true))}
                     </div>
                 </nav>
             </div>
 
             {/* User Profile */}
-            <div className="mt-auto p-4 border-t">
+            <div className="border-t border-slate-200 bg-gradient-to-r from-slate-50 to-white">
                 {isLoading ? (
-                    <div className="flex items-center gap-3 rounded-lg p-2">
-                        <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
-                        <div className="flex-1 space-y-2">
-                            <div className="h-3 bg-muted rounded animate-pulse" />
-                            <div className="h-2 bg-muted rounded animate-pulse w-2/3" />
+                    <div className={cn("p-4", isCollapsed && "px-2")}>
+                        <div className="flex items-center gap-3 rounded-xl p-2">
+                            <div className="h-10 w-10 rounded-full bg-slate-200 animate-pulse" />
+                            {!isCollapsed && (
+                                <div className="flex-1 space-y-2">
+                                    <div className="h-3 bg-slate-200 rounded animate-pulse" />
+                                    <div className="h-2 bg-slate-200 rounded animate-pulse w-2/3" />
+                                </div>
+                            )}
                         </div>
                     </div>
                 ) : user ? (
-                    <div className="flex items-center gap-3 rounded-lg p-2 hover:bg-muted transition-colors">
-                        <Avatar className="h-8 w-8">
-                            <AvatarImage
-                                src={userProfile?.avatar_url || "/placeholder-avatar.jpg"}
-                                alt={getDisplayName()}
-                            />
-                            <AvatarFallback>{getUserInitials()}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 space-y-1 min-w-0">
-                            <p className="text-sm font-medium leading-none truncate">
-                                {getDisplayName()}
-                            </p>
-                            <p className="text-xs leading-none text-muted-foreground truncate">
-                                {getEmail()}
-                            </p>
+                    <div className={cn("p-4", isCollapsed && "px-2")}>
+                        <div className={cn(
+                            "flex items-center gap-3 rounded-xl p-3 hover:bg-slate-100 transition-all duration-200 cursor-pointer group",
+                            isCollapsed && "justify-center"
+                        )}>
+                            <Avatar className="h-10 w-10 ring-2 ring-slate-200 shadow-md">
+                                <AvatarImage
+                                    src={userProfile?.avatar_url || "/placeholder-avatar.jpg"}
+                                    alt={getDisplayName()}
+                                />
+                                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
+                                    {getUserInitials()}
+                                </AvatarFallback>
+                            </Avatar>
+                            {!isCollapsed && (
+                                <>
+                                    <div className="flex-1 space-y-1 min-w-0">
+                                        <p className="text-sm font-semibold text-slate-900 truncate">
+                                            {getDisplayName()}
+                                        </p>
+                                        <p className="text-xs text-slate-500 truncate">
+                                            {user.email}
+                                        </p>
+                                    </div>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 shrink-0 hover:bg-red-100 hover:text-red-600 transition-colors duration-200"
+                                        onClick={handleSignOut}
+                                        title="Sair"
+                                    >
+                                        <LogOut className="h-4 w-4" />
+                                    </Button>
+                                </>
+                            )}
                         </div>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 shrink-0"
-                            onClick={handleSignOut}
-                            title="Sair"
-                        >
-                            <LogOut className="h-4 w-4" />
-                        </Button>
                     </div>
                 ) : (
-                    <div className="flex items-center justify-center p-2">
-                        <p className="text-sm text-muted-foreground">Não autenticado</p>
+                    <div className="p-4">
+                        <div className="flex items-center justify-center p-2">
+                            <p className="text-sm text-slate-500">Não autenticado</p>
+                        </div>
                     </div>
                 )}
             </div>
         </div>
+    );
+
+    return (
+        <>
+            {/* Mobile Menu Button */}
+            <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden fixed top-4 left-4 z-50 h-10 w-10 bg-white shadow-md hover:shadow-lg transition-shadow duration-200"
+                onClick={() => setIsMobileOpen(true)}
+            >
+                <Menu className="h-5 w-5" />
+            </Button>
+
+            {/* Mobile Overlay */}
+            {isMobileOpen && (
+                <div
+                    className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-200"
+                    onClick={() => setIsMobileOpen(false)}
+                />
+            )}
+
+            {/* Desktop Sidebar */}
+            <aside className={cn(
+                "hidden lg:block fixed left-0 top-0 z-30 h-full transition-all duration-300 ease-in-out",
+                isCollapsed ? "w-16" : "w-64",
+                className
+            )}>
+                {sidebarContent}
+            </aside>
+
+            {/* Mobile Sidebar */}
+            <aside className={cn(
+                "lg:hidden fixed left-0 top-0 z-50 h-full w-64 transform transition-transform duration-300 ease-in-out",
+                isMobileOpen ? "translate-x-0" : "-translate-x-full"
+            )}>
+                {sidebarContent}
+            </aside>
+        </>
     );
 }

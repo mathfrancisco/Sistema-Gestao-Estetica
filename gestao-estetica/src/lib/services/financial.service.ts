@@ -1,6 +1,6 @@
 // lib/services/financialService.ts
-import { supabase } from '@/lib/supabase/client'
-import type { Database } from '@/lib/supabase/types'
+import { supabase } from '@/lib/database/supabase/client'
+import type { Database } from '@/lib/database/supabase/types'
 
 export type Attendance = Database['public']['Tables']['attendances']['Row']
 export type AttendanceInsert = Database['public']['Tables']['attendances']['Insert']
@@ -53,6 +53,8 @@ export interface FinancialSummary {
     totalDiscounts: number
     averageTicket: number
     transactionCount: number
+    conversionRate:number
+    conversionGrowth: number
 }
 
 export interface MonthlyFinancialReport {
@@ -323,6 +325,7 @@ export class FinancialService {
             acc.totalCosts += cost
             acc.totalDiscounts += attendance.discount
             acc.transactionCount++
+            acc.totalProfit += netValue - cost
 
             if (attendance.payment_status === 'paid') {
                 acc.totalPaid += netValue
@@ -339,7 +342,9 @@ export class FinancialService {
             totalPaid: 0,
             totalDiscounts: 0,
             averageTicket: 0,
-            transactionCount: 0
+            transactionCount: 0,
+            conversionRate: 0,
+            conversionGrowth: 0
         }) || {
             totalRevenue: 0,
             totalCosts: 0,
@@ -348,13 +353,23 @@ export class FinancialService {
             totalPaid: 0,
             totalDiscounts: 0,
             averageTicket: 0,
-            transactionCount: 0
+            transactionCount: 0,
+            conversionRate: 0,
+            conversionGrowth: 0
         }
 
+        // Calculate derived values after the reduction
         summary.totalProfit = summary.totalRevenue - summary.totalCosts
         summary.averageTicket = summary.transactionCount > 0
             ? summary.totalRevenue / summary.transactionCount
             : 0
+        summary.conversionRate = summary.totalRevenue > 0
+            ? (summary.totalPaid / summary.totalRevenue) * 100
+            : 0
+
+        // For now, setting it to 0 as a placeholder - you'll need to implement
+        // the actual growth calculation logic based on your business requirements
+        summary.conversionGrowth = 0 // Replace with actual growth calculation
 
         return summary
     }

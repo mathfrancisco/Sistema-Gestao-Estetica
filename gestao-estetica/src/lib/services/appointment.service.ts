@@ -1,6 +1,6 @@
 // lib/services/appointmentService.ts
-import { supabase } from '@/lib/supabase/client'
-import type { Database } from '@/lib/supabase/types'
+import { supabase } from '@/lib/database/supabase/client'
+import type { Database } from '@/lib/database/supabase/types'
 
 type Appointment = Database['public']['Tables']['appointments']['Row']
 type AppointmentInsert = Database['public']['Tables']['appointments']['Insert']

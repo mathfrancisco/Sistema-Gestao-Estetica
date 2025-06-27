@@ -1,7 +1,7 @@
 // lib/services/calendarService.ts
 import { google } from 'googleapis'
-import { supabase } from '@/lib/supabase/client'
-import type { Database } from '@/lib/supabase/types'
+import { supabase } from '@/lib/database/supabase/client'
+import type { Database } from '@/lib/database/supabase/types'
 
 type User = Database['public']['Tables']['users']['Row']
 
