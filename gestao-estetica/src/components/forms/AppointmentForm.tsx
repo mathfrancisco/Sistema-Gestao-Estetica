@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Calendar, Clock, User, Phone, Mail, MapPin, FileText, Save, X, AlertCircle } from 'lucide-react'
+import { Calendar, Clock, User,MapPin, FileText, Save, X, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -10,6 +10,15 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Switch } from '@/components/ui/switch'
 import { useAppointments } from '@/lib/hooks/useAppointment'
 import { useGoogleCalendar } from '@/lib/hooks/useGoogleCalendar'
+import { useAuthStore } from '@/store/useAuthStore'
+import { useSearchClients, useCreateClient } from '@/lib/hooks/useClients'
+import { toast } from 'sonner'
+import type { Database } from '@/lib/database/supabase/types'
+
+// Tipos
+type Client = Database['public']['Tables']['clients']['Row']
+type ClientInsert = Database['public']['Tables']['clients']['Insert']
+type AppointmentStatus = Database['public']['Enums']['appointment_status_enum']
 
 interface AppointmentFormData {
     client_name: string
@@ -21,7 +30,7 @@ interface AppointmentFormData {
     location?: string
     notes?: string
     price?: number
-    status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no_show'
+    status: AppointmentStatus
     create_google_event?: boolean
     send_confirmation?: boolean
 }
@@ -36,13 +45,16 @@ interface AppointmentFormProps {
 }
 
 const SERVICE_TYPES = [
-    'Consulta Médica',
-    'Terapia',
-    'Massagem',
-    'Tratamento Estético',
-    'Fisioterapia',
-    'Consultoria',
-    'Reunião',
+    'Limpeza de Pele',
+    'Peeling',
+    'Hidratação Facial',
+    'Massagem Relaxante',
+    'Drenagem Linfática',
+    'Depilação',
+    'Design de Sobrancelhas',
+    'Manicure e Pedicure',
+    'Tratamento Capilar',
+    'Consulta',
     'Outro'
 ]
 
@@ -55,6 +67,14 @@ const DURATIONS = [
     { value: 180, label: '3 horas' }
 ]
 
+const STATUS_OPTIONS: { value: AppointmentStatus; label: string }[] = [
+    { value: 'scheduled', label: 'Agendado' },
+    { value: 'confirmed', label: 'Confirmado' },
+    { value: 'completed', label: 'Concluído' },
+    { value: 'cancelled', label: 'Cancelado' },
+    { value: 'no_show', label: 'Não Compareceu' }
+]
+
 export default function AppointmentForm({
                                             initialData,
                                             appointmentId,
@@ -63,6 +83,7 @@ export default function AppointmentForm({
                                             isEditing = false,
                                             preselectedDateTime
                                         }: AppointmentFormProps) {
+    const { user } = useAuthStore()
     const [formData, setFormData] = useState<AppointmentFormData>({
         client_name: '',
         client_email: '',
@@ -81,9 +102,22 @@ export default function AppointmentForm({
 
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [searchQuery, setSearchQuery] = useState('')
+    const [selectedClient, setSelectedClient] = useState<Client | null>(null)
 
+    // Hooks
     const { createAppointment, updateAppointment, checkConflicts } = useAppointments()
     const { isAuthenticated: isGoogleCalendarConnected, createEvent } = useGoogleCalendar()
+    const createClientMutation = useCreateClient()
+
+    // Buscar clientes quando o usuário digitar
+    const {
+        data: searchResults = [],
+        isLoading: isSearching
+    } = useSearchClients(
+        searchQuery,
+        5
+    )
 
     // Atualizar dados quando initialData mudar
     useEffect(() => {
@@ -99,13 +133,38 @@ export default function AppointmentForm({
         }
     }, [preselectedDateTime])
 
+    // Atualizar busca quando nome do cliente mudar
+    useEffect(() => {
+        if (formData.client_name.length >= 2 && !selectedClient) {
+            setSearchQuery(formData.client_name)
+        } else if (formData.client_name.length < 2) {
+            setSearchQuery('')
+        }
+    }, [formData.client_name, selectedClient])
+
     const handleInputChange = (field: keyof AppointmentFormData, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }))
+
+        // Limpar cliente selecionado se nome mudar
+        if (field === 'client_name' && selectedClient) {
+            setSelectedClient(null)
+        }
 
         // Limpar erro do campo quando o usuário começar a digitar
         if (errors[field]) {
             setErrors(prev => ({ ...prev, [field]: '' }))
         }
+    }
+
+    const handleClientSelect = (client: Client) => {
+        setSelectedClient(client)
+        setFormData(prev => ({
+            ...prev,
+            client_name: client.name,
+            client_email: client.email || '',
+            client_phone: client.phone || ''
+        }))
+        setSearchQuery('')
     }
 
     const validateForm = () => {
@@ -178,8 +237,94 @@ export default function AppointmentForm({
         }
     }
 
+    const findOrCreateClient = async (): Promise<string> => {
+        if (!user) throw new Error('Usuário não autenticado')
+
+        // Se já temos um cliente selecionado, usar ele
+        if (selectedClient) {
+            return selectedClient.id
+        }
+
+        // Verificar se existe cliente com mesmo telefone nos resultados da busca
+        const existingClient = searchResults.find(
+            client => client.phone === formData.client_phone || client.name === formData.client_name
+        )
+
+        if (existingClient) {
+            return existingClient.id
+        }
+
+        // Criar novo cliente
+        try {
+            const clientData: ClientInsert = {
+                user_id: user.id,
+                name: formData.client_name,
+                email: formData.client_email || null,
+                phone: formData.client_phone || null,
+                status: 'active'
+            }
+
+            const newClient = await createClientMutation.mutateAsync(clientData)
+            return newClient.id
+        } catch (error) {
+            console.error('Erro ao criar cliente:', error)
+            throw new Error('Erro ao processar dados do cliente')
+        }
+    }
+
+    const findOrCreateProcedure = async (): Promise<string> => {
+        if (!user) throw new Error('Usuário não autenticado')
+
+        try {
+            // Buscar procedimento existente pelo nome
+            const { data: procedures, error } = await import('@/lib/database/supabase/client')
+                .then(({ supabase }) => supabase
+                    .from('procedures')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .eq('name', formData.service_type)
+                    .eq('is_active', true)
+                    .limit(1)
+                    .single()
+                )
+
+            if (!error && procedures) {
+                return procedures.id
+            }
+
+            // Criar novo procedimento se não encontrar
+            const { data: newProcedure, error: createError } = await import('@/lib/database/supabase/client')
+                .then(({ supabase }) => supabase
+                    .from('procedures')
+                    .insert({
+                        user_id: user.id,
+                        name: formData.service_type,
+                        price: formData.price || 0,
+                        duration_minutes: formData.duration_minutes,
+                        is_active: true
+                    })
+                    .select('id')
+                    .single()
+                )
+
+            if (createError) {
+                throw createError
+            }
+
+            return newProcedure?.id
+        } catch (error) {
+            console.error('Erro ao encontrar/criar procedimento:', error)
+            throw new Error('Erro ao processar tipo de serviço')
+        }
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+
+        if (!user) {
+            toast.error('Usuário não autenticado')
+            return
+        }
 
         if (!validateForm()) return
 
@@ -193,14 +338,32 @@ export default function AppointmentForm({
                 return
             }
 
+            // Encontrar ou criar cliente e procedimento
+            const [clientId, procedureId] = await Promise.all([
+                findOrCreateClient(),
+                findOrCreateProcedure()
+            ])
+
+            // Preparar dados do agendamento
+            const appointmentData = {
+                user_id: user.id,
+                client_id: clientId,
+                procedure_id: procedureId,
+                scheduled_datetime: formData.scheduled_datetime,
+                duration_minutes: formData.duration_minutes,
+                status: formData.status,
+                notes: formData.notes || null,
+                calendar_synced: false
+            }
+
             let result
 
             if (isEditing && appointmentId) {
                 // Atualizar agendamento existente
-                result = await updateAppointment(appointmentId, formData)
+                result = await updateAppointment(appointmentId, appointmentData)
             } else {
                 // Criar novo agendamento
-                result = await createAppointment(formData)
+                result = await createAppointment(appointmentData)
             }
 
             if (result) {
@@ -210,7 +373,7 @@ export default function AppointmentForm({
                         const endDateTime = new Date(formData.scheduled_datetime)
                         endDateTime.setMinutes(endDateTime.getMinutes() + formData.duration_minutes)
 
-                        await createEvent({
+                        const googleEvent = await createEvent({
                             summary: `${formData.service_type} - ${formData.client_name}`,
                             description: formData.notes || '',
                             startDateTime: formData.scheduled_datetime,
@@ -219,29 +382,34 @@ export default function AppointmentForm({
                             location: formData.location,
                             createMeet: true
                         })
+
+                        if (googleEvent) {
+                            // Atualizar agendamento com ID do evento do Google
+                            await updateAppointment(result.id, {
+                                google_event_id: googleEvent.id,
+                                calendar_synced: true,
+                                google_meet_link: googleEvent.hangoutLink || null
+                            })
+                        }
                     } catch (error) {
                         console.error('Erro ao criar evento no Google Calendar:', error)
-                        // Continuar mesmo se falhar a criação do evento
+                        toast.warning('Agendamento criado, mas houve erro na sincronização com Google Calendar')
                     }
                 }
 
+                toast.success(isEditing ? 'Agendamento atualizado com sucesso!' : 'Agendamento criado com sucesso!')
                 onSave?.(formData)
             }
         } catch (error) {
             console.error('Erro ao salvar agendamento:', error)
             setErrors(prev => ({
                 ...prev,
-                submit: 'Erro ao salvar agendamento. Tente novamente.'
+                submit: error instanceof Error ? error.message : 'Erro ao salvar agendamento. Tente novamente.'
             }))
+            toast.error('Erro ao salvar agendamento')
         } finally {
             setIsSubmitting(false)
         }
-    }
-
-    const formatDateTime = (datetime: string) => {
-        if (!datetime) return ''
-        const date = new Date(datetime)
-        return date.toLocaleString('pt-BR')
     }
 
     const formatPhoneNumber = (value: string) => {
@@ -273,13 +441,37 @@ export default function AppointmentForm({
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="client_name">Nome do Cliente *</Label>
-                                <Input
-                                    id="client_name"
-                                    value={formData.client_name}
-                                    onChange={(e) => handleInputChange('client_name', e.target.value)}
-                                    placeholder="Nome completo"
-                                    className={errors.client_name ? 'border-red-500' : ''}
-                                />
+                                <div className="relative">
+                                    <Input
+                                        id="client_name"
+                                        value={formData.client_name}
+                                        onChange={(e) => handleInputChange('client_name', e.target.value)}
+                                        placeholder="Nome completo"
+                                        className={errors.client_name ? 'border-red-500' : ''}
+                                    />
+
+                                    {/* Resultados da busca */}
+                                    {searchResults.length > 0 && !selectedClient && formData.client_name.length >= 2 && (
+                                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-40 overflow-y-auto">
+                                            {searchResults.map((client) => (
+                                                <button
+                                                    key={client.id}
+                                                    type="button"
+                                                    onClick={() => handleClientSelect(client)}
+                                                    className="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
+                                                >
+                                                    <User className="h-4 w-4 text-gray-400" />
+                                                    <div>
+                                                        <p className="font-medium">{client.name}</p>
+                                                        {client.phone && (
+                                                            <p className="text-sm text-gray-500">{client.phone}</p>
+                                                        )}
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                                 {errors.client_name && (
                                     <p className="text-sm text-red-500">{errors.client_name}</p>
                                 )}
@@ -430,19 +622,17 @@ export default function AppointmentForm({
                                 <Label htmlFor="status">Status do Agendamento</Label>
                                 <Select
                                     value={formData.status}
-                                    onValueChange={(value: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no_show') =>
-                                        handleInputChange('status', value)
-                                    }
+                                    onValueChange={(value: AppointmentStatus) => handleInputChange('status', value)}
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="scheduled">Agendado</SelectItem>
-                                        <SelectItem value="confirmed">Confirmado</SelectItem>
-                                        <SelectItem value="completed">Concluído</SelectItem>
-                                        <SelectItem value="cancelled">Cancelado</SelectItem>
-                                        <SelectItem value="no_show">Não Compareceu</SelectItem>
+                                        {STATUS_OPTIONS.map((status) => (
+                                            <SelectItem key={status.value} value={status.value}>
+                                                {status.label}
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -470,9 +660,50 @@ export default function AppointmentForm({
                                         Enviar confirmação ao cliente
                                     </Label>
                                 </div>
+
+                                {!isGoogleCalendarConnected && (
+                                    <p className="text-sm text-amber-600 bg-amber-50 p-2 rounded">
+                                        Google Calendar não está conectado.
+                                        <br />
+                                        Conecte para criar eventos automaticamente.
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </div>
+
+                    {/* Cliente selecionado */}
+                    {selectedClient && (
+                        <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <div className="flex items-center space-x-2">
+                                <User className="h-4 w-4 text-green-600" />
+                                <span className="text-sm font-medium text-green-800">
+                                    Cliente selecionado: {selectedClient.name}
+                                </span>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setSelectedClient(null)}
+                                    className="text-green-600 hover:text-green-800"
+                                >
+                                    <X className="h-3 w-3" />
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Loading de criação de cliente */}
+                    {createClientMutation.isPending && (
+                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div className="flex items-center space-x-2">
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                <span className="text-sm text-blue-800">
+                                    Criando novo cliente...
+                                </span>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Mensagem de erro */}
                     {errors.submit && (
@@ -497,11 +728,15 @@ export default function AppointmentForm({
 
                         <Button
                             type="submit"
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || createClientMutation.isPending}
                             className="flex items-center space-x-1"
                         >
                             <Save className="h-4 w-4" />
-                            <span>{isSubmitting ? 'Salvando...' : 'Salvar Agendamento'}</span>
+                            <span>
+                                {isSubmitting ? 'Salvando...' :
+                                    createClientMutation.isPending ? 'Criando cliente...' :
+                                        'Salvar Agendamento'}
+                            </span>
                         </Button>
                     </div>
                 </CardContent>

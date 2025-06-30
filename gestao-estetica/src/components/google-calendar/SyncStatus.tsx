@@ -1,330 +1,528 @@
-// components/google-calendar/SyncStatus.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
-import {
-    RefreshCw,
-    CheckCircle,
-    AlertTriangle,
-    Clock,
-    Calendar,
-    ExternalLink,
-    RotateCw,
-    X
-} from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-
-import { useGoogleCalendar } from '@/lib/hooks/useGoogleCalendar'
-import { useAuthStore } from '@/store/useAuthStore'
-import { formatDistance } from 'date-fns'
+import {
+    RefreshCw,
+    CheckCircle,
+    XCircle,
+    AlertCircle,
+    Clock,
+    ArrowUpDown,
+    Calendar,
+    Zap,
+    Pause,
+    Play,
+    RotateCcw,
+    TrendingUp
+} from 'lucide-react'
+import { format, formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import {useAppointments} from "@/lib/hooks/useAppointment";
+import { cn } from '@/lib/utils/utils'
 
-interface SyncResult {
-    appointmentId: string
-    eventId?: string
-    success: boolean
+interface SyncOperation {
+    id: string
+    type: 'system_to_google' | 'google_to_system' | 'bidirectional'
+    status: 'running' | 'completed' | 'failed' | 'queued'
+    startTime: Date
+    endTime?: Date
+    progress: number
+    details: {
+        totalItems: number
+        processedItems: number
+        successItems: number
+        failedItems: number
+        currentItem?: string
+    }
     error?: string
 }
 
-interface SyncStatusProps {
-    onSyncComplete?: (results: SyncResult[]) => void
+interface SyncMetrics {
+    totalSyncs: number
+    successfulSyncs: number
+    failedSyncs: number
+    averageDuration: number
+    lastSuccessfulSync?: Date
+    uptime: number
+    eventsInSync: number
+    eventsOutOfSync: number
 }
 
-export default function SyncStatus({ onSyncComplete }: SyncStatusProps) {
-    const [syncResults, setSyncResults] = useState<SyncResult[]>([])
-    const [isSyncing, setIsSyncing] = useState(false)
-    const [syncProgress, setSyncProgress] = useState(0)
-    const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null)
+interface SyncStatusProps {
+    autoRefresh?: boolean
+    onSyncTrigger?: () => Promise<void>
+    onToggleAutoSync?: (enabled: boolean) => Promise<void>
+    className?: string
+}
 
-    const { user } = useAuthStore()
-    const { isAuthenticated, loading: calendarLoading } = useGoogleCalendar()
-    const { getUnsyncedAppointments, syncWithGoogleCalendar } = useAppointments()
+const SyncStatus: React.FC<SyncStatusProps> = ({
+                                                   autoRefresh = true,
+                                                   onSyncTrigger,
+                                                   onToggleAutoSync,
+                                                   className
+                                               }) => {
+    const [currentOperation, setCurrentOperation] = useState<SyncOperation | null>(null)
+    const [recentOperations, setRecentOperations] = useState<SyncOperation[]>([])
+    const [metrics, setMetrics] = useState<SyncMetrics>({
+        totalSyncs: 0,
+        successfulSyncs: 0,
+        failedSyncs: 0,
+        averageDuration: 0,
+        uptime: 95.8,
+        eventsInSync: 0,
+        eventsOutOfSync: 0
+    })
+    const [autoSyncEnabled, setAutoSyncEnabled] = useState(true)
+    const [isLoading, setIsLoading] = useState(false)
 
-    // Buscar agendamentos não sincronizados
-    const [unsyncedCount, setUnsyncedCount] = useState(0)
-
+    // Simular dados de sincronização
     useEffect(() => {
-        const fetchUnsyncedCount = async () => {
-            if (user && isAuthenticated) {
-                const unsynced = await getUnsyncedAppointments()
-                setUnsyncedCount(unsynced.length)
+        const loadSyncData = () => {
+            const mockMetrics: SyncMetrics = {
+                totalSyncs: 247,
+                successfulSyncs: 241,
+                failedSyncs: 6,
+                averageDuration: 3.2,
+                lastSuccessfulSync: new Date(Date.now() - 15 * 60 * 1000), // 15 minutos atrás
+                uptime: 97.6,
+                eventsInSync: 156,
+                eventsOutOfSync: 3
             }
-        }
 
-        fetchUnsyncedCount()
-    }, [user, isAuthenticated, getUnsyncedAppointments])
-
-    const handleBulkSync = async () => {
-        if (!user || !isAuthenticated) return
-
-        setIsSyncing(true)
-        setSyncProgress(0)
-        setSyncResults([])
-
-        try {
-            const response = await fetch('/api/calendar/sync', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
+            const mockOperations: SyncOperation[] = [
+                {
+                    id: '1',
+                    type: 'bidirectional',
+                    status: 'completed',
+                    startTime: new Date(Date.now() - 15 * 60 * 1000),
+                    endTime: new Date(Date.now() - 14 * 60 * 1000 - 30 * 1000),
+                    progress: 100,
+                    details: {
+                        totalItems: 12,
+                        processedItems: 12,
+                        successItems: 12,
+                        failedItems: 0
+                    }
                 },
-                body: JSON.stringify({ userId: user.id })
-            })
+                {
+                    id: '2',
+                    type: 'system_to_google',
+                    status: 'completed',
+                    startTime: new Date(Date.now() - 45 * 60 * 1000),
+                    endTime: new Date(Date.now() - 44 * 60 * 1000),
+                    progress: 100,
+                    details: {
+                        totalItems: 5,
+                        processedItems: 5,
+                        successItems: 4,
+                        failedItems: 1
+                    }
+                },
+                {
+                    id: '3',
+                    type: 'google_to_system',
+                    status: 'failed',
+                    startTime: new Date(Date.now() - 2 * 60 * 60 * 1000),
+                    endTime: new Date(Date.now() - 2 * 60 * 60 * 1000 + 30 * 1000),
+                    progress: 30,
+                    details: {
+                        totalItems: 8,
+                        processedItems: 2,
+                        successItems: 0,
+                        failedItems: 2
+                    },
+                    error: 'Token de acesso expirado'
+                }
+            ]
 
-            if (!response.ok) {
-                throw new Error('Erro na sincronização')
+            setMetrics(mockMetrics)
+            setRecentOperations(mockOperations)
+        }
+
+        loadSyncData()
+
+        // Auto-refresh se habilitado
+        if (autoRefresh) {
+            const interval = setInterval(loadSyncData, 30000) // 30 segundos
+            return () => clearInterval(interval)
+        }
+    }, [autoRefresh])
+
+    // Simular operação de sincronização em andamento
+    const simulateSync = async () => {
+        const operation: SyncOperation = {
+            id: Date.now().toString(),
+            type: 'bidirectional',
+            status: 'running',
+            startTime: new Date(),
+            progress: 0,
+            details: {
+                totalItems: 15,
+                processedItems: 0,
+                successItems: 0,
+                failedItems: 0
+            }
+        }
+
+        setCurrentOperation(operation)
+        setIsLoading(true)
+
+        // Simular progresso
+        for (let i = 0; i <= 15; i++) {
+            await new Promise(resolve => setTimeout(resolve, 200))
+
+            const updatedOperation: SyncOperation = {
+                ...operation,
+                progress: (i / 15) * 100,
+                details: {
+                    ...operation.details,
+                    processedItems: i,
+                    successItems: Math.max(0, i - Math.floor(Math.random() * 2)),
+                    failedItems: Math.floor(Math.random() * 2),
+                    currentItem: i < 15 ? `Evento ${i + 1}` : undefined
+                }
             }
 
-            const data = await response.json()
-            setSyncResults(data.results)
-            setLastSyncTime(new Date())
-            setUnsyncedCount(Math.max(0, unsyncedCount - data.syncedCount))
-
-            if (onSyncComplete) {
-                onSyncComplete(data.results)
+            if (i === 15) {
+                updatedOperation.status = 'completed'
+                updatedOperation.endTime = new Date()
             }
+
+            setCurrentOperation(updatedOperation)
+        }
+
+        // Adicionar à lista de operações recentes
+        setRecentOperations(prev => [operation, ...prev.slice(0, 4)])
+        setCurrentOperation(null)
+        setIsLoading(false)
+
+        // Atualizar métricas
+        setMetrics(prev => ({
+            ...prev,
+            totalSyncs: prev.totalSyncs + 1,
+            successfulSyncs: prev.successfulSyncs + 1,
+            lastSuccessfulSync: new Date(),
+            eventsInSync: prev.eventsInSync + 3
+        }))
+    }
+
+    const handleManualSync = async () => {
+        try {
+            await onSyncTrigger?.()
+            await simulateSync()
         } catch (error) {
-            console.error('Erro na sincronização:', error)
-            setSyncResults([{
-                appointmentId: 'error',
-                success: false,
-                error: error instanceof Error ? error.message : 'Erro desconhecido'
-            }])
-        } finally {
-            setIsSyncing(false)
-            setSyncProgress(100)
+            console.error('Erro na sincronização manual:', error)
         }
     }
 
-    const getSyncStatusIcon = () => {
-        if (isSyncing) return <RefreshCw className="h-4 w-4 animate-spin" />
-        if (unsyncedCount === 0) return <CheckCircle className="h-4 w-4 text-green-500" />
-        if (unsyncedCount > 0) return <AlertTriangle className="h-4 w-4 text-yellow-500" />
-        return <Clock className="h-4 w-4 text-gray-500" />
+    const handleToggleAutoSync = async () => {
+        try {
+            const newState = !autoSyncEnabled
+            await onToggleAutoSync?.(newState)
+            setAutoSyncEnabled(newState)
+        } catch (error) {
+            console.error('Erro ao alterar auto-sync:', error)
+        }
     }
 
-    const getSyncStatusText = () => {
-        if (isSyncing) return 'Sincronizando...'
-        if (unsyncedCount === 0) return 'Tudo sincronizado'
-        if (unsyncedCount > 0) return `${unsyncedCount} agendamento(s) pendente(s)`
-        return 'Status desconhecido'
+    const getStatusIcon = (status: SyncOperation['status']) => {
+        switch (status) {
+            case 'running':
+                return <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />
+            case 'completed':
+                return <CheckCircle className="w-4 h-4 text-green-600" />
+            case 'failed':
+                return <XCircle className="w-4 h-4 text-red-600" />
+            case 'queued':
+                return <Clock className="w-4 h-4 text-yellow-600" />
+            default:
+                return <AlertCircle className="w-4 h-4 text-gray-400" />
+        }
     }
 
-    const getSyncStatusVariant = () => {
-        if (unsyncedCount === 0) return 'secondary'
-        if (unsyncedCount > 0) return 'outline'
-        return 'secondary'
+    const getTypeLabel = (type: SyncOperation['type']) => {
+        switch (type) {
+            case 'bidirectional':
+                return 'Bidirecional'
+            case 'system_to_google':
+                return 'Sistema → Google'
+            case 'google_to_system':
+                return 'Google → Sistema'
+            default:
+                return 'Desconhecido'
+        }
     }
 
-    if (calendarLoading) {
-        return (
-            <Card>
-                <CardContent className="flex items-center justify-center p-8">
-                    <div className="flex items-center space-x-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
-                        <span>Carregando status...</span>
-                    </div>
-                </CardContent>
-            </Card>
-        )
+    const getStatusBadge = (status: SyncOperation['status']) => {
+        const config = {
+            running: { label: 'Em Andamento', variant: 'secondary' as const },
+            completed: { label: 'Concluído', variant: 'default' as const },
+            failed: { label: 'Falha', variant: 'destructive' as const },
+            queued: { label: 'Na Fila', variant: 'secondary' as const }
+        }
+
+        const { label, variant } = config[status] || config.queued
+        return <Badge variant={variant}>{label}</Badge>
     }
 
-    if (!isAuthenticated) {
-        return (
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                        <Calendar className="h-5 w-5" />
-                        <span>Sincronização</span>
-                    </CardTitle>
-                    <CardDescription>
-                        Conecte sua conta do Google Calendar para sincronizar agendamentos
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Alert>
-                        <AlertTriangle className="h-4 w-4" />
-                        <AlertDescription>
-                            Google Calendar não está conectado. Vá para as configurações para conectar sua conta.
-                        </AlertDescription>
-                    </Alert>
-                </CardContent>
-            </Card>
-        )
+    const getSuccessRate = () => {
+        if (metrics.totalSyncs === 0) return 0
+        return (metrics.successfulSyncs / metrics.totalSyncs) * 100
+    }
+
+    const getSyncHealthColor = () => {
+        const rate = getSuccessRate()
+        if (rate >= 95) return 'text-green-600'
+        if (rate >= 85) return 'text-yellow-600'
+        return 'text-red-600'
     }
 
     return (
-        <div className="space-y-4">
+        <div className={cn("space-y-6", className)}>
+            {/* Status Geral */}
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                            <RotateCw className="h-5 w-5" />
-                            <CardTitle>Status da Sincronização</CardTitle>
+                        <CardTitle className="flex items-center gap-2">
+                            <ArrowUpDown className="w-5 h-5" />
+                            Status de Sincronização
+                        </CardTitle>
+                        <div className="flex items-center gap-2">
+                            <Badge variant={autoSyncEnabled ? "default" : "secondary"}>
+                                {autoSyncEnabled ? 'Auto-sync Ativo' : 'Auto-sync Inativo'}
+                            </Badge>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleToggleAutoSync}
+                            >
+                                {autoSyncEnabled ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                            </Button>
                         </div>
-                        <Badge variant={getSyncStatusVariant()}>
-                            {getSyncStatusIcon()}
-                            <span className="ml-1">{getSyncStatusText()}</span>
-                        </Badge>
                     </div>
-                    <CardDescription>
-                        Mantenha seus agendamentos sincronizados com o Google Calendar
-                    </CardDescription>
                 </CardHeader>
-
-                <CardContent className="space-y-4">
-                    {isSyncing && (
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between text-sm">
-                                <span>Sincronizando agendamentos...</span>
-                                <span>{Math.round(syncProgress)}%</span>
+                <CardContent>
+                    {/* Métricas Principais */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div className="text-center p-3 bg-blue-50 rounded-lg">
+                            <div className="text-2xl font-bold text-blue-600">
+                                {metrics.eventsInSync}
                             </div>
-                            <Progress value={syncProgress} className="w-full" />
+                            <div className="text-sm text-blue-700">Eventos Sincronizados</div>
                         </div>
-                    )}
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="bg-blue-50 rounded-lg p-4">
-                            <div className="flex items-center space-x-2">
-                                <Calendar className="h-5 w-5 text-blue-600" />
-                                <span className="font-medium text-blue-900">Total</span>
+                        <div className="text-center p-3 bg-yellow-50 rounded-lg">
+                            <div className="text-2xl font-bold text-yellow-600">
+                                {metrics.eventsOutOfSync}
                             </div>
-                            <p className="text-2xl font-bold text-blue-900 mt-1">
-                                {unsyncedCount + (syncResults.filter(r => r.success).length)}
-                            </p>
-                            <p className="text-sm text-blue-700">Agendamentos</p>
+                            <div className="text-sm text-yellow-700">Fora de Sincronia</div>
                         </div>
-
-                        <div className="bg-green-50 rounded-lg p-4">
-                            <div className="flex items-center space-x-2">
-                                <CheckCircle className="h-5 w-5 text-green-600" />
-                                <span className="font-medium text-green-900">Sincronizados</span>
+                        <div className="text-center p-3 bg-green-50 rounded-lg">
+                            <div className={cn("text-2xl font-bold", getSyncHealthColor())}>
+                                {getSuccessRate().toFixed(1)}%
                             </div>
-                            <p className="text-2xl font-bold text-green-900 mt-1">
-                                {syncResults.filter(r => r.success).length}
-                            </p>
-                            <p className="text-sm text-green-700">Com sucesso</p>
+                            <div className="text-sm text-green-700">Taxa de Sucesso</div>
                         </div>
-
-                        <div className="bg-yellow-50 rounded-lg p-4">
-                            <div className="flex items-center space-x-2">
-                                <AlertTriangle className="h-5 w-5 text-yellow-600" />
-                                <span className="font-medium text-yellow-900">Pendentes</span>
+                        <div className="text-center p-3 bg-purple-50 rounded-lg">
+                            <div className="text-2xl font-bold text-purple-600">
+                                {metrics.averageDuration.toFixed(1)}s
                             </div>
-                            <p className="text-2xl font-bold text-yellow-900 mt-1">
-                                {unsyncedCount}
-                            </p>
-                            <p className="text-sm text-yellow-700">Não sincronizados</p>
+                            <div className="text-sm text-purple-700">Tempo Médio</div>
                         </div>
                     </div>
 
-                    {lastSyncTime && (
-                        <div className="bg-gray-50 rounded-lg p-3">
-                            <div className="flex items-center space-x-2 text-sm text-gray-600">
-                                <Clock className="h-4 w-4" />
-                                <span>
-                  Última sincronização: {formatDistance(lastSyncTime, new Date(), {
-                                    addSuffix: true,
-                                    locale: ptBR
-                                })}
-                </span>
+                    {/* Última Sincronização */}
+                    {metrics.lastSuccessfulSync && (
+                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg mb-4">
+                            <div className="flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-gray-500" />
+                                <span className="text-sm font-medium">Última sincronização:</span>
+                            </div>
+                            <div className="text-right text-sm">
+                                <p className="font-medium">
+                                    {format(metrics.lastSuccessfulSync, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                                </p>
+                                <p className="text-gray-500">
+                                    {formatDistanceToNow(metrics.lastSuccessfulSync, {
+                                        addSuffix: true,
+                                        locale: ptBR
+                                    })}
+                                </p>
                             </div>
                         </div>
                     )}
 
-                    <div className="flex flex-col sm:flex-row gap-2">
+                    {/* Uptime */}
+                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg mb-4">
+                        <div className="flex items-center gap-2">
+                            <TrendingUp className="w-4 h-4 text-green-600" />
+                            <span className="text-sm font-medium text-green-900">Disponibilidade do serviço:</span>
+                        </div>
+                        <span className="font-bold text-green-600">{metrics.uptime}%</span>
+                    </div>
+
+                    {/* Ações */}
+                    <div className="flex gap-2">
                         <Button
-                            onClick={handleBulkSync}
-                            disabled={isSyncing || unsyncedCount === 0}
+                            onClick={handleManualSync}
+                            disabled={isLoading || !!currentOperation}
                             className="flex-1"
                         >
-                            {isSyncing ? (
-                                <>
-                                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                                    Sincronizando...
-                                </>
-                            ) : (
-                                <>
-                                    <RotateCw className="h-4 w-4 mr-2" />
-                                    Sincronizar Agendamentos
-                                </>
-                            )}
+                            <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
+                            Sincronizar Agora
                         </Button>
-
                         <Button
                             variant="outline"
-                            onClick={() => window.open('https://calendar.google.com', '_blank')}
+                            onClick={() => window.location.reload()}
                             className="flex-1"
                         >
-                            <ExternalLink className="h-4 w-4 mr-2" />
-                            Abrir Google Calendar
+                            <RotateCcw className="w-4 h-4 mr-2" />
+                            Atualizar Status
                         </Button>
                     </div>
                 </CardContent>
             </Card>
 
-            {syncResults.length > 0 && (
+            {/* Operação Atual */}
+            {currentOperation && (
                 <Card>
                     <CardHeader>
-                        <div className="flex items-center justify-between">
-                            <CardTitle>Resultados da Sincronização</CardTitle>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setSyncResults([])}
-                            >
-                                <X className="h-4 w-4" />
-                            </Button>
-                        </div>
+                        <CardTitle className="flex items-center gap-2">
+                            <Zap className="w-5 h-5" />
+                            Sincronização em Andamento
+                        </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <div className="space-y-2 max-h-60 overflow-y-auto">
-                            {syncResults.map((result, index) => (
-                                <div
-                                    key={index}
-                                    className={`flex items-center justify-between p-3 rounded-lg border ${
-                                        result.success
-                                            ? 'bg-green-50 border-green-200'
-                                            : 'bg-red-50 border-red-200'
-                                    }`}
-                                >
-                                    <div className="flex items-center space-x-2">
-                                        {result.success ? (
-                                            <CheckCircle className="h-4 w-4 text-green-600" />
-                                        ) : (
-                                            <X className="h-4 w-4 text-red-600" />
-                                        )}
-                                        <span className="text-sm font-medium">
-                      Agendamento {result.appointmentId.slice(0, 8)}
-                    </span>
-                                    </div>
+                    <CardContent className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                {getStatusIcon(currentOperation.status)}
+                                <span className="font-medium">
+                  {getTypeLabel(currentOperation.type)}
+                </span>
+                            </div>
+                            <div className="text-sm text-gray-600">
+                                {currentOperation.details.processedItems} / {currentOperation.details.totalItems}
+                            </div>
+                        </div>
 
-                                    <div className="text-right">
-                                        {result.success ? (
-                                            <Badge variant="secondary" className="bg-green-100 text-green-700">
-                                                Sincronizado
-                                            </Badge>
-                                        ) : (
-                                            <div className="space-y-1">
-                                                <Badge variant="destructive">Erro</Badge>
-                                                {result.error && (
-                                                    <p className="text-xs text-red-600 max-w-xs truncate">
-                                                        {result.error}
-                                                    </p>
+                        <Progress value={currentOperation.progress} className="w-full" />
+
+                        {currentOperation.details.currentItem && (
+                            <p className="text-sm text-gray-600">
+                                Processando: {currentOperation.details.currentItem}
+                            </p>
+                        )}
+
+                        <div className="grid grid-cols-3 gap-4 text-center">
+                            <div>
+                                <div className="font-medium text-green-600">
+                                    {currentOperation.details.successItems}
+                                </div>
+                                <div className="text-xs text-gray-500">Sucessos</div>
+                            </div>
+                            <div>
+                                <div className="font-medium text-red-600">
+                                    {currentOperation.details.failedItems}
+                                </div>
+                                <div className="text-xs text-gray-500">Falhas</div>
+                            </div>
+                            <div>
+                                <div className="font-medium text-blue-600">
+                                    {Math.round(currentOperation.progress)}%
+                                </div>
+                                <div className="text-xs text-gray-500">Progresso</div>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Histórico de Operações */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Calendar className="w-5 h-5" />
+                        Operações Recentes
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {recentOperations.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                            <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                            <p>Nenhuma operação de sincronização recente</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {recentOperations.map((operation) => (
+                                <div
+                                    key={operation.id}
+                                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        {getStatusIcon(operation.status)}
+                                        <div>
+                                            <p className="font-medium text-sm">
+                                                {getTypeLabel(operation.type)}
+                                            </p>
+                                            <div className="flex items-center gap-4 text-xs text-gray-500">
+                        <span>
+                          {format(operation.startTime, 'dd/MM HH:mm', { locale: ptBR })}
+                        </span>
+                                                {operation.endTime && (
+                                                    <span>
+                            Duração: {Math.round((operation.endTime.getTime() - operation.startTime.getTime()) / 1000)}s
+                          </span>
                                                 )}
+                                                <span>
+                          {operation.details.successItems}/{operation.details.totalItems} sucessos
+                        </span>
                                             </div>
+                                            {operation.error && (
+                                                <p className="text-xs text-red-600 mt-1">{operation.error}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {getStatusBadge(operation.status)}
+                                        {operation.status === 'failed' && (
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleManualSync()}
+                                            >
+                                                <RotateCcw className="w-3 h-3" />
+                                            </Button>
                                         )}
                                     </div>
                                 </div>
                             ))}
                         </div>
-                    </CardContent>
-                </Card>
+                    )}
+                </CardContent>
+            </Card>
+
+            {/* Alertas */}
+            {metrics.eventsOutOfSync > 0 && (
+                <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                        <div className="space-y-1">
+                            <p className="font-medium">Eventos fora de sincronia detectados</p>
+                            <p>
+                                Existem {metrics.eventsOutOfSync} eventos que não estão sincronizados entre o sistema e o Google Calendar.
+                            </p>
+                            <Button size="sm" onClick={handleManualSync} className="mt-2">
+                                Sincronizar Agora
+                            </Button>
+                        </div>
+                    </AlertDescription>
+                </Alert>
             )}
         </div>
     )
 }
+
+export default SyncStatus

@@ -1,294 +1,448 @@
-import React, { useState, useEffect, useMemo } from 'react'
-import { Clock, Calendar, AlertCircle, CheckCircle } from 'lucide-react'
+'use client'
+
+import React, { useState, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-
-const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-}
-
-const formatDate = (date: Date) => {
-    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' })
-}
-
-const addMinutes = (date: Date, minutes: number) => {
-    const result = new Date(date)
-    result.setMinutes(result.getMinutes() + minutes)
-    return result
-}
-
-const isAfter = (date1: Date, date2: Date) => date1.getTime() > date2.getTime()
-const isBefore = (date1: Date, date2: Date) => date1.getTime() < date2.getTime()
-import { useGoogleCalendar } from '@/lib/hooks/useGoogleCalendar'
-import { useAppointments } from '@/lib/hooks/useAppointment'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+    Clock,
+    CalendarDays,
+    User,
+    CheckCircle,
+    XCircle,
+    AlertCircle,
+    ChevronLeft,
+    ChevronRight
+} from 'lucide-react'
+import { format, addDays, startOfDay, addMinutes, isSameDay, isAfter, isBefore } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
+import { cn } from '@/lib/utils/utils'
 
 interface TimeSlot {
     time: string
-    datetime: string
     available: boolean
-    reason?: string
+    appointment?: {
+        id: string
+        clientName: string
+        procedureName: string
+        durationMinutes: number
+        status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled'
+    }
+}
+
+interface DaySchedule {
+    date: Date
+    slots: TimeSlot[]
 }
 
 interface TimeSlotsProps {
-    selectedDate: Date
-    duration: number // em minutos
-    onTimeSlotSelect: (datetime: string) => void
-    selectedTimeSlot?: string
+    selectedDate?: Date
+    onDateChange?: (date: Date) => void
+    onTimeSelect?: (date: Date, time: string) => void
     workingHours?: {
-        start: string // formato "09:00"
-        end: string   // formato "18:00"
+        start: string
+        end: string
+        interval: number // em minutos
     }
-    excludedTimes?: string[] // horários específicos a excluir
-    interval?: number // intervalo entre slots em minutos
-    showUnavailableSlots?: boolean
+    appointments?: Array<{
+        id: string
+        clientName: string
+        procedureName: string
+        scheduledDateTime: string
+        durationMinutes: number
+        status: string
+    }>
+    blockedTimes?: Array<{
+        date: Date
+        startTime: string
+        endTime: string
+        reason?: string
+    }>
+    showWeekView?: boolean
 }
 
-export default function TimeSlots({
-                                      selectedDate,
-                                      duration = 60,
-                                      onTimeSlotSelect,
-                                      selectedTimeSlot,
-                                      workingHours = { start: '09:00', end: '18:00' },
-                                      excludedTimes = [],
-                                      interval = 30,
-                                      showUnavailableSlots = true
-                                  }: TimeSlotsProps) {
-    const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([])
-    const [loading, setLoading] = useState(false)
+const TimeSlots: React.FC<TimeSlotsProps> = ({
+                                                 selectedDate = new Date(),
+                                                 onDateChange,
+                                                 onTimeSelect,
+                                                 workingHours = {
+                                                     start: '08:00',
+                                                     end: '18:00',
+                                                     interval: 30
+                                                 },
+                                                 appointments = [],
+                                                 blockedTimes = [],
+                                                 showWeekView = false
+                                             }) => {
+    const [currentDate, setCurrentDate] = useState(selectedDate)
+    const [viewMode, setViewMode] = useState<'day' | 'week'>(showWeekView ? 'week' : 'day')
 
-    const { getEventsForDate, isTimeSlotAvailable } = useGoogleCalendar()
-    const { getAppointmentsByDate } = useAppointments()
-
-    // Gerar slots de tempo
-    const generateTimeSlots = useMemo(() => {
+    // Gerar slots de horário para um dia
+    const generateTimeSlots = (date: Date): TimeSlot[] => {
         const slots: TimeSlot[] = []
-        const startTime = new Date(selectedDate)
         const [startHour, startMinute] = workingHours.start.split(':').map(Number)
+        const [endHour, endMinute] = workingHours.end.split(':').map(Number)
+
+        const startTime = new Date(date)
         startTime.setHours(startHour, startMinute, 0, 0)
 
-        const endTime = new Date(selectedDate)
-        const [endHour, endMinute] = workingHours.end.split(':').map(Number)
+        const endTime = new Date(date)
         endTime.setHours(endHour, endMinute, 0, 0)
 
         let currentTime = new Date(startTime)
 
-        while (isBefore(currentTime, endTime)) {
-            const timeString = formatTime(currentTime)
-            const datetimeString = currentTime.toISOString()
+        while (currentTime < endTime) {
+            const timeString = format(currentTime, 'HH:mm')
 
-            // Verificar se o horário está na lista de exclusões
-            const isExcluded = excludedTimes.includes(timeString)
+            // Verificar se há agendamento neste horário
+            const appointment = appointments.find(apt => {
+                const aptDateTime = new Date(apt.scheduledDateTime)
+                const aptEndTime = addMinutes(aptDateTime, apt.durationMinutes)
+                return isSameDay(aptDateTime, date) &&
+                    !isAfter(currentTime, aptEndTime) &&
+                    !isBefore(addMinutes(currentTime, workingHours.interval), aptDateTime)
+            })
 
-            // Verificar se ainda há tempo suficiente antes do fim do expediente
-            const endSlotTime = addMinutes(currentTime, duration)
-            const hasEnoughTime = isBefore(endSlotTime, endTime) || endSlotTime.getTime() === endTime.getTime()
+            // Verificar se o horário está bloqueado
+            const isBlocked = blockedTimes.some(blocked => {
+                if (!isSameDay(blocked.date, date)) return false
+                const [blockStartHour, blockStartMinute] = blocked.startTime.split(':').map(Number)
+                const [blockEndHour, blockEndMinute] = blocked.endTime.split(':').map(Number)
+
+                const blockStart = new Date(date)
+                blockStart.setHours(blockStartHour, blockStartMinute, 0, 0)
+
+                const blockEnd = new Date(date)
+                blockEnd.setHours(blockEndHour, blockEndMinute, 0, 0)
+
+                return currentTime >= blockStart && currentTime < blockEnd
+            })
+
+            // Verificar se o horário já passou (para o dia atual)
+            const isPast = isSameDay(date, new Date()) && currentTime < new Date()
 
             slots.push({
                 time: timeString,
-                datetime: datetimeString,
-                available: !isExcluded && hasEnoughTime,
-                reason: isExcluded ? 'Horário bloqueado' : !hasEnoughTime ? 'Duração insuficiente' : undefined
+                available: !appointment && !isBlocked && !isPast,
+                appointment: appointment ? {
+                    id: appointment.id,
+                    clientName: appointment.clientName,
+                    procedureName: appointment.procedureName,
+                    durationMinutes: appointment.durationMinutes,
+                    status: appointment.status as any
+                } : undefined
             })
 
-            currentTime = addMinutes(currentTime, interval)
+            currentTime = addMinutes(currentTime, workingHours.interval)
         }
 
         return slots
-    }, [selectedDate, workingHours, duration, interval, excludedTimes])
+    }
 
-    // Verificar disponibilidade considerando agendamentos existentes e eventos do Google Calendar
-    const checkAvailability = async (slots: TimeSlot[]) => {
-        setLoading(true)
-
-        try {
-            // Buscar agendamentos do dia
-            const dateString = selectedDate.toISOString().split('T')[0]
-            const appointments = await getAppointmentsByDate(dateString)
-
-            // Buscar eventos do Google Calendar
-            const calendarEvents = getEventsForDate(selectedDate)
-
-            const updatedSlots = slots.map(slot => {
-                if (!slot.available) return slot
-
-                const slotStart = new Date(slot.datetime)
-                const slotEnd = addMinutes(slotStart, duration)
-
-                // Verificar conflito com agendamentos
-                const hasAppointmentConflict = appointments.some(appointment => {
-                    const appointmentStart = new Date(appointment.scheduled_datetime)
-                    const appointmentEnd = addMinutes(appointmentStart, appointment.duration_minutes || duration)
-
-                    return (
-                        (slotStart < appointmentEnd && slotEnd > appointmentStart) &&
-                        appointment.status !== 'cancelled'
-                    )
-                })
-
-                // Verificar conflito com eventos do Google Calendar
-                const hasCalendarConflict = calendarEvents.some(event => {
-                    const eventStart = new Date(event.start.dateTime)
-                    const eventEnd = new Date(event.end.dateTime)
-
-                    return slotStart < eventEnd && slotEnd > eventStart
-                })
-
-                // Verificar se o slot está no passado
-                const isPast = isAfter(new Date(), slotStart)
-
-                let available = slot.available && !hasAppointmentConflict && !hasCalendarConflict && !isPast
-                let reason = slot.reason
-
-                if (isPast) {
-                    available = false
-                    reason = 'Horário já passou'
-                } else if (hasAppointmentConflict) {
-                    available = false
-                    reason = 'Já existe agendamento'
-                } else if (hasCalendarConflict) {
-                    available = false
-                    reason = 'Conflito no calendário'
-                }
-
-                return {
-                    ...slot,
-                    available,
-                    reason
-                }
+    // Gerar horários para a semana
+    const weekSchedule = useMemo(() => {
+        const schedules: DaySchedule[] = []
+        for (let i = 0; i < 7; i++) {
+            const date = addDays(startOfDay(currentDate), i - currentDate.getDay())
+            schedules.push({
+                date,
+                slots: generateTimeSlots(date)
             })
-
-            setTimeSlots(updatedSlots)
-        } catch (error) {
-            console.error('Erro ao verificar disponibilidade:', error)
-            setTimeSlots(slots)
-        } finally {
-            setLoading(false)
         }
+        return schedules
+    }, [currentDate, appointments, blockedTimes, workingHours])
+
+    // Horários para o dia atual
+    const daySchedule = useMemo(() => ({
+        date: currentDate,
+        slots: generateTimeSlots(currentDate)
+    }), [currentDate, appointments, blockedTimes, workingHours])
+
+    const handleDateNavigation = (direction: 'prev' | 'next') => {
+        const newDate = addDays(currentDate, direction === 'next' ? 1 : -1)
+        setCurrentDate(newDate)
+        onDateChange?.(newDate)
     }
 
-    // Atualizar slots quando a data ou duração mudar
-    useEffect(() => {
-        checkAvailability(generateTimeSlots)
-    }, [generateTimeSlots, selectedDate, duration])
-
-    const handleTimeSlotClick = (slot: TimeSlot) => {
-        if (slot.available) {
-            onTimeSlotSelect(slot.datetime)
-        }
+    const handleTimeClick = (time: string) => {
+        onTimeSelect?.(currentDate, time)
     }
 
-    const availableSlots = timeSlots.filter(slot => slot.available)
-    const unavailableSlots = timeSlots.filter(slot => !slot.available)
+    const getSlotStatusColor = (slot: TimeSlot) => {
+        if (!slot.available && slot.appointment) {
+            switch (slot.appointment.status) {
+                case 'confirmed':
+                    return 'bg-green-100 text-green-800 border-green-200'
+                case 'scheduled':
+                    return 'bg-blue-100 text-blue-800 border-blue-200'
+                case 'completed':
+                    return 'bg-gray-100 text-gray-800 border-gray-200'
+                case 'cancelled':
+                    return 'bg-red-100 text-red-800 border-red-200'
+                default:
+                    return 'bg-gray-100 text-gray-800 border-gray-200'
+            }
+        }
+        if (!slot.available) {
+            return 'bg-gray-100 text-gray-500 border-gray-200'
+        }
+        return 'bg-white text-gray-900 border-gray-200 hover:bg-gray-50'
+    }
 
-    if (loading) {
-        return (
+    const getSlotIcon = (slot: TimeSlot) => {
+        if (slot.appointment) {
+            switch (slot.appointment.status) {
+                case 'confirmed':
+                    return <CheckCircle className="w-3 h-3" />
+                case 'scheduled':
+                    return <Clock className="w-3 h-3" />
+                case 'cancelled':
+                    return <XCircle className="w-3 h-3" />
+                default:
+                    return <AlertCircle className="w-3 h-3" />
+            }
+        }
+        return null
+    }
+
+    const renderDayView = () => (
+        <Card>
+            <CardHeader>
+                <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                        <CalendarDays className="w-5 h-5" />
+                        {format(currentDate, "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDateNavigation('prev')}
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentDate(new Date())}
+                        >
+                            Hoje
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDateNavigation('next')}
+                        >
+                            <ChevronRight className="w-4 h-4" />
+                        </Button>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    {daySchedule.slots.map((slot) => (
+                        <Button
+                            key={slot.time}
+                            variant="outline"
+                            className={cn(
+                                "h-auto p-3 flex flex-col items-start justify-start",
+                                getSlotStatusColor(slot),
+                                slot.available && "cursor-pointer hover:shadow-md transition-shadow"
+                            )}
+                            onClick={() => slot.available && handleTimeClick(slot.time)}
+                            disabled={!slot.available}
+                        >
+                            <div className="flex items-center gap-2 w-full">
+                                {getSlotIcon(slot)}
+                                <span className="font-mono text-sm">{slot.time}</span>
+                            </div>
+                            {slot.appointment && (
+                                <div className="text-xs mt-1 text-left">
+                                    <p className="font-medium truncate w-full">
+                                        {slot.appointment.clientName}
+                                    </p>
+                                    <p className="text-muted-foreground truncate w-full">
+                                        {slot.appointment.procedureName}
+                                    </p>
+                                    <p className="text-muted-foreground">
+                                        {slot.appointment.durationMinutes}min
+                                    </p>
+                                </div>
+                            )}
+                        </Button>
+                    ))}
+                </div>
+            </CardContent>
+        </Card>
+    )
+
+    const renderWeekView = () => (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <CalendarDays className="w-5 h-5" />
+                    Semana de {format(weekSchedule[0].date, "d 'de' MMMM", { locale: ptBR })}
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="grid grid-cols-7 gap-2">
+                    {weekSchedule.map((daySchedule) => (
+                        <div key={daySchedule.date.toISOString()} className="space-y-2">
+                            <div className="text-center p-2 bg-gray-50 rounded-lg">
+                                <p className="text-xs font-medium text-gray-600">
+                                    {format(daySchedule.date, 'EEE', { locale: ptBR })}
+                                </p>
+                                <p className="text-sm font-bold">
+                                    {format(daySchedule.date, 'd')}
+                                </p>
+                            </div>
+                            <div className="space-y-1 max-h-96 overflow-y-auto">
+                                {daySchedule.slots.map((slot) => (
+                                    <Button
+                                        key={slot.time}
+                                        variant="outline"
+                                        size="sm"
+                                        className={cn(
+                                            "w-full h-auto p-2 flex flex-col text-xs",
+                                            getSlotStatusColor(slot)
+                                        )}
+                                        onClick={() => {
+                                            setCurrentDate(daySchedule.date)
+                                            onDateChange?.(daySchedule.date)
+                                            slot.available && handleTimeClick(slot.time)
+                                        }}
+                                        disabled={!slot.available}
+                                    >
+                                        <span className="font-mono">{slot.time}</span>
+                                        {slot.appointment && (
+                                            <span className="truncate w-full text-[10px]">
+                        {slot.appointment.clientName}
+                      </span>
+                                        )}
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </CardContent>
+        </Card>
+    )
+
+    const renderLegend = () => (
+        <Card>
+            <CardHeader>
+                <CardTitle className="text-sm">Legenda</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+                <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-white border border-gray-200 rounded"></div>
+                    <span className="text-sm">Disponível</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-blue-100 border border-blue-200 rounded"></div>
+                    <span className="text-sm">Agendado</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-green-100 border border-green-200 rounded"></div>
+                    <span className="text-sm">Confirmado</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-gray-100 border border-gray-200 rounded"></div>
+                    <span className="text-sm">Indisponível</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-red-100 border border-red-200 rounded"></div>
+                    <span className="text-sm">Cancelado</span>
+                </div>
+            </CardContent>
+        </Card>
+    )
+
+    return (
+        <div className="space-y-6">
+            {showWeekView && (
+                <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'day' | 'week')}>
+                    <TabsList>
+                        <TabsTrigger value="day">Dia</TabsTrigger>
+                        <TabsTrigger value="week">Semana</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="day" className="space-y-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                            <div className="lg:col-span-3">
+                                {renderDayView()}
+                            </div>
+                            <div>
+                                {renderLegend()}
+                            </div>
+                        </div>
+                    </TabsContent>
+                    <TabsContent value="week" className="space-y-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                            <div className="lg:col-span-3">
+                                {renderWeekView()}
+                            </div>
+                            <div>
+                                {renderLegend()}
+                            </div>
+                        </div>
+                    </TabsContent>
+                </Tabs>
+            )}
+
+            {!showWeekView && (
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <div className="lg:col-span-3">
+                        {renderDayView()}
+                    </div>
+                    <div>
+                        {renderLegend()}
+                    </div>
+                </div>
+            )}
+
+            {/* Resumo do dia */}
             <Card>
                 <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                        <Clock className="h-5 w-5" />
-                        <span>Horários Disponíveis</span>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                        <User className="w-5 h-5" />
+                        Resumo do Dia
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex items-center justify-center p-8">
-                        <div className="flex items-center space-x-2">
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
-                            <span>Verificando disponibilidade...</span>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="text-center p-3 bg-blue-50 rounded-lg">
+                            <div className="text-2xl font-bold text-blue-600">
+                                {daySchedule.slots.filter(s => s.appointment?.status === 'scheduled').length}
+                            </div>
+                            <div className="text-sm text-blue-700">Agendados</div>
+                        </div>
+                        <div className="text-center p-3 bg-green-50 rounded-lg">
+                            <div className="text-2xl font-bold text-green-600">
+                                {daySchedule.slots.filter(s => s.appointment?.status === 'confirmed').length}
+                            </div>
+                            <div className="text-sm text-green-700">Confirmados</div>
+                        </div>
+                        <div className="text-center p-3 bg-gray-50 rounded-lg">
+                            <div className="text-2xl font-bold text-gray-600">
+                                {daySchedule.slots.filter(s => s.available).length}
+                            </div>
+                            <div className="text-sm text-gray-700">Disponíveis</div>
+                        </div>
+                        <div className="text-center p-3 bg-purple-50 rounded-lg">
+                            <div className="text-2xl font-bold text-purple-600">
+                                {daySchedule.slots.filter(s => s.appointment).reduce((total, slot) =>
+                                    total + (slot.appointment?.durationMinutes || 0), 0
+                                )}min
+                            </div>
+                            <div className="text-sm text-purple-700">Total Agendado</div>
                         </div>
                     </div>
                 </CardContent>
             </Card>
-        )
-    }
-
-    return (
-        <div className="space-y-4">
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                            <Clock className="h-5 w-5" />
-                            <span>Horários Disponíveis</span>
-                        </div>
-                        <Badge variant="secondary">
-                            {formatDate(selectedDate)}
-                        </Badge>
-                    </CardTitle>
-                </CardHeader>
-
-                <CardContent className="space-y-4">
-                    {availableSlots.length === 0 ? (
-                        <Alert>
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertDescription>
-                                Não há horários disponíveis para esta data. Tente selecionar outro dia.
-                            </AlertDescription>
-                        </Alert>
-                    ) : (
-                        <>
-                            <div className="text-sm text-gray-600 mb-4">
-                                <p>Duração: {duration} minutos</p>
-                                <p>{availableSlots.length} horário(s) disponível(is)</p>
-                            </div>
-
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                                {availableSlots.map((slot) => (
-                                    <Button
-                                        key={slot.time}
-                                        variant={selectedTimeSlot === slot.datetime ? "default" : "outline"}
-                                        size="sm"
-                                        onClick={() => handleTimeSlotClick(slot)}
-                                        className="h-12 flex flex-col items-center justify-center"
-                                    >
-                                        <Clock className="h-3 w-3 mb-1" />
-                                        <span className="text-xs">{slot.time}</span>
-                                    </Button>
-                                ))}
-                            </div>
-                        </>
-                    )}
-                </CardContent>
-            </Card>
-
-            {showUnavailableSlots && unavailableSlots.length > 0 && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-sm text-gray-500">
-                            Horários Indisponíveis
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                            {unavailableSlots.map((slot) => (
-                                <div
-                                    key={slot.time}
-                                    className="h-12 flex flex-col items-center justify-center border border-gray-200 rounded-md bg-gray-50 text-gray-400"
-                                    title={slot.reason}
-                                >
-                                    <Clock className="h-3 w-3 mb-1" />
-                                    <span className="text-xs">{slot.time}</span>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="mt-4 space-y-1 text-xs text-gray-500">
-                            <p>Legendas:</p>
-                            <div className="flex flex-wrap gap-4">
-                                <div className="flex items-center space-x-1">
-                                    <div className="w-3 h-3 bg-gray-200 rounded"></div>
-                                    <span>Indisponível</span>
-                                </div>
-                                <div className="flex items-center space-x-1">
-                                    <CheckCircle className="w-3 h-3 text-green-500" />
-                                    <span>Disponível</span>
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
         </div>
     )
 }
+
+export default TimeSlots
