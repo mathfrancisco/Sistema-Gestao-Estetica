@@ -2,7 +2,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useAuthStore } from '@/store/useAuthStore'
 
-
 export interface GoogleCalendarEvent {
     id: string
     summary: string
@@ -56,7 +55,7 @@ export const useGoogleCalendar = () => {
         isAuthenticated: false
     })
 
-    const { user } = useAuthStore()
+    const { user, userProfile } = useAuthStore()
 
     // Update state helper
     const updateState = useCallback((updates: Partial<UseGoogleCalendarState>) => {
@@ -72,7 +71,7 @@ export const useGoogleCalendar = () => {
 
     // Check authentication status
     const checkAuthentication = useCallback(async () => {
-        if (!user) {
+        if (!user || !userProfile) {
             updateState({ isAuthenticated: false, loading: false })
             return false
         }
@@ -81,9 +80,9 @@ export const useGoogleCalendar = () => {
             updateState({ loading: true, error: null })
 
             const isAuthenticated = !!(
-                user.google_access_token &&
-                user.google_refresh_token &&
-                user.google_calendar_id
+                userProfile.google_access_token &&
+                userProfile.google_refresh_token &&
+                userProfile.google_calendar_id
             )
 
             updateState({ isAuthenticated, loading: false })
@@ -92,29 +91,64 @@ export const useGoogleCalendar = () => {
             handleError(error, 'checkAuthentication')
             return false
         }
-    }, [user, updateState, handleError])
+    }, [user, userProfile, updateState, handleError])
 
     // Get auth URL
     const getAuthUrl = useCallback(async () => {
         try {
+            updateState({ loading: true, error: null })
+
             const response = await fetch('/api/calendar/auth', {
-                method: 'POST'
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             })
 
             if (!response.ok) {
-                throw new Error('Erro ao gerar URL de autenticação')
+                const errorData = await response.json().catch(() => ({ error: 'Response não é JSON válido' }))
+                throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
             }
 
             const data = await response.json()
+
+            if (!data.authUrl) {
+                throw new Error('URL de autenticação não retornada')
+            }
+
+            updateState({ loading: false })
             return data.authUrl
         } catch (error) {
             handleError(error, 'getAuthUrl')
             return null
         }
-    }, [handleError])
+    }, [handleError, updateState])
 
-    // Authenticate user with Google code
-    const authenticateUser = useCallback(async (code: string) => {
+    // Start authentication flow
+    const startAuthentication = useCallback(async () => {
+        if (!user) {
+            updateState({ error: 'Usuário não autenticado' })
+            return false
+        }
+
+        try {
+            const authUrl = await getAuthUrl()
+            if (!authUrl) return false
+
+            // Add userId to the auth URL
+            const urlWithUserId = `${authUrl}&state=${user.id}`
+
+            // Redirect to Google OAuth
+            window.location.href = urlWithUserId
+            return true
+        } catch (error) {
+            handleError(error, 'startAuthentication')
+            return false
+        }
+    }, [user, getAuthUrl, handleError])
+
+    // Process OAuth callback (to be called from the callback page)
+    const processCallback = useCallback(async (code: string) => {
         if (!user) {
             updateState({ error: 'Usuário não autenticado' })
             return false
@@ -123,23 +157,21 @@ export const useGoogleCalendar = () => {
         try {
             updateState({ loading: true, error: null })
 
-            const response = await fetch(`/api/calendar/auth?code=${code}&userId=${user.id}`)
+            const response = await fetch(`/api/calendar/auth?code=${encodeURIComponent(code)}&userId=${user.id}`)
 
             if (!response.ok) {
-                const errorData = await response.json()
+                const errorData = await response.json().catch(() => ({ error: 'Erro na resposta' }))
                 throw new Error(errorData.error || 'Erro na autenticação')
             }
 
-            const data = await response.json()
+            // Refresh user profile to get new tokens
+            await useAuthStore.getState().refreshProfile()
+            await checkAuthentication()
 
-            if (data.success) {
-                await checkAuthentication()
-                return true
-            }
-
-            return false
+            updateState({ loading: false })
+            return true
         } catch (error) {
-            handleError(error, 'authenticateUser')
+            handleError(error, 'processCallback')
             return false
         }
     }, [user, updateState, handleError, checkAuthentication])
@@ -326,9 +358,20 @@ export const useGoogleCalendar = () => {
         try {
             updateState({ loading: true, error: null })
 
-            // Update user in Supabase (remove Google tokens)
-            // This would need to be handled through your existing user update mechanism
-            // For now, just update local state
+            const response = await fetch('/api/calendar/disconnect', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ userId: user.id })
+            })
+
+            if (!response.ok) {
+                throw new Error('Erro ao desconectar Google Calendar')
+            }
+
+            await useAuthStore.getState().refreshProfile()
+
             updateState({
                 isAuthenticated: false,
                 events: [],
@@ -366,17 +409,16 @@ export const useGoogleCalendar = () => {
             const eventStart = new Date(event.start.dateTime).getTime()
             const eventEnd = new Date(event.end.dateTime).getTime()
 
-            // Check for overlap
             return (startTime < eventEnd && endTime > eventStart)
         })
     }, [state.events])
 
     // Initialize authentication check
     useEffect(() => {
-        if (user) {
+        if (user && userProfile) {
             checkAuthentication()
         }
-    }, [user, checkAuthentication])
+    }, [user, userProfile, checkAuthentication])
 
     return {
         // State
@@ -385,7 +427,8 @@ export const useGoogleCalendar = () => {
         // Authentication methods
         checkAuthentication,
         getAuthUrl,
-        authenticateUser,
+        startAuthentication,
+        processCallback,
         disconnect,
 
         // Event methods

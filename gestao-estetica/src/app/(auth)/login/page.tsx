@@ -109,7 +109,7 @@ export default function LoginPage() {
                                         id="email"
                                         type="email"
                                         {...register('email')}
-                                        className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                        className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900"
                                         placeholder="seu@email.com"/>
                                 </div>
                                 {errors.email && (
@@ -131,7 +131,7 @@ export default function LoginPage() {
                                         id="password"
                                         type={showPassword ? 'text' : 'password'}
                                         {...register('password')}
-                                        className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                        className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900"
                                         placeholder="••••••••"/>
                                     <button
                                         type="button"

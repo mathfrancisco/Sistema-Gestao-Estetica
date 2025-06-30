@@ -87,7 +87,7 @@
 
 body {
   background-color: hsl(var(--color-background));
-  color: hsl(var(--color-foreground));
+  /*color: hsl(var(--color-foreground));*/
 }
 
 /* Custom scrollbar */

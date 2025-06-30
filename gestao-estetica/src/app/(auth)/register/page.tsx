@@ -49,7 +49,7 @@ export default function RegisterPage() {
                 password: data.password,
                 options: {
                     data: {
-                        name: data.name
+                        full_name: data.name // Corrigido para full_name
                     }
                 }
             })
@@ -66,15 +66,32 @@ export default function RegisterPage() {
                         {
                             id: authData.user.id,
                             email: data.email,
-                            name: data.name,
+                            full_name: data.name, // Corrigido para full_name
+                            avatar_url: '', // Campo obrigatório
                             created_at: new Date().toISOString(),
                             updated_at: new Date().toISOString()
                         }
                     ])
 
                 if (profileError) {
-                    console.error('Erro ao criar perfil:', profileError)
-                    // Não vamos falhar o registro por causa do perfil
+                    console.error('Erro ao criar perfil do usuário:', profileError)
+                    // Não falhar o registro por causa do perfil
+                }
+
+                // Criar business_profile vazio para evitar erros 406
+                const { error: businessError } = await supabase
+                    .from('business_profile')
+                    .insert([
+                        {
+                            user_id: authData.user.id,
+                            business_name: '', // Será preenchido depois
+                            created_at: new Date().toISOString()
+                        }
+                    ])
+
+                if (businessError) {
+                    console.error('Erro ao criar business profile:', businessError)
+                    // Não falhar o registro por causa do business profile
                 }
 
                 toast.success('Conta criada com sucesso! Verifique seu email para confirmar.')
@@ -133,7 +150,7 @@ export default function RegisterPage() {
                                         id="name"
                                         type="text"
                                         {...register('name')}
-                                        className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                        className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900"
                                         placeholder="Seu nome completo"
                                     />
                                 </div>
@@ -155,7 +172,7 @@ export default function RegisterPage() {
                                         id="email"
                                         type="email"
                                         {...register('email')}
-                                        className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                        className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900"
                                         placeholder="seu@email.com"
                                     />
                                 </div>
@@ -177,7 +194,7 @@ export default function RegisterPage() {
                                         id="password"
                                         type={showPassword ? 'text' : 'password'}
                                         {...register('password')}
-                                        className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                        className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900"
                                         placeholder="••••••••"
                                     />
                                     <button
@@ -210,7 +227,7 @@ export default function RegisterPage() {
                                         id="confirmPassword"
                                         type={showConfirmPassword ? 'text' : 'password'}
                                         {...register('confirmPassword')}
-                                        className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                        className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900"
                                         placeholder="••••••••"
                                     />
                                     <button
