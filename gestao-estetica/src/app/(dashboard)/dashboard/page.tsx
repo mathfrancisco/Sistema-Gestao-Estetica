@@ -26,7 +26,7 @@ import { DashboardTabs } from '@/components/dashboard/DashboardTabs'
 import { useAppointments } from "@/lib/hooks/useAppointment"
 import { useFinancials } from "@/lib/hooks/useFinancials"
 import { useClientStats, useUpcomingBirthdays } from "@/lib/hooks/useClients"
-import MainLayout from "@/app/(dashboard)/layout";
+
 
 // Tipos atualizados
 interface DashboardData {
@@ -289,7 +289,6 @@ export default function DashboardPage() {
     })) || []
 
     return (
-        <MainLayout>
             <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
                 {/* Sidebar */}
                 <Sidebar />
@@ -490,6 +489,5 @@ export default function DashboardPage() {
                     </main>
                 </div>
             </div>
-        </MainLayout>
     )
 }

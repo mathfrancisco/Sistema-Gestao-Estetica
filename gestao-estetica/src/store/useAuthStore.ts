@@ -15,7 +15,6 @@ interface AuthState {
     businessProfile: BusinessProfile | null
     isLoading: boolean
     isInitialized: boolean
-    profilesLoaded: boolean // Novo flag para controlar se os perfis já foram carregados
 }
 
 interface AuthActions {
@@ -25,12 +24,12 @@ interface AuthActions {
     setBusinessProfile: (profile: BusinessProfile | null) => void
     setLoading: (loading: boolean) => void
     setInitialized: (initialized: boolean) => void
-    setProfilesLoaded: (loaded: boolean) => void
     signOut: () => Promise<void>
     initialize: () => Promise<void>
     refreshProfile: () => Promise<void>
     hasGoogleCalendar: () => boolean
     isBusinessSetup: () => boolean
+    reset: () => void
 }
 
 type AuthStore = AuthState & AuthActions
@@ -45,71 +44,132 @@ export const useAuthStore = create<AuthStore>()(
             businessProfile: null,
             isLoading: true,
             isInitialized: false,
-            profilesLoaded: false,
 
             // Actions
-            setUser: (user) => set({ user }),
+            setUser: (user) => {
+                console.log('👤 Setting user:', user?.email || 'null')
+                set({ user })
+            },
 
-            setSession: (session) => set({ session }),
+            setSession: (session) => {
+                console.log('🔑 Setting session:', !!session)
+                set({ session })
+            },
 
-            setUserProfile: (userProfile) => set({ userProfile }),
+            setUserProfile: (userProfile) => {
+                console.log('👤 Setting user profile:', {
+                    email: userProfile?.email,
+                    hasGoogleTokens: !!(userProfile?.google_access_token && userProfile?.google_refresh_token),
+                    hasCalendarId: !!userProfile?.google_calendar_id
+                })
+                set({ userProfile })
+            },
 
-            setBusinessProfile: (businessProfile) => set({ businessProfile }),
+            setBusinessProfile: (businessProfile) => {
+                console.log('🏢 Setting business profile:', {
+                    businessName: businessProfile?.business_name,
+                    hasGoogleSettings: !!businessProfile?.google_calendar_settings
+                })
+                set({ businessProfile })
+            },
 
             setLoading: (isLoading) => set({ isLoading }),
 
-            setInitialized: (isInitialized) => set({ isInitialized }),
+            setInitialized: (isInitialized) => {
+                console.log('🚀 Auth store initialized:', isInitialized)
+                set({ isInitialized })
+            },
 
-            setProfilesLoaded: (profilesLoaded) => set({ profilesLoaded }),
+            // ✅ CORRIGIDO: Enhanced hasGoogleCalendar function
+            hasGoogleCalendar: () => {
+                const { userProfile } = get()
 
+                if (!userProfile) {
+                    console.log('🔍 hasGoogleCalendar: No user profile')
+                    return false
+                }
+
+                const hasTokens = !!(userProfile.google_access_token && userProfile.google_refresh_token)
+                const hasCalendarId = !!userProfile.google_calendar_id
+
+                const result = hasTokens && hasCalendarId
+
+                console.log('🔍 hasGoogleCalendar check:', {
+                    hasTokens,
+                    hasCalendarId,
+                    result,
+                    email: userProfile.email
+                })
+
+                return result
+            },
+
+            isBusinessSetup: () => {
+                const { businessProfile } = get()
+                return !!(businessProfile?.business_name)
+            },
+
+            // ✅ CORRIGIDO: Enhanced sign out
             signOut: async () => {
-                set({ isLoading: true })
                 try {
-                    await supabase.auth.signOut()
-                    set({
-                        user: null,
-                        session: null,
-                        userProfile: null,
-                        businessProfile: null,
-                        profilesLoaded: false,
-                    })
+                    console.log('🚪 Signing out...')
+                    set({ isLoading: true })
+
+                    const { error } = await supabase.auth.signOut()
+                    if (error) throw error
+
+                    // Clear all state
+                    get().reset()
+
+                    console.log('✅ Signed out successfully')
                 } catch (error) {
-                    console.error('Error signing out:', error)
-                } finally {
+                    console.error('❌ Error signing out:', error)
                     set({ isLoading: false })
+                    throw error
                 }
             },
 
+            // ✅ CORRIGIDO: Enhanced initialization
             initialize: async () => {
-                const { isInitialized } = get()
-                if (isInitialized) return // Evitar re-inicialização
-
-                set({ isLoading: true })
-
                 try {
-                    // Verificar sessão atual
-                    const { data: { session }, error } = await supabase.auth.getSession()
+                    console.log('🚀 Initializing auth store...')
+                    set({ isLoading: true })
 
-                    if (error) {
-                        console.error('Error getting session:', error)
-                        return
+                    // Get current session
+                    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+                    if (sessionError) {
+                        console.error('❌ Session error:', sessionError)
+                        throw sessionError
                     }
 
-                    if (session?.user) {
+                    if (session) {
+                        console.log('✅ Active session found:', session.user.email)
                         set({
-                            user: session.user,
-                            session
+                            session,
+                            user: session.user
                         })
 
-                        // Carregar perfis apenas se ainda não foram carregados
-                        const { profilesLoaded } = get()
-                        if (!profilesLoaded) {
-                            await get().refreshProfile()
-                        }
+                        // Load user profile
+                        await get().refreshProfile()
+                    } else {
+                        console.log('ℹ️ No active session')
+                        set({
+                            user: null,
+                            session: null,
+                            userProfile: null,
+                            businessProfile: null
+                        })
                     }
+
+                    set({
+                        isLoading: false,
+                        isInitialized: true
+                    })
+
+                    console.log('✅ Auth store initialized successfully')
                 } catch (error) {
-                    console.error('Error initializing auth:', error)
-                } finally {
+                    console.error('❌ Error initializing auth store:', error)
                     set({
                         isLoading: false,
                         isInitialized: true
@@ -117,80 +177,152 @@ export const useAuthStore = create<AuthStore>()(
                 }
             },
 
+            // ✅ CORRIGIDO: Enhanced refresh profile
             refreshProfile: async () => {
-                const { user, profilesLoaded } = get()
-                if (!user) return
-
-                // Evitar múltiplas requisições simultâneas
-                if (profilesLoaded) return
-
                 try {
-                    // Usar Promise.allSettled para não falhar se um perfil não existir
-                    const [userProfileResult, businessProfileResult] = await Promise.allSettled([
-                        supabase
-                            .from('users')
-                            .select('*')
-                            .eq('id', user.id)
-                            .single(),
-                        supabase
-                            .from('business_profile')
-                            .select('*')
-                            .eq('user_id', user.id)
-                            .single()
-                    ])
+                    const { user } = get()
 
-                    let userProfile = null
-                    let businessProfile = null
-
-                    // Processar resultado do user profile
-                    if (userProfileResult.status === 'fulfilled' && userProfileResult.value.data) {
-                        userProfile = userProfileResult.value.data
-                    } else if (userProfileResult.status === 'rejected') {
-                        console.warn('User profile not found:', userProfileResult.reason)
+                    if (!user) {
+                        console.log('⚠️ No user to refresh profile for')
+                        set({
+                            userProfile: null,
+                            businessProfile: null
+                        })
+                        return
                     }
 
-                    // Processar resultado do business profile
-                    if (businessProfileResult.status === 'fulfilled' && businessProfileResult.value.data) {
-                        businessProfile = businessProfileResult.value.data
-                    } else if (businessProfileResult.status === 'rejected') {
-                        console.warn('Business profile not found:', businessProfileResult.reason)
+                    console.log('🔄 Refreshing profile for:', user.email)
+
+                    // ✅ Load user profile with Google Calendar data
+                    console.log('👤 Loading user profile...')
+                    const { data: userProfile, error: userError } = await supabase
+                        .from('users')
+                        .select(`
+                            id,
+                            email,
+                            full_name,
+                            avatar_url,
+                            google_access_token,
+                            google_refresh_token,
+                            google_calendar_id,
+                            created_at,
+                            updated_at
+                        `)
+                        .eq('id', user.id)
+                        .single()
+
+                    if (userError) {
+                        console.error('❌ Error loading user profile:', userError)
+
+                        // If user doesn't exist in our users table, create it
+                        if (userError.code === 'PGRST116') {
+                            console.log('👤 Creating user profile...')
+                            const { data: newUserProfile, error: createError } = await supabase
+                                .from('users')
+                                .insert({
+                                    id: user.id,
+                                    email: user.email!,
+                                    full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+                                    avatar_url: user.user_metadata?.avatar_url || null
+                                })
+                                .select()
+                                .single()
+
+                            if (createError) {
+                                console.error('❌ Error creating user profile:', createError)
+                            } else {
+                                console.log('✅ User profile created')
+                                set({ userProfile: newUserProfile })
+                            }
+                        }
+                    } else {
+                        console.log('✅ User profile loaded:', {
+                            email: userProfile.email,
+                            hasGoogleTokens: !!(userProfile.google_access_token && userProfile.google_refresh_token),
+                            hasCalendarId: !!userProfile.google_calendar_id
+                        })
+                        set({ userProfile })
                     }
 
-                    set({
-                        userProfile,
-                        businessProfile,
-                        profilesLoaded: true
-                    })
+                    // ✅ Load business profile
+                    console.log('🏢 Loading business profile...')
+                    const { data: businessProfile, error: businessError } = await supabase
+                        .from('business_profile')
+                        .select(`
+                            id,
+                            user_id,
+                            business_name,
+                            cnpj,
+                            phone,
+                            address,
+                            business_hours,
+                            google_calendar_settings,
+                            settings,
+                            created_at
+                        `)
+                        .eq('user_id', user.id)
+                        .single()
+
+                    if (businessError) {
+                        if (businessError.code === 'PGRST116') {
+                            console.log('ℹ️ No business profile found')
+                            set({ businessProfile: null })
+                        } else {
+                            console.error('❌ Error loading business profile:', businessError)
+                        }
+                    } else {
+                        console.log('✅ Business profile loaded:', {
+                            businessName: businessProfile.business_name,
+                            hasGoogleSettings: !!businessProfile.google_calendar_settings
+                        })
+                        set({ businessProfile })
+                    }
+
+                    console.log('✅ Profile refresh completed')
                 } catch (error) {
-                    console.error('Error refreshing profile:', error)
-                    // Marcar como carregado mesmo com erro para evitar loops infinitos
-                    set({ profilesLoaded: true })
+                    console.error('❌ Error refreshing profile:', error)
                 }
             },
 
-            hasGoogleCalendar: () => {
-                const { userProfile } = get()
-                return !!(
-                    userProfile?.google_access_token &&
-                    userProfile?.google_refresh_token &&
-                    userProfile?.google_calendar_id
-                )
-            },
-
-            isBusinessSetup: () => {
-                const { businessProfile } = get()
-                return !!(businessProfile?.business_name && businessProfile.business_name.trim() !== '')
-            },
+            // ✅ NOVO: Reset function for clean state
+            reset: () => {
+                set({
+                    user: null,
+                    session: null,
+                    userProfile: null,
+                    businessProfile: null,
+                    isLoading: false,
+                    isInitialized: true
+                })
+            }
         }),
         {
-            name: 'auth-storage',
+            name: 'auth-store',
+            // ✅ CORRIGIDO: Não persistir dados sensíveis
             partialize: (state) => ({
-                user: state.user,
-                session: state.session,
-                userProfile: state.userProfile,
-                businessProfile: state.businessProfile,
-                profilesLoaded: state.profilesLoaded,
+                isInitialized: state.isInitialized,
+                // Persistir apenas o que é necessário para UX, não dados sensíveis
             }),
+            // ✅ NOVO: Configurações de persistência mais robustas
+            version: 1,
+            migrate: (persistedState: any, version: number) => {
+                // Handle migration if needed
+                return persistedState
+            },
+            onRehydrateStorage: () => {
+                console.log('🔄 Rehydrating auth store...')
+                return (state, error) => {
+                    if (error) {
+                        console.error('❌ Error rehydrating auth store:', error)
+                    } else {
+                        console.log('✅ Auth store rehydrated')
+                        // Trigger initialization after rehydration
+                        if (state) {
+                            state.initialize()
+                        }
+                    }
+                }
+            }
         }
     )
 )

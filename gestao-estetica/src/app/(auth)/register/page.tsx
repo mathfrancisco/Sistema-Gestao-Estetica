@@ -43,69 +43,87 @@ export default function RegisterPage() {
         setIsLoading(true)
 
         try {
-            // Criar conta no Supabase Auth
+            console.log('📝 Starting user registration...')
+
+            // ✅ CORRIGIDO: Criar conta no Supabase Auth com metadados corretos
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: data.email,
                 password: data.password,
                 options: {
                     data: {
-                        full_name: data.name // Corrigido para full_name
+                        full_name: data.name,
+                        name: data.name, // Backup para compatibilidade
+                        email: data.email
                     }
                 }
             })
 
             if (authError) {
+                console.error('❌ Auth error:', authError)
                 throw authError
             }
 
             if (authData.user) {
-                // Criar perfil do usuário na tabela users
-                const { error: profileError } = await supabase
-                    .from('users')
-                    .insert([
-                        {
-                            id: authData.user.id,
-                            email: data.email,
-                            full_name: data.name, // Corrigido para full_name
-                            avatar_url: '', // Campo obrigatório
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        }
-                    ])
+                console.log('✅ User created in auth:', {
+                    id: authData.user.id,
+                    email: authData.user.email,
+                    metadata: authData.user.user_metadata
+                })
 
-                if (profileError) {
-                    console.error('Erro ao criar perfil do usuário:', profileError)
-                    // Não falhar o registro por causa do perfil
+                // ✅ CORRIGIDO: Não criar perfil manualmente - deixar o trigger fazer
+                // O trigger handle_new_user() vai criar automaticamente:
+                // - Registro na tabela users
+                // - Registro na tabela business_profile
+
+                // ✅ Aguardar um pouco para o trigger processar
+                await new Promise(resolve => setTimeout(resolve, 1000))
+
+                // ✅ Verificar se o perfil foi criado pelo trigger
+                try {
+                    const { data: userProfile, error: profileError } = await supabase
+                        .from('users')
+                        .select('id, email, full_name')
+                        .eq('id', authData.user.id)
+                        .single()
+
+                    if (profileError) {
+                        console.warn('⚠️ Profile not found immediately (may take a moment):', profileError)
+                    } else {
+                        console.log('✅ User profile created by trigger:', userProfile)
+                    }
+                } catch (verifyError) {
+                    console.warn('⚠️ Could not verify profile creation:', verifyError)
+                    // Não falhar o registro por causa da verificação
                 }
 
-                // Criar business_profile vazio para evitar erros 406
-                const { error: businessError } = await supabase
-                    .from('business_profile')
-                    .insert([
-                        {
-                            user_id: authData.user.id,
-                            business_name: '', // Será preenchido depois
-                            created_at: new Date().toISOString()
-                        }
-                    ])
-
-                if (businessError) {
-                    console.error('Erro ao criar business profile:', businessError)
-                    // Não falhar o registro por causa do business profile
-                }
-
+                console.log('🎉 Registration successful!')
                 toast.success('Conta criada com sucesso! Verifique seu email para confirmar.')
+
+                // ✅ Redirecionar para login com mensagem
                 router.push('/login?message=check-email')
+            } else {
+                throw new Error('Usuário não foi criado')
             }
         } catch (error: any) {
-            console.error('Erro no registro:', error)
+            console.error('❌ Registration error:', error)
 
             let errorMessage = 'Erro ao criar conta'
 
+            // ✅ Tratar erros específicos do Supabase
             if (error.message === 'User already registered') {
                 errorMessage = 'Este email já está cadastrado'
-            } else if (error.message.includes('Password')) {
+            } else if (error.message?.includes('Password')) {
                 errorMessage = 'Senha deve ter pelo menos 6 caracteres'
+            } else if (error.message?.includes('Email')) {
+                errorMessage = 'Email inválido'
+            } else if (error.message?.includes('weak')) {
+                errorMessage = 'Senha muito fraca. Use pelo menos 6 caracteres'
+            } else if (error.message?.includes('already')) {
+                errorMessage = 'Este email já está sendo usado'
+            } else if (error.code === 'weak_password') {
+                errorMessage = 'Senha muito fraca. Use pelo menos 6 caracteres'
+            } else if (error.code === 'user_already_exists') {
+                errorMessage = 'Este email já está cadastrado'
             }
 
             toast.error(errorMessage)
@@ -286,6 +304,16 @@ export default function RegisterPage() {
                                 </Link>
                             </div>
                         </div>
+
+                        {/* Debug Info (apenas em desenvolvimento) */}
+                        {process.env.NODE_ENV === 'development' && (
+                            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                                <strong>🛠️ Debug Info:</strong>
+                                <br />• Trigger automático criará perfil na tabela users
+                                <br />• Business profile será criado automaticamente
+                                <br />• RLS configurado para acesso seguro
+                            </div>
+                        )}
                     </div>
                 </div>
             </main>

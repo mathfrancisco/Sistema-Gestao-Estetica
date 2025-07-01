@@ -1,4 +1,6 @@
 // lib/hooks/useGoogleCalendar.ts
+'use client'
+
 import { useState, useCallback, useEffect } from 'react'
 import { useAuthStore } from '@/store/useAuthStore'
 
@@ -55,7 +57,7 @@ export const useGoogleCalendar = () => {
         isAuthenticated: false
     })
 
-    const { user, userProfile } = useAuthStore()
+    const { user, hasGoogleCalendar } = useAuthStore()
 
     // Update state helper
     const updateState = useCallback((updates: Partial<UseGoogleCalendarState>) => {
@@ -71,110 +73,21 @@ export const useGoogleCalendar = () => {
 
     // Check authentication status
     const checkAuthentication = useCallback(async () => {
-        if (!user || !userProfile) {
+        if (!user) {
             updateState({ isAuthenticated: false, loading: false })
             return false
         }
 
         try {
             updateState({ loading: true, error: null })
-
-            const isAuthenticated = !!(
-                userProfile.google_access_token &&
-                userProfile.google_refresh_token &&
-                userProfile.google_calendar_id
-            )
-
+            const isAuthenticated = hasGoogleCalendar()
             updateState({ isAuthenticated, loading: false })
             return isAuthenticated
         } catch (error) {
             handleError(error, 'checkAuthentication')
             return false
         }
-    }, [user, userProfile, updateState, handleError])
-
-    // Get auth URL
-    const getAuthUrl = useCallback(async () => {
-        try {
-            updateState({ loading: true, error: null })
-
-            const response = await fetch('/api/calendar/auth', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ error: 'Response não é JSON válido' }))
-                throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
-            }
-
-            const data = await response.json()
-
-            if (!data.authUrl) {
-                throw new Error('URL de autenticação não retornada')
-            }
-
-            updateState({ loading: false })
-            return data.authUrl
-        } catch (error) {
-            handleError(error, 'getAuthUrl')
-            return null
-        }
-    }, [handleError, updateState])
-
-    // Start authentication flow
-    const startAuthentication = useCallback(async () => {
-        if (!user) {
-            updateState({ error: 'Usuário não autenticado' })
-            return false
-        }
-
-        try {
-            const authUrl = await getAuthUrl()
-            if (!authUrl) return false
-
-            // Add userId to the auth URL
-            const urlWithUserId = `${authUrl}&state=${user.id}`
-
-            // Redirect to Google OAuth
-            window.location.href = urlWithUserId
-            return true
-        } catch (error) {
-            handleError(error, 'startAuthentication')
-            return false
-        }
-    }, [user, getAuthUrl, handleError])
-
-    // Process OAuth callback (to be called from the callback page)
-    const processCallback = useCallback(async (code: string) => {
-        if (!user) {
-            updateState({ error: 'Usuário não autenticado' })
-            return false
-        }
-
-        try {
-            updateState({ loading: true, error: null })
-
-            const response = await fetch(`/api/calendar/auth?code=${encodeURIComponent(code)}&userId=${user.id}`)
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ error: 'Erro na resposta' }))
-                throw new Error(errorData.error || 'Erro na autenticação')
-            }
-
-            // Refresh user profile to get new tokens
-            await useAuthStore.getState().refreshProfile()
-            await checkAuthentication()
-
-            updateState({ loading: false })
-            return true
-        } catch (error) {
-            handleError(error, 'processCallback')
-            return false
-        }
-    }, [user, updateState, handleError, checkAuthentication])
+    }, [user, hasGoogleCalendar, updateState, handleError])
 
     // Get calendar events
     const getEvents = useCallback(async (
@@ -351,40 +264,6 @@ export const useGoogleCalendar = () => {
         updateState({ error: null })
     }, [updateState])
 
-    // Disconnect Google Calendar
-    const disconnect = useCallback(async () => {
-        if (!user) return false
-
-        try {
-            updateState({ loading: true, error: null })
-
-            const response = await fetch('/api/calendar/disconnect', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ userId: user.id })
-            })
-
-            if (!response.ok) {
-                throw new Error('Erro ao desconectar Google Calendar')
-            }
-
-            await useAuthStore.getState().refreshProfile()
-
-            updateState({
-                isAuthenticated: false,
-                events: [],
-                loading: false
-            })
-
-            return true
-        } catch (error) {
-            handleError(error, 'disconnect')
-            return false
-        }
-    }, [user, updateState, handleError])
-
     // Get events for specific date
     const getEventsForDate = useCallback((date: Date) => {
         const targetDate = new Date(date)
@@ -409,27 +288,21 @@ export const useGoogleCalendar = () => {
             const eventStart = new Date(event.start.dateTime).getTime()
             const eventEnd = new Date(event.end.dateTime).getTime()
 
+            // Check for overlap
             return (startTime < eventEnd && endTime > eventStart)
         })
     }, [state.events])
 
     // Initialize authentication check
     useEffect(() => {
-        if (user && userProfile) {
+        if (user) {
             checkAuthentication()
         }
-    }, [user, userProfile, checkAuthentication])
+    }, [user, checkAuthentication])
 
     return {
         // State
         ...state,
-
-        // Authentication methods
-        checkAuthentication,
-        getAuthUrl,
-        startAuthentication,
-        processCallback,
-        disconnect,
 
         // Event methods
         getEvents,

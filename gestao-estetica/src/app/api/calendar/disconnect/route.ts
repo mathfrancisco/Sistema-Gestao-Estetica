@@ -1,9 +1,8 @@
 // app/api/calendar/disconnect/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { Database } from "@/lib/database/supabase/types"
 
-const supabase = createClient<Database>(
+const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
@@ -19,7 +18,9 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Remove Google Calendar credentials from user
+        console.log('🔌 Desconectando Google Calendar para usuário:', userId)
+
+        // ✅ Remover tokens do Google Calendar
         const { error: updateError } = await supabase
             .from('users')
             .update({
@@ -31,12 +32,11 @@ export async function POST(request: NextRequest) {
             .eq('id', userId)
 
         if (updateError) {
-            console.error('Error disconnecting calendar:', updateError)
-            return NextResponse.json(
-                { error: 'Erro ao desconectar calendário' },
-                { status: 500 }
-            )
+            console.error('❌ Erro ao desconectar:', updateError)
+            throw updateError
         }
+
+        console.log('✅ Google Calendar desconectado com sucesso')
 
         return NextResponse.json({
             success: true,
@@ -44,9 +44,9 @@ export async function POST(request: NextRequest) {
         })
 
     } catch (error) {
-        console.error('Disconnect calendar error:', error)
+        console.error('❌ Erro na desconexão:', error)
         return NextResponse.json(
-            { error: 'Erro ao desconectar calendário' },
+            { error: 'Erro interno do servidor' },
             { status: 500 }
         )
     }

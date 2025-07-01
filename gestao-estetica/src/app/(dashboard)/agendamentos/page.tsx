@@ -57,7 +57,6 @@ import {useClients} from "@/lib/hooks/useClients";
 import {useAppointments} from "@/lib/hooks/useAppointment";
 import {useProcedures} from "@/lib/hooks/useProcedures";
 import { Sidebar } from '@/components/layout/sidebar'
-import MainLayout from "@/app/(dashboard)/layout";
 
 type AppointmentStatus = Database['public']['Enums']['appointment_status_enum']
 
@@ -293,7 +292,6 @@ const AgendamentosPage: React.FC = () => {
 
     if (isLoading && appointmentsWithDetails.length === 0) {
         return (
-            <MainLayout>
                 <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
                     <Sidebar />
                     <div className="lg:ml-64">
@@ -302,12 +300,10 @@ const AgendamentosPage: React.FC = () => {
                         </div>
                     </div>
                 </div>
-            </MainLayout>
         )
     }
 
     return (
-        <MainLayout>
             <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
                 {/* Sidebar */}
                 <Sidebar />
@@ -817,7 +813,6 @@ const AgendamentosPage: React.FC = () => {
                     />
                 )}
             </div>
-        </MainLayout>
     )
 }
 

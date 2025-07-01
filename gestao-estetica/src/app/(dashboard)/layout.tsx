@@ -1,16 +1,17 @@
-// src/app/layout.tsx
 'use client'
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactNode, useState } from 'react'
+import { ReactNode } from 'react'
 
-export default function MainLayout({ children }: { children: ReactNode }) {
-    // Cria o QueryClient apenas uma vez
-    const [queryClient] = useState(() => new QueryClient())
+interface DashboardLayoutProps {
+    children: ReactNode
+}
 
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
+    // Este layout NÃO deve ter tags HTML (<html>, <head>, <body>)
+    // Apenas lógica de wrapper para o dashboard
     return (
-        <QueryClientProvider client={queryClient}>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
             {children}
-        </QueryClientProvider>
+        </div>
     )
 }
