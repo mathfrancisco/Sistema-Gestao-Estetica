@@ -254,102 +254,129 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
                         <button
                             onClick={() => toggleSubmenu(item.title)}
                             className={cn(
-                                "w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 hover:bg-slate-100 group",
-                                active ? "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 shadow-sm border border-blue-100" : "text-slate-600 hover:text-slate-900",
+                                "w-full flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-300 ease-out group relative overflow-hidden",
+                                "hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:shadow-sm hover:scale-[1.02]",
+                                "focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-2 focus:ring-offset-white",
+                                active ?
+                                    "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/25 scale-[1.02]" :
+                                    "text-slate-600 hover:text-slate-900",
                                 isCollapsed && "justify-center px-2"
                             )}
                         >
+                            {/* Animação de fundo para hover */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
                             <div className={cn(
-                                "p-1.5 rounded-lg transition-colors duration-200",
-                                active ? "bg-blue-100" : "group-hover:bg-slate-200"
+                                "relative z-10 p-2 rounded-lg transition-all duration-300",
+                                active ? "bg-white/20 backdrop-blur-sm" : "group-hover:bg-blue-100"
                             )}>
                                 <Icon className={cn(
-                                    "h-4 w-4 transition-colors duration-200",
-                                    active ? "text-blue-600" : "text-slate-500 group-hover:text-slate-700"
+                                    "h-5 w-5 transition-all duration-300",
+                                    active ? "text-white drop-shadow-sm" : "text-slate-500 group-hover:text-blue-600"
                                 )} />
                             </div>
                             {!isCollapsed && (
                                 <>
-                                    <span className="flex-1 text-left">{item.title}</span>
+                                    <span className="relative z-10 flex-1 text-left font-medium">{item.title}</span>
                                     {item.badge && (
                                         <Badge
                                             variant={isBottomMenu ? "destructive" : "secondary"}
-                                            className="ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs bg-blue-100 text-blue-700 border-0"
+                                            className={cn(
+                                                "relative z-10 ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs border-0 font-semibold transition-all duration-300",
+                                                active ? "bg-white text-blue-600 shadow-sm" : "bg-blue-100 text-blue-700 group-hover:bg-blue-600 group-hover:text-white"
+                                            )}
                                         >
                                             {item.badge}
                                         </Badge>
                                     )}
-                                    {isSubmenuOpen ?
-                                        <ChevronDown className="h-3 w-3 text-slate-400" /> :
-                                        <ChevronRight className="h-3 w-3 text-slate-400" />
-                                    }
+                                    <div className="relative z-10">
+                                        {isSubmenuOpen ?
+                                            <ChevronDown className={cn("h-4 w-4 transition-all duration-300", active ? "text-white" : "text-slate-400 group-hover:text-blue-600")} /> :
+                                            <ChevronRight className={cn("h-4 w-4 transition-all duration-300", active ? "text-white" : "text-slate-400 group-hover:text-blue-600")} />
+                                        }
+                                    </div>
                                 </>
                             )}
                         </button>
 
-                        {isSubmenuOpen && !isCollapsed && (
-                            <div className="ml-3 pl-4 border-l border-slate-200 space-y-1">
-                                {item.submenu?.map(subItem => {
-                                    const SubIcon = subItem.icon;
-                                    const isSubActive = pathname === subItem.href;
+                        <div className={cn(
+                            "ml-3 pl-4 border-l-2 space-y-1 transition-all duration-300 overflow-hidden",
+                            isSubmenuOpen && !isCollapsed ? "max-h-96 opacity-100" : "max-h-0 opacity-0",
+                            active ? "border-l-blue-200" : "border-l-slate-200"
+                        )}>
+                            {item.submenu?.map(subItem => {
+                                const SubIcon = subItem.icon;
+                                const isSubActive = pathname === subItem.href;
 
-                                    return (
-                                        <Link
-                                            key={subItem.href}
-                                            href={subItem.href}
-                                            onClick={handleNavigation}
-                                            className={cn(
-                                                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-slate-100 group",
-                                                isSubActive ? "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 shadow-sm" : "text-slate-600 hover:text-slate-900"
-                                            )}
-                                        >
-                                            <SubIcon className={cn(
-                                                "h-3 w-3 transition-colors duration-200",
-                                                isSubActive ? "text-blue-600" : "text-slate-400 group-hover:text-slate-600"
-                                            )} />
-                                            <span className="flex-1">{subItem.title}</span>
-                                            {subItem.badge && (
-                                                <Badge
-                                                    variant="secondary"
-                                                    className="ml-auto flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-xs"
-                                                >
-                                                    {subItem.badge}
-                                                </Badge>
-                                            )}
-                                        </Link>
-                                    );
-                                })}
-                            </div>
-                        )}
+                                return (
+                                    <Link
+                                        key={subItem.href}
+                                        href={subItem.href}
+                                        onClick={handleNavigation}
+                                        className={cn(
+                                            "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-300 group relative overflow-hidden hover:scale-[1.02]",
+                                            "focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-2 focus:ring-offset-white",
+                                            isSubActive ?
+                                                "bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 shadow-sm border border-blue-100" :
+                                                "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                                        )}
+                                    >
+                                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                        <SubIcon className={cn(
+                                            "relative z-10 h-4 w-4 transition-all duration-300",
+                                            isSubActive ? "text-blue-600" : "text-slate-400 group-hover:text-blue-600"
+                                        )} />
+                                        <span className="relative z-10 flex-1">{subItem.title}</span>
+                                        {subItem.badge && (
+                                            <Badge
+                                                variant="secondary"
+                                                className="relative z-10 ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs"
+                                            >
+                                                {subItem.badge}
+                                            </Badge>
+                                        )}
+                                    </Link>
+                                );
+                            })}
+                        </div>
                     </div>
                 ) : (
                     <Link
                         href={item.href}
                         onClick={handleNavigation}
                         className={cn(
-                            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 hover:bg-slate-100 group",
-                            active ? "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 shadow-sm border border-blue-100" : "text-slate-600 hover:text-slate-900",
+                            "flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-300 ease-out group relative overflow-hidden",
+                            "hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:shadow-sm hover:scale-[1.02]",
+                            "focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-2 focus:ring-offset-white",
+                            active ?
+                                "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/25 scale-[1.02]" :
+                                "text-slate-600 hover:text-slate-900",
                             isCollapsed && "justify-center px-2"
                         )}
                     >
+                        {/* Animação de fundo para hover */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
                         <div className={cn(
-                            "p-1.5 rounded-lg transition-colors duration-200",
-                            active ? "bg-blue-100" : "group-hover:bg-slate-200"
+                            "relative z-10 p-2 rounded-lg transition-all duration-300",
+                            active ? "bg-white/20 backdrop-blur-sm" : "group-hover:bg-blue-100"
                         )}>
                             <Icon className={cn(
-                                "h-4 w-4 transition-colors duration-200",
-                                active ? "text-blue-600" : "text-slate-500 group-hover:text-slate-700"
+                                "h-5 w-5 transition-all duration-300",
+                                active ? "text-white drop-shadow-sm" : "text-slate-500 group-hover:text-blue-600"
                             )} />
                         </div>
                         {!isCollapsed && (
                             <>
-                                <span className="flex-1">{item.title}</span>
+                                <span className="relative z-10 flex-1 font-medium">{item.title}</span>
                                 {item.badge && (
                                     <Badge
                                         variant={isBottomMenu ? "destructive" : "secondary"}
                                         className={cn(
-                                            "ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs border-0",
-                                            isBottomMenu ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"
+                                            "relative z-10 ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs border-0 font-semibold transition-all duration-300",
+                                            isBottomMenu ?
+                                                (active ? "bg-white text-red-600" : "bg-red-100 text-red-700 group-hover:bg-red-600 group-hover:text-white") :
+                                                (active ? "bg-white text-blue-600 shadow-sm" : "bg-blue-100 text-blue-700 group-hover:bg-blue-600 group-hover:text-white")
                                         )}
                                     >
                                         {item.badge}
@@ -364,18 +391,18 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
     };
 
     const sidebarContent = (
-        <div className="flex h-full flex-col bg-white border-r border-slate-200 shadow-xl">
+        <div className="flex h-full flex-col bg-white/95 backdrop-blur-lg border-r border-slate-200/80 shadow-2xl">
             {/* Header */}
             <div className={cn(
-                "flex items-center border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white",
-                isCollapsed ? "h-16 px-4 justify-center" : "h-16 px-6 justify-between"
+                "flex items-center border-b border-slate-200/80 bg-gradient-to-r from-slate-50/90 to-white/90 backdrop-blur-sm",
+                isCollapsed ? "h-20 px-4 justify-center" : "h-20 px-6 justify-between"
             )}>
-                <Link href="/dashboard" className="flex items-center gap-3 font-semibold">
-                    <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
-                        <Sparkles className="h-4 w-4 text-white" />
+                <Link href="/dashboard" className="flex items-center gap-3 font-semibold group">
+                    <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-blue-500 via-purple-600 to-blue-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                        <Sparkles className="h-5 w-5 text-white drop-shadow-sm" />
                     </div>
                     {!isCollapsed && (
-                        <span className="text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                        <span className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300">
                             {getBusinessName()}
                         </span>
                     )}
@@ -385,90 +412,96 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
                         variant="ghost"
                         size="icon"
                         onClick={() => setIsCollapsed(true)}
-                        className="h-8 w-8 hover:bg-slate-100 lg:hidden"
+                        className="h-10 w-10 hover:bg-slate-100 lg:hidden rounded-xl transition-all duration-300 hover:scale-110"
                     >
-                        <X className="h-4 w-4" />
+                        <X className="h-5 w-5" />
                     </Button>
                 )}
             </div>
 
             {/* Collapse Button - Desktop */}
-            <div className="hidden lg:flex items-center justify-end p-2 border-b border-slate-200">
+            <div className="hidden lg:flex items-center justify-end p-3 border-b border-slate-200/80">
                 <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="h-8 w-8 hover:bg-slate-100"
+                    className="h-9 w-9 hover:bg-slate-100 rounded-xl transition-all duration-300 hover:scale-110 group"
                 >
-                    {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    {isCollapsed ?
+                        <ChevronRight className="h-4 w-4 group-hover:text-blue-600 transition-colors duration-300" /> :
+                        <ChevronDown className="h-4 w-4 group-hover:text-blue-600 transition-colors duration-300" />
+                    }
                 </Button>
             </div>
 
             {/* Navigation */}
             <div className="flex-1 overflow-y-auto scrollbar-hide">
-                <nav className={cn("space-y-2 p-4", isCollapsed && "px-2")}>
+                <nav className={cn("space-y-2 p-4", isCollapsed && "px-3")}>
                     {/* Main Menu */}
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                         {menuItems.map(item => renderMenuItem(item))}
                     </div>
 
                     {/* Divider */}
-                    <div className="border-t border-slate-200 my-4" />
+                    <div className="border-t border-slate-200/80 my-6" />
 
                     {/* Bottom Menu */}
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                         {bottomMenuItems.map(item => renderMenuItem(item, true))}
                     </div>
                 </nav>
             </div>
 
             {/* User Profile */}
-            <div className="border-t border-slate-200 bg-gradient-to-r from-slate-50 to-white">
+            <div className="border-t border-slate-200/80 bg-gradient-to-r from-slate-50/90 to-white/90 backdrop-blur-sm">
                 {isLoading ? (
-                    <div className={cn("p-4", isCollapsed && "px-2")}>
-                        <div className="flex items-center gap-3 rounded-xl p-2">
-                            <div className="h-10 w-10 rounded-full bg-slate-200 animate-pulse" />
+                    <div className={cn("p-4", isCollapsed && "px-3")}>
+                        <div className="flex items-center gap-3 rounded-2xl p-3">
+                            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 animate-pulse" />
                             {!isCollapsed && (
                                 <div className="flex-1 space-y-2">
-                                    <div className="h-3 bg-slate-200 rounded animate-pulse" />
-                                    <div className="h-2 bg-slate-200 rounded animate-pulse w-2/3" />
+                                    <div className="h-4 bg-slate-200 rounded-lg animate-pulse" />
+                                    <div className="h-3 bg-slate-200 rounded-lg animate-pulse w-2/3" />
                                 </div>
                             )}
                         </div>
                     </div>
                 ) : user ? (
-                    <div className={cn("p-4", isCollapsed && "px-2")}>
+                    <div className={cn("p-4", isCollapsed && "px-3")}>
                         <div className={cn(
-                            "flex items-center gap-3 rounded-xl p-3 hover:bg-slate-100 transition-all duration-200 cursor-pointer group",
+                            "flex items-center gap-3 rounded-2xl p-3 hover:bg-slate-100/80 transition-all duration-300 cursor-pointer group relative overflow-hidden",
                             isCollapsed && "justify-center"
                         )}>
-                            <Avatar className="h-10 w-10 ring-2 ring-slate-200 shadow-md">
+                            {/* Background hover effect */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl" />
+
+                            <Avatar className="relative z-10 h-12 w-12 ring-2 ring-slate-200 shadow-lg group-hover:ring-blue-300 group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
                                 <AvatarImage
                                     src={userProfile?.avatar_url || "/placeholder-avatar.jpg"}
                                     alt={getDisplayName()}
                                 />
-                                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
+                                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-lg">
                                     {getUserInitials()}
                                 </AvatarFallback>
                             </Avatar>
                             {!isCollapsed && (
                                 <>
-                                    <div className="flex-1 space-y-1 min-w-0">
-                                        <p className="text-sm font-semibold text-slate-900 truncate">
+                                    <div className="relative z-10 flex-1 space-y-1 min-w-0">
+                                        <p className="text-sm font-semibold text-slate-900 truncate group-hover:text-blue-900 transition-colors duration-300">
                                             {getDisplayName()}
                                         </p>
-                                        <p className="text-xs text-slate-500 truncate">
+                                        <p className="text-xs text-slate-500 truncate group-hover:text-blue-600 transition-colors duration-300">
                                             {user.email}
                                         </p>
                                     </div>
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-8 w-8 shrink-0 hover:bg-red-100 hover:text-red-600 transition-colors duration-200"
+                                        className="relative z-10 h-9 w-9 shrink-0 hover:bg-red-100 hover:text-red-600 transition-all duration-300 rounded-xl group/logout hover:scale-110"
                                         onClick={handleSignOut}
                                         title="Sair"
                                     >
-                                        <LogOut className="h-4 w-4" />
+                                        <LogOut className="h-4 w-4 group-hover/logout:rotate-12 transition-transform duration-300" />
                                     </Button>
                                 </>
                             )}
@@ -476,8 +509,8 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
                     </div>
                 ) : (
                     <div className="p-4">
-                        <div className="flex items-center justify-center p-2">
-                            <p className="text-sm text-slate-500">Não autenticado</p>
+                        <div className="flex items-center justify-center p-3 rounded-2xl bg-red-50">
+                            <p className="text-sm text-red-600 font-medium">Não autenticado</p>
                         </div>
                     </div>
                 )}
@@ -491,24 +524,24 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
             <Button
                 variant="ghost"
                 size="icon"
-                className="lg:hidden fixed top-4 left-4 z-50 h-10 w-10 bg-white shadow-md hover:shadow-lg transition-shadow duration-200"
+                className="lg:hidden fixed top-4 left-4 z-50 h-12 w-12 bg-white/95 backdrop-blur-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 rounded-2xl border border-slate-200/80"
                 onClick={() => setIsMobileOpen(true)}
             >
-                <Menu className="h-5 w-5" />
+                <Menu className="h-6 w-6" />
             </Button>
 
             {/* Mobile Overlay */}
             {isMobileOpen && (
                 <div
-                    className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-200"
+                    className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-all duration-300"
                     onClick={() => setIsMobileOpen(false)}
                 />
             )}
 
             {/* Desktop Sidebar */}
             <aside className={cn(
-                "hidden lg:block fixed left-0 top-0 z-30 h-full transition-all duration-300 ease-in-out",
-                isCollapsed ? "w-16" : "w-64",
+                "hidden lg:block fixed left-0 top-0 z-30 h-full transition-all duration-500 ease-in-out",
+                isCollapsed ? "w-20" : "w-72",
                 className
             )}>
                 {sidebarContent}
@@ -516,7 +549,7 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
 
             {/* Mobile Sidebar */}
             <aside className={cn(
-                "lg:hidden fixed left-0 top-0 z-50 h-full w-64 transform transition-transform duration-300 ease-in-out",
+                "lg:hidden fixed left-0 top-0 z-50 h-full w-72 transform transition-transform duration-500 ease-in-out",
                 isMobileOpen ? "translate-x-0" : "-translate-x-full"
             )}>
                 {sidebarContent}

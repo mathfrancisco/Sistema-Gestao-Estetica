@@ -23,17 +23,20 @@ import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Separator } from '@/components/ui/separator'
 import {
     CalendarIcon,
     Clock,
     User,
     Scissors,
-    Phone,
-    Mail,
-    Calendar as GoogleCalendarIcon,
     AlertCircle,
     Check,
-    Loader2
+    Loader2,
+    Search,
+    Trash2,
+    Save,
+    Eye,
+    EyeOff, FileText
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -91,10 +94,10 @@ interface AppointmentModalProps {
     loading?: boolean
 }
 
-// Horários disponíveis (8h às 18h em intervalos de 10 min)
+// Horários disponíveis (8h às 18h em intervalos de 30 min)
 const timeSlots = Array.from({ length: 21 }, (_, i) => {
     const hour = Math.floor(i / 2) + 8
-    const minute = (i % 2) * 10
+    const minute = (i % 2) * 30
     return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
 })
 
@@ -111,6 +114,8 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
     const [clientSearch, setClientSearch] = useState('')
     const [conflicts, setConflicts] = useState<Appointment[]>([])
+    const [currentStep, setCurrentStep] = useState(1)
+    const [showAdvanced, setShowAdvanced] = useState(false)
 
     const { user } = useAuthStore()
     const {
@@ -190,6 +195,7 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
             setSelectedDate(undefined)
             setSelectedClient(null)
             setSelectedProcedure(null)
+            setCurrentStep(1)
         }
     }, [appointment, allClients, procedures, reset, hasGoogleCalendar])
 
@@ -233,12 +239,14 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
         const client = allClients.find(c => c.id === clientId)
         setSelectedClient(client || null)
         setValue('clientId', clientId)
+        if (currentStep === 1) setCurrentStep(2)
     }
 
     const handleProcedureChange = (procedureId: string) => {
         const procedure = procedures.find(p => p.id === procedureId)
         setSelectedProcedure(procedure || null)
         setValue('procedureId', procedureId)
+        if (currentStep === 2) setCurrentStep(3)
     }
 
     const handleDateSelect = (date: Date | undefined) => {
@@ -246,6 +254,7 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
             setSelectedDate(date)
             setValue('date', date)
             setIsDatePickerOpen(false)
+            if (currentStep === 3) setCurrentStep(4)
         }
     }
 
@@ -319,307 +328,499 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
         }
     }
 
+    const getStepProgress = () => {
+        const totalSteps = 4
+        return (currentStep / totalSteps) * 100
+    }
+
+    const canProceedToNextStep = () => {
+        switch (currentStep) {
+            case 1: return !!watchedValues.clientId
+            case 2: return !!watchedValues.procedureId
+            case 3: return !!watchedValues.date
+            case 4: return !!watchedValues.time
+            default: return false
+        }
+    }
+
+    const renderStepIndicator = () => (
+        <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-slate-900">
+                    {appointment ? 'Editar Agendamento' : 'Novo Agendamento'}
+                </h3>
+                {!appointment && (
+                    <span className="text-sm text-slate-500 font-medium">
+                        Passo {currentStep} de 4
+                    </span>
+                )}
+            </div>
+            {!appointment && (
+                <div className="w-full bg-slate-200 rounded-full h-2">
+                    <div
+                        className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-500 ease-out"
+                        style={{ width: `${getStepProgress()}%` }}
+                    />
+                </div>
+            )}
+        </div>
+    )
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                        <CalendarIcon className="w-5 h-5" />
-                        {appointment ? 'Editar Agendamento' : 'Novo Agendamento'}
+            <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto bg-gradient-to-br from-white via-slate-50/50 to-white">
+                <DialogHeader className="pb-6">
+                    <DialogTitle className="flex items-center gap-3 text-xl">
+                        <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg">
+                            <CalendarIcon className="w-6 h-6" />
+                        </div>
+                        {renderStepIndicator()}
                     </DialogTitle>
                 </DialogHeader>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                    {/* Cliente */}
-                    <div className="space-y-2">
-                        <Label className="flex items-center gap-2">
-                            <User className="w-4 h-4" />
-                            Cliente *
-                        </Label>
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        {/* Formulário Principal */}
+                        <div className="lg:col-span-2 space-y-6">
+                            {/* Seção 1: Cliente */}
+                            <div className={cn(
+                                "p-6 rounded-2xl border-2 transition-all duration-300",
+                                currentStep === 1 ? "border-blue-200 bg-blue-50/50 shadow-lg" : "border-slate-200 bg-white"
+                            )}>
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className={cn(
+                                        "p-2 rounded-lg transition-all duration-300",
+                                        currentStep === 1 ? "bg-blue-100 text-blue-600" : "bg-slate-100 text-slate-500"
+                                    )}>
+                                        <User className="w-5 h-5" />
+                                    </div>
+                                    <h3 className="text-lg font-semibold">Cliente</h3>
+                                    {selectedClient && (
+                                        <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
+                                            <Check className="w-3 h-3 mr-1" />
+                                            Selecionado
+                                        </Badge>
+                                    )}
+                                </div>
 
-                        {/* Campo de busca de cliente */}
-                        <Input
-                            placeholder="Buscar cliente..."
-                            value={clientSearch}
-                            onChange={(e) => setClientSearch(e.target.value)}
-                            className="mb-2"
-                        />
+                                <div className="space-y-4">
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                                        <Input
+                                            placeholder="Buscar cliente por nome..."
+                                            value={clientSearch}
+                                            onChange={(e) => setClientSearch(e.target.value)}
+                                            className="pl-10 h-12 border-slate-300 focus:border-blue-500 focus:ring-blue-500/20"
+                                        />
+                                    </div>
 
-                        <Select value={watchedValues.clientId} onValueChange={handleClientChange}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecione um cliente" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {allClients.map((client) => (
-                                    <SelectItem key={client.id} value={client.id}>
-                                        <div className="flex flex-col">
-                                            <span className="font-medium">{client.name}</span>
-                                            {client.phone && (
-                                                <span className="text-sm text-gray-500">{client.phone}</span>
+                                    <Select value={watchedValues.clientId} onValueChange={handleClientChange}>
+                                        <SelectTrigger className="h-12 border-slate-300 focus:border-blue-500">
+                                            <SelectValue placeholder="Selecione um cliente" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {allClients.map((client) => (
+                                                <SelectItem key={client.id} value={client.id}>
+                                                    <div className="flex flex-col py-1">
+                                                        <span className="font-medium">{client.name}</span>
+                                                        {client.phone && (
+                                                            <span className="text-sm text-slate-500">{client.phone}</span>
+                                                        )}
+                                                    </div>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    {errors.clientId && (
+                                        <p className="text-sm text-red-600 flex items-center gap-1">
+                                            <AlertCircle className="w-4 h-4" />
+                                            {errors.clientId.message}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Seção 2: Procedimento */}
+                            <div className={cn(
+                                "p-6 rounded-2xl border-2 transition-all duration-300",
+                                currentStep === 2 ? "border-blue-200 bg-blue-50/50 shadow-lg" : "border-slate-200 bg-white",
+                                !canProceedToNextStep() && currentStep > 1 ? "opacity-50" : ""
+                            )}>
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className={cn(
+                                        "p-2 rounded-lg transition-all duration-300",
+                                        currentStep === 2 ? "bg-blue-100 text-blue-600" : "bg-slate-100 text-slate-500"
+                                    )}>
+                                        <Scissors className="w-5 h-5" />
+                                    </div>
+                                    <h3 className="text-lg font-semibold">Procedimento</h3>
+                                    {selectedProcedure && (
+                                        <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
+                                            <Check className="w-3 h-3 mr-1" />
+                                            Selecionado
+                                        </Badge>
+                                    )}
+                                </div>
+
+                                <div className="space-y-4">
+                                    <Select value={watchedValues.procedureId} onValueChange={handleProcedureChange}>
+                                        <SelectTrigger className="h-12 border-slate-300 focus:border-blue-500">
+                                            <SelectValue placeholder="Selecione um procedimento" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {procedures.map((procedure) => (
+                                                <SelectItem key={procedure.id} value={procedure.id}>
+                                                    <div className="flex flex-col py-1">
+                                                        <span className="font-medium">{procedure.name}</span>
+                                                        <div className="flex items-center gap-3 text-sm text-slate-500">
+                                                            <span className="flex items-center gap-1">
+                                                                <Clock className="w-3 h-3" />
+                                                                {procedure.duration_minutes} min
+                                                            </span>
+                                                            <span className="font-medium text-green-600">
+                                                                R$ {procedure.price.toFixed(2)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    {errors.procedureId && (
+                                        <p className="text-sm text-red-600 flex items-center gap-1">
+                                            <AlertCircle className="w-4 h-4" />
+                                            {errors.procedureId.message}
+                                        </p>
+                                    )}
+
+                                    {selectedProcedure && (
+                                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                                <div>
+                                                    <span className="text-slate-600">Duração:</span>
+                                                    <p className="font-medium">{selectedProcedure.duration_minutes} minutos</p>
+                                                </div>
+                                                <div>
+                                                    <span className="text-slate-600">Valor:</span>
+                                                    <p className="font-medium text-green-600">R$ {selectedProcedure.price.toFixed(2)}</p>
+                                                </div>
+                                            </div>
+                                            {selectedProcedure.description && (
+                                                <p className="text-sm text-slate-600 mt-2">{selectedProcedure.description}</p>
                                             )}
                                         </div>
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        {errors.clientId && (
-                            <p className="text-sm text-red-600">{errors.clientId.message}</p>
-                        )}
-                    </div>
+                                    )}
+                                </div>
+                            </div>
 
-                    {/* Procedimento */}
-                    <div className="space-y-2">
-                        <Label className="flex items-center gap-2">
-                            <Scissors className="w-4 h-4" />
-                            Procedimento *
-                        </Label>
-                        <Select value={watchedValues.procedureId} onValueChange={handleProcedureChange}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecione um procedimento" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {procedures.map((procedure) => (
-                                    <SelectItem key={procedure.id} value={procedure.id}>
-                                        <div className="flex flex-col">
-                                            <span className="font-medium">{procedure.name}</span>
-                                            <div className="flex items-center gap-2 text-sm text-gray-500">
-                                                <span>{procedure.duration_minutes} min</span>
-                                                <span>R$ {procedure.price.toFixed(2)}</span>
+                            {/* Seção 3: Data e Horário */}
+                            <div className={cn(
+                                "p-6 rounded-2xl border-2 transition-all duration-300",
+                                currentStep >= 3 ? "border-blue-200 bg-blue-50/50 shadow-lg" : "border-slate-200 bg-white",
+                                currentStep < 3 ? "opacity-50" : ""
+                            )}>
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className={cn(
+                                        "p-2 rounded-lg transition-all duration-300",
+                                        currentStep >= 3 ? "bg-blue-100 text-blue-600" : "bg-slate-100 text-slate-500"
+                                    )}>
+                                        <CalendarIcon className="w-5 h-5" />
+                                    </div>
+                                    <h3 className="text-lg font-semibold">Data e Horário</h3>
+                                    {selectedDate && watchedValues.time && (
+                                        <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
+                                            <Check className="w-3 h-3 mr-1" />
+                                            Agendado
+                                        </Badge>
+                                    )}
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium">Data</Label>
+                                        <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    className={cn(
+                                                        "w-full h-12 justify-start text-left font-normal border-slate-300 hover:border-blue-500",
+                                                        !selectedDate && "text-slate-500"
+                                                    )}
+                                                >
+                                                    <CalendarIcon className="mr-3 h-4 w-4" />
+                                                    {selectedDate ? (
+                                                        format(selectedDate, "dd/MM/yyyy", { locale: ptBR })
+                                                    ) : (
+                                                        "Selecionar data"
+                                                    )}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={selectedDate}
+                                                    onSelect={handleDateSelect}
+                                                    disabled={(date) => date < new Date()}
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                        {errors.date && (
+                                            <p className="text-sm text-red-600 flex items-center gap-1">
+                                                <AlertCircle className="w-4 h-4" />
+                                                {errors.date.message}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium">Horário</Label>
+                                        <Select value={watchedValues.time} onValueChange={(value) => setValue('time', value)}>
+                                            <SelectTrigger className="h-12 border-slate-300 focus:border-blue-500">
+                                                <SelectValue placeholder="Selecionar horário" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {timeSlots.map((time) => (
+                                                    <SelectItem key={time} value={time}>
+                                                        <div className="flex items-center gap-2">
+                                                            <Clock className="w-4 h-4 text-slate-400" />
+                                                            {time}
+                                                        </div>
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        {errors.time && (
+                                            <p className="text-sm text-red-600 flex items-center gap-1">
+                                                <AlertCircle className="w-4 h-4" />
+                                                {errors.time.message}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="mt-4">
+                                    <Label className="text-sm font-medium">Duração (minutos)</Label>
+                                    <Input
+                                        type="number"
+                                        min="15"
+                                        step="15"
+                                        className="mt-1 h-12 border-slate-300 focus:border-blue-500"
+                                        {...register('durationMinutes', { valueAsNumber: true })}
+                                    />
+                                    {errors.durationMinutes && (
+                                        <p className="text-sm text-red-600 flex items-center gap-1 mt-1">
+                                            <AlertCircle className="w-4 h-4" />
+                                            {errors.durationMinutes.message}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Seção 4: Observações */}
+                            <div className="p-6 rounded-2xl border-2 border-slate-200 bg-white">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="p-2 rounded-lg bg-slate-100 text-slate-500">
+                                        <FileText className="w-5 h-5" />
+                                    </div>
+                                    <h3 className="text-lg font-semibold">Observações</h3>
+                                </div>
+                                <Textarea
+                                    {...register('notes')}
+                                    placeholder="Observações adicionais sobre o agendamento..."
+                                    rows={4}
+                                    className="border-slate-300 focus:border-blue-500 resize-none"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Sidebar de Resumo */}
+                        <div className="space-y-6">
+                            {/* Resumo do Agendamento */}
+                            <div className="p-6 rounded-2xl border-2 border-slate-200 bg-white sticky top-6">
+                                <h3 className="text-lg font-semibold mb-4">Resumo</h3>
+
+                                <div className="space-y-4">
+                                    {selectedClient && (
+                                        <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                                            <User className="w-5 h-5 text-blue-600" />
+                                            <div>
+                                                <p className="font-medium">{selectedClient.name}</p>
+                                                <p className="text-sm text-slate-500">{selectedClient.phone}</p>
                                             </div>
                                         </div>
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        {errors.procedureId && (
-                            <p className="text-sm text-red-600">{errors.procedureId.message}</p>
-                        )}
-                    </div>
+                                    )}
 
-                    {/* Data e Horário */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>Data *</Label>
-                            <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
-                                <PopoverTrigger asChild>
+                                    {selectedProcedure && (
+                                        <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                                            <Scissors className="w-5 h-5 text-purple-600" />
+                                            <div>
+                                                <p className="font-medium">{selectedProcedure.name}</p>
+                                                <p className="text-sm text-slate-500">
+                                                    {selectedProcedure.duration_minutes}min • R$ {selectedProcedure.price.toFixed(2)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {selectedDate && watchedValues.time && (
+                                        <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                                            <CalendarIcon className="w-5 h-5 text-green-600" />
+                                            <div>
+                                                <p className="font-medium">
+                                                    {format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}
+                                                </p>
+                                                <p className="text-sm text-slate-500">às {watchedValues.time}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Opções Avançadas */}
+                                <div className="mt-6 pt-6 border-t border-slate-200">
                                     <Button
-                                        variant="outline"
-                                        className={cn(
-                                            "w-full justify-start text-left font-normal",
-                                            !selectedDate && "text-muted-foreground"
-                                        )}
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setShowAdvanced(!showAdvanced)}
+                                        className="w-full justify-between"
                                     >
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {selectedDate ? (
-                                            format(selectedDate, "dd/MM/yyyy", { locale: ptBR })
-                                        ) : (
-                                            "Selecionar data"
-                                        )}
+                                        Opções Avançadas
+                                        {showAdvanced ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                     </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar
-                                        mode="single"
-                                        selected={selectedDate}
-                                        onSelect={handleDateSelect}
-                                        disabled={(date) => date < new Date()}
-                                        initialFocus
-                                    />
-                                </PopoverContent>
-                            </Popover>
-                            {errors.date && (
-                                <p className="text-sm text-red-600">{errors.date.message}</p>
-                            )}
-                        </div>
 
-                        <div className="space-y-2">
-                            <Label>Horário *</Label>
-                            <Select value={watchedValues.time} onValueChange={(value) => setValue('time', value)}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Selecionar horário" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {timeSlots.map((time) => (
-                                        <SelectItem key={time} value={time}>
-                                            {time}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            {errors.time && (
-                                <p className="text-sm text-red-600">{errors.time.message}</p>
-                            )}
-                        </div>
-                    </div>
+                                    {showAdvanced && (
+                                        <div className="mt-4 space-y-4">
+                                            {/* Informações de contato */}
+                                            {selectedClient && (
+                                                <div className="space-y-3">
+                                                    <div>
+                                                        <Label className="text-sm">Email do cliente</Label>
+                                                        <Input
+                                                            type="email"
+                                                            {...register('clientEmail')}
+                                                            placeholder="email@exemplo.com"
+                                                            className="mt-1 h-10 text-sm"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <Label className="text-sm">Telefone do cliente</Label>
+                                                        <Input
+                                                            {...register('clientPhone')}
+                                                            placeholder="(11) 99999-9999"
+                                                            className="mt-1 h-10 text-sm"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
 
-                    {/* Duração */}
-                    <div className="space-y-2">
-                        <Label className="flex items-center gap-2">
-                            <Clock className="w-4 h-4" />
-                            Duração (minutos) *
-                        </Label>
-                        <Input
-                            type="number"
-                            min="15"
-                            step="15"
-                            {...register('durationMinutes', { valueAsNumber: true })}
-                        />
-                        {errors.durationMinutes && (
-                            <p className="text-sm text-red-600">{errors.durationMinutes.message}</p>
-                        )}
-                    </div>
+                                            {/* Integração Google Calendar */}
+                                            {hasGoogleCalendar && (
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center space-x-2">
+                                                        <Checkbox
+                                                            id="createGoogleEvent"
+                                                            checked={watchedValues.createGoogleEvent}
+                                                            onCheckedChange={(checked) => setValue('createGoogleEvent', !!checked)}
+                                                        />
+                                                        <Label htmlFor="createGoogleEvent" className="text-sm">
+                                                            Criar evento no Google Calendar
+                                                        </Label>
+                                                    </div>
 
-                    {/* Informações de contato */}
-                    {selectedClient && (
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label className="flex items-center gap-2">
-                                    <Mail className="w-4 h-4" />
-                                    Email do cliente
-                                </Label>
-                                <Input
-                                    type="email"
-                                    {...register('clientEmail')}
-                                    placeholder="email@exemplo.com"
-                                />
-                                {errors.clientEmail && (
-                                    <p className="text-sm text-red-600">{errors.clientEmail.message}</p>
-                                )}
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label className="flex items-center gap-2">
-                                    <Phone className="w-4 h-4" />
-                                    Telefone do cliente
-                                </Label>
-                                <Input
-                                    {...register('clientPhone')}
-                                    placeholder="(11) 99999-9999"
-                                />
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Observações */}
-                    <div className="space-y-2">
-                        <Label>Observações</Label>
-                        <Textarea
-                            {...register('notes')}
-                            placeholder="Observações adicionais sobre o agendamento"
-                            rows={3}
-                        />
-                    </div>
-
-                    {/* Opções de integração */}
-                    {hasGoogleCalendar && (
-                        <div className="space-y-4 border-t pt-4">
-                            <h4 className="font-medium flex items-center gap-2">
-                                <GoogleCalendarIcon className="w-4 h-4" />
-                                Integração Google Calendar
-                            </h4>
-
-                            <div className="space-y-3">
-                                <div className="flex items-center space-x-2">
-                                    <Checkbox
-                                        id="createGoogleEvent"
-                                        checked={watchedValues.createGoogleEvent}
-                                        onCheckedChange={(checked) => setValue('createGoogleEvent', !!checked)}
-                                    />
-                                    <Label htmlFor="createGoogleEvent" className="text-sm">
-                                        Criar evento no Google Calendar
-                                    </Label>
-                                </div>
-
-                                <div className="flex items-center space-x-2">
-                                    <Checkbox
-                                        id="sendReminder"
-                                        checked={watchedValues.sendReminder}
-                                        onCheckedChange={(checked) => setValue('sendReminder', !!checked)}
-                                    />
-                                    <Label htmlFor="sendReminder" className="text-sm">
-                                        Enviar lembrete por email
-                                    </Label>
+                                                    <div className="flex items-center space-x-2">
+                                                        <Checkbox
+                                                            id="sendReminder"
+                                                            checked={watchedValues.sendReminder}
+                                                            onCheckedChange={(checked) => setValue('sendReminder', !!checked)}
+                                                        />
+                                                        <Label htmlFor="sendReminder" className="text-sm">
+                                                            Enviar lembrete por email
+                                                        </Label>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
-                            {watchedValues.createGoogleEvent && (
-                                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            {/* Conflitos */}
+                            {conflicts.length > 0 && (
+                                <div className="p-4 bg-red-50 rounded-xl border border-red-200">
                                     <div className="flex items-start gap-2">
-                                        <AlertCircle className="w-4 h-4 text-blue-600 mt-0.5" />
+                                        <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
                                         <div className="text-sm">
-                                            <p className="font-medium text-blue-900">Evento será criado no Google Calendar</p>
-                                            <p className="text-blue-700 mt-1">
-                                                O cliente receberá um convite por email e o evento aparecerá em seu calendário.
-                                            </p>
+                                            <p className="font-medium text-red-900 mb-1">Conflito de horário!</p>
+                                            {conflicts.map((conflict, index) => (
+                                                <p key={index} className="text-red-700">
+                                                    • Agendamento às {format(new Date(conflict.scheduled_datetime), 'HH:mm')}
+                                                </p>
+                                            ))}
                                         </div>
                                     </div>
                                 </div>
                             )}
-                        </div>
-                    )}
 
-                    {/* Conflitos */}
-                    {conflicts.length > 0 && (
-                        <div className="p-3 bg-red-50 rounded-lg border border-red-200">
-                            <div className="flex items-start gap-2">
-                                <AlertCircle className="w-4 h-4 text-red-600 mt-0.5" />
-                                <div className="text-sm">
-                                    <p className="font-medium text-red-900">Conflito de horário detectado!</p>
-                                    {conflicts.map((conflict, index) => (
-                                        <p key={index} className="text-red-700 mt-1">
-                                            • Agendamento existente às {format(new Date(conflict.scheduled_datetime), 'HH:mm')}
+                            {/* Status do agendamento */}
+                            {appointment && (
+                                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <h4 className="font-medium text-sm">Status</h4>
+                                        <Badge variant={appointment.calendar_synced ? "default" : "destructive"}>
+                                            {appointment.calendar_synced ? "Sincronizado" : "Não Sincronizado"}
+                                        </Badge>
+                                    </div>
+                                    {appointment.google_event_id && (
+                                        <p className="text-xs text-slate-600">
+                                            ID: {appointment.google_event_id}
                                         </p>
-                                    ))}
+                                    )}
                                 </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Status do agendamento para edição */}
-                    {appointment && (
-                        <div className="border-t pt-4">
-                            <div className="flex items-center gap-2 mb-2">
-                                <h4 className="font-medium">Status do Agendamento</h4>
-                                <Badge variant={appointment.calendar_synced ? "default" : "destructive"}>
-                                    {appointment.calendar_synced ? "Sincronizado" : "Não Sincronizado"}
-                                </Badge>
-                            </div>
-                            {appointment.google_event_id && (
-                                <p className="text-sm text-gray-600">
-                                    ID do evento no Google: {appointment.google_event_id}
-                                </p>
                             )}
                         </div>
-                    )}
+                    </div>
 
-                    <DialogFooter className="flex-col sm:flex-row gap-2">
-                        {appointment && (
-                            <Button
-                                type="button"
-                                variant="destructive"
-                                onClick={handleDelete}
-                                disabled={appointmentsLoading}
-                            >
-                                {appointmentsLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Excluir'}
-                            </Button>
-                        )}
-                        <div className="flex gap-2 ml-auto">
+                    <Separator className="my-8" />
+
+                    <DialogFooter className="flex items-center justify-between">
+                        <div className="flex gap-2">
+                            {appointment && (
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    onClick={handleDelete}
+                                    disabled={appointmentsLoading}
+                                    className="hover:scale-105 transition-transform duration-200"
+                                >
+                                    {appointmentsLoading ?
+                                        <Loader2 className="w-4 h-4 animate-spin mr-2" /> :
+                                        <Trash2 className="w-4 h-4 mr-2" />
+                                    }
+                                    Excluir
+                                </Button>
+                            )}
+                        </div>
+
+                        <div className="flex gap-3">
                             <Button
                                 type="button"
                                 variant="outline"
                                 onClick={() => onOpenChange(false)}
                                 disabled={isSubmitting || appointmentsLoading}
+                                className="hover:scale-105 transition-transform duration-200"
                             >
                                 Cancelar
                             </Button>
                             <Button
                                 type="submit"
                                 disabled={isSubmitting || appointmentsLoading || conflicts.length > 0}
+                                className="hover:scale-105 transition-transform duration-200 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                             >
                                 {isSubmitting || appointmentsLoading ? (
                                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                                 ) : (
-                                    <Check className="w-4 h-4 mr-2" />
+                                    <Save className="w-4 h-4 mr-2" />
                                 )}
                                 {appointment ? 'Atualizar' : 'Criar'} Agendamento
                             </Button>

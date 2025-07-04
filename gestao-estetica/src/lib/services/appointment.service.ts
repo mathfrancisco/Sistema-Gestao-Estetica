@@ -1,4 +1,4 @@
-// lib/services/appointmentService.ts
+// lib/services/appointment.service.ts
 import { supabase } from '@/lib/database/supabase/client'
 import type { Database } from '@/lib/database/supabase/types'
 
@@ -32,8 +32,19 @@ export interface AppointmentsResponse {
 }
 
 export interface AppointmentWithDetails extends Appointment {
-    clients?: { name: string; email: string | null; phone: string | null }
-    procedures?: { name: string; price: number; duration_minutes: number }
+    clients?: {
+        id: string
+        name: string
+        email: string | null
+        phone: string | null
+        address?: any
+    }
+    procedures?: {
+        id: string
+        name: string
+        price: number
+        duration_minutes: number
+    }
 }
 
 export class AppointmentService {
@@ -102,8 +113,19 @@ export class AppointmentService {
             .from('appointments')
             .select(`
                 *,
-                clients (name, email, phone),
-                procedures (name, price, duration_minutes)
+                clients:client_id (
+                    id,
+                    name,
+                    email,
+                    phone,
+                    address
+                ),
+                procedures:procedure_id (
+                    id,
+                    name,
+                    price,
+                    duration_minutes
+                )
             `, { count: 'exact' })
 
         // Aplicar filtros
@@ -125,6 +147,10 @@ export class AppointmentService {
 
         if (filters?.dateTo) {
             query = query.lte('scheduled_datetime', filters.dateTo)
+        }
+
+        if (filters?.calendarSynced !== undefined) {
+            query = query.eq('calendar_synced', filters.calendarSynced)
         }
 
         // Aplicar ordenação e paginação
@@ -151,8 +177,19 @@ export class AppointmentService {
             .from('appointments')
             .select(`
                 *,
-                clients (name, email, phone),
-                procedures (name, price, duration_minutes)
+                clients:client_id (
+                    id,
+                    name,
+                    email,
+                    phone,
+                    address
+                ),
+                procedures:procedure_id (
+                    id,
+                    name,
+                    price,
+                    duration_minutes
+                )
             `)
             .eq('id', id)
             .single()
@@ -222,8 +259,19 @@ export class AppointmentService {
             .from('appointments')
             .select(`
                 *,
-                clients (name, email, phone),
-                procedures (name, price, duration_minutes)
+                clients:client_id (
+                    id,
+                    name,
+                    email,
+                    phone,
+                    address
+                ),
+                procedures:procedure_id (
+                    id,
+                    name,
+                    price,
+                    duration_minutes
+                )
             `)
             .gte('scheduled_datetime', startDate.toISOString())
             .lte('scheduled_datetime', endDate.toISOString())
@@ -247,8 +295,19 @@ export class AppointmentService {
             .from('appointments')
             .select(`
                 *,
-                clients (name, email, phone),
-                procedures (name, price, duration_minutes)
+                clients:client_id (
+                    id,
+                    name,
+                    email,
+                    phone,
+                    address
+                ),
+                procedures:procedure_id (
+                    id,
+                    name,
+                    price,
+                    duration_minutes
+                )
             `)
             .gte('scheduled_datetime', startDate)
             .lte('scheduled_datetime', endDate)
@@ -281,8 +340,19 @@ export class AppointmentService {
             .from('appointments')
             .select(`
                 *,
-                clients (name, email, phone),
-                procedures (name, price, duration_minutes)
+                clients:client_id (
+                    id,
+                    name,
+                    email,
+                    phone,
+                    address
+                ),
+                procedures:procedure_id (
+                    id,
+                    name,
+                    price,
+                    duration_minutes
+                )
             `)
             .gte('scheduled_datetime', now.toISOString())
             .lte('scheduled_datetime', futureDate.toISOString())
@@ -446,30 +516,172 @@ export class AppointmentService {
         }
     }
 
-    static async syncWithGoogleCalendar(id: string, googleEventId: string): Promise<Appointment> {
-        return this.updateAppointment(id, {
-            google_event_id: googleEventId,
-            calendar_synced: true
-        })
+    // ==================== MÉTODOS DE SINCRONIZAÇÃO ====================
+
+    // Método para buscar agendamentos não sincronizados
+    static async getUnsyncedAppointments(userId: string) {
+        try {
+            console.log('🔍 Buscando agendamentos não sincronizados para usuário:', userId)
+
+            const { data, error } = await supabase
+                .from('appointments')
+                .select(`
+                    *,
+                    clients:client_id (
+                        id,
+                        name,
+                        email,
+                        phone,
+                        address
+                    ),
+                    procedures:procedure_id (
+                        id,
+                        name,
+                        duration_minutes,
+                        price
+                    )
+                `)
+                .eq('user_id', userId)
+                .eq('calendar_synced', false)
+                .neq('status', 'cancelled')
+                .order('scheduled_datetime', { ascending: true })
+
+            if (error) {
+                console.error('❌ Erro ao buscar agendamentos:', error)
+                throw error
+            }
+
+            console.log('✅ Agendamentos não sincronizados encontrados:', data?.length || 0)
+            return data || []
+        } catch (error) {
+            console.error('💥 Erro ao buscar agendamentos não sincronizados:', error)
+            throw error
+        }
     }
 
-    static async getUnsyncedAppointments(userId?: string): Promise<Appointment[]> {
-        let query = supabase
-            .from('appointments')
-            .select('*')
-            .eq('calendar_synced', false)
-            .neq('status', 'cancelled')
+    // Método para marcar agendamento como sincronizado
+    static async syncWithGoogleCalendar(appointmentId: string, googleEventId: string) {
+        try {
+            console.log('🔄 Marcando agendamento como sincronizado:', { appointmentId, googleEventId })
 
-        if (userId) {
-            query = query.eq('user_id', userId)
+            const { data, error } = await supabase
+                .from('appointments')
+                .update({
+                    calendar_synced: true,
+                    google_event_id: googleEventId,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', appointmentId)
+                .select()
+                .single()
+
+            if (error) {
+                console.error('❌ Erro ao atualizar agendamento:', error)
+                throw error
+            }
+
+            console.log('✅ Agendamento marcado como sincronizado')
+            return data
+        } catch (error) {
+            console.error('💥 Erro ao marcar agendamento como sincronizado:', error)
+            throw error
         }
+    }
 
-        const { data, error } = await query
+    // Método para buscar todos os agendamentos de um usuário
+    static async getAppointmentsByUser(userId: string) {
+        try {
+            console.log('🔍 Buscando todos os agendamentos do usuário:', userId)
 
-        if (error) {
-            throw new Error(`Erro ao buscar agendamentos não sincronizados: ${error.message}`)
+            const { data, error } = await supabase
+                .from('appointments')
+                .select(`
+                    *,
+                    clients:client_id (
+                        id,
+                        name,
+                        email,
+                        phone,
+                        address
+                    ),
+                    procedures:procedure_id (
+                        id,
+                        name,
+                        duration_minutes,
+                        price
+                    )
+                `)
+                .eq('user_id', userId)
+                .order('scheduled_datetime', { ascending: true })
+
+            if (error) {
+                console.error('❌ Erro ao buscar agendamentos:', error)
+                throw error
+            }
+
+            console.log('✅ Agendamentos encontrados:', data?.length || 0)
+            return data || []
+        } catch (error) {
+            console.error('💥 Erro ao buscar agendamentos do usuário:', error)
+            throw error
         }
+    }
 
-        return data || []
+    // Método para remover sincronização (se evento for deletado do Google)
+    static async unsyncFromGoogleCalendar(appointmentId: string) {
+        try {
+            console.log('🔄 Removendo sincronização do agendamento:', appointmentId)
+
+            const { data, error } = await supabase
+                .from('appointments')
+                .update({
+                    calendar_synced: false,
+                    google_event_id: null,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', appointmentId)
+                .select()
+                .single()
+
+            if (error) {
+                console.error('❌ Erro ao remover sincronização:', error)
+                throw error
+            }
+
+            console.log('✅ Sincronização removida')
+            return data
+        } catch (error) {
+            console.error('💥 Erro ao remover sincronização do agendamento:', error)
+            throw error
+        }
+    }
+
+    // Método para verificar se um agendamento está sincronizado
+    static async checkSyncStatus(appointmentId: string) {
+        try {
+            console.log('🔍 Verificando status de sincronização:', appointmentId)
+
+            const { data, error } = await supabase
+                .from('appointments')
+                .select('calendar_synced, google_event_id')
+                .eq('id', appointmentId)
+                .single()
+
+            if (error) {
+                console.error('❌ Erro ao verificar status:', error)
+                throw error
+            }
+
+            const result = {
+                isSynced: data.calendar_synced || false,
+                googleEventId: data.google_event_id
+            }
+
+            console.log('✅ Status verificado:', result)
+            return result
+        } catch (error) {
+            console.error('💥 Erro ao verificar status de sincronização:', error)
+            throw error
+        }
     }
 }

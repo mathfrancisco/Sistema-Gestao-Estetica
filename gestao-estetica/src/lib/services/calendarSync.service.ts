@@ -1,4 +1,3 @@
-
 import { AppointmentService } from '@/lib/services/appointment.service'
 
 export interface CalendarEventData {
@@ -95,7 +94,7 @@ export class CalendarSyncService {
         }
     }
 
-    // Método para sincronizar todos os agendamentos não sincronizados
+    // Novo método para sincronizar todos os agendamentos não sincronizados
     static async syncAllUnsyncedAppointments(userId: string): Promise<SyncResponse> {
         try {
             const response = await fetch('/api/calendar/sync', {
@@ -116,7 +115,7 @@ export class CalendarSyncService {
         }
     }
 
-    // Método para sincronizar um agendamento específico
+    // Novo método para sincronizar um agendamento específico
     static async syncSpecificAppointment(
         userId: string,
         appointmentId: string,

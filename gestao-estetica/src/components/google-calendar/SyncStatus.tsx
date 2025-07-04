@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -18,204 +18,57 @@ import {
     Pause,
     Play,
     RotateCcw,
-    TrendingUp
 } from 'lucide-react'
 import { format, formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { cn } from '@/lib/utils/utils'
+import { useRealCalendarSync } from '@/lib/hooks/useRealCalendarSync'
+import { toast } from 'sonner'
 
-interface SyncOperation {
-    id: string
-    type: 'system_to_google' | 'google_to_system' | 'bidirectional'
-    status: 'running' | 'completed' | 'failed' | 'queued'
-    startTime: Date
-    endTime?: Date
-    progress: number
-    details: {
-        totalItems: number
-        processedItems: number
-        successItems: number
-        failedItems: number
-        currentItem?: string
-    }
-    error?: string
-}
-
-interface SyncMetrics {
-    totalSyncs: number
-    successfulSyncs: number
-    failedSyncs: number
-    averageDuration: number
-    lastSuccessfulSync?: Date
-    uptime: number
-    eventsInSync: number
-    eventsOutOfSync: number
-}
-
-interface SyncStatusProps {
+interface RealSyncStatusProps {
     autoRefresh?: boolean
-    onSyncTrigger?: () => Promise<void>
     onToggleAutoSync?: (enabled: boolean) => Promise<void>
     className?: string
 }
 
-const SyncStatus: React.FC<SyncStatusProps> = ({
-                                                   autoRefresh = true,
-                                                   onSyncTrigger,
-                                                   onToggleAutoSync,
-                                                   className
-                                               }) => {
-    const [currentOperation, setCurrentOperation] = useState<SyncOperation | null>(null)
-    const [recentOperations, setRecentOperations] = useState<SyncOperation[]>([])
-    const [metrics, setMetrics] = useState<SyncMetrics>({
-        totalSyncs: 0,
-        successfulSyncs: 0,
-        failedSyncs: 0,
-        averageDuration: 0,
-        uptime: 95.8,
-        eventsInSync: 0,
-        eventsOutOfSync: 0
-    })
+const RealSyncStatus: React.FC<RealSyncStatusProps> = ({
+                                                           autoRefresh = true,
+                                                           onToggleAutoSync,
+                                                           className
+                                                       }) => {
     const [autoSyncEnabled, setAutoSyncEnabled] = useState(true)
-    const [isLoading, setIsLoading] = useState(false)
 
-    // Simular dados de sincronização
-    useEffect(() => {
-        const loadSyncData = () => {
-            const mockMetrics: SyncMetrics = {
-                totalSyncs: 247,
-                successfulSyncs: 241,
-                failedSyncs: 6,
-                averageDuration: 3.2,
-                lastSuccessfulSync: new Date(Date.now() - 15 * 60 * 1000), // 15 minutos atrás
-                uptime: 97.6,
-                eventsInSync: 156,
-                eventsOutOfSync: 3
-            }
-
-            const mockOperations: SyncOperation[] = [
-                {
-                    id: '1',
-                    type: 'bidirectional',
-                    status: 'completed',
-                    startTime: new Date(Date.now() - 15 * 60 * 1000),
-                    endTime: new Date(Date.now() - 14 * 60 * 1000 - 30 * 1000),
-                    progress: 100,
-                    details: {
-                        totalItems: 12,
-                        processedItems: 12,
-                        successItems: 12,
-                        failedItems: 0
-                    }
-                },
-                {
-                    id: '2',
-                    type: 'system_to_google',
-                    status: 'completed',
-                    startTime: new Date(Date.now() - 45 * 60 * 1000),
-                    endTime: new Date(Date.now() - 44 * 60 * 1000),
-                    progress: 100,
-                    details: {
-                        totalItems: 5,
-                        processedItems: 5,
-                        successItems: 4,
-                        failedItems: 1
-                    }
-                },
-                {
-                    id: '3',
-                    type: 'google_to_system',
-                    status: 'failed',
-                    startTime: new Date(Date.now() - 2 * 60 * 60 * 1000),
-                    endTime: new Date(Date.now() - 2 * 60 * 60 * 1000 + 30 * 1000),
-                    progress: 30,
-                    details: {
-                        totalItems: 8,
-                        processedItems: 2,
-                        successItems: 0,
-                        failedItems: 2
-                    },
-                    error: 'Token de acesso expirado'
-                }
-            ]
-
-            setMetrics(mockMetrics)
-            setRecentOperations(mockOperations)
-        }
-
-        loadSyncData()
-
-        // Auto-refresh se habilitado
-        if (autoRefresh) {
-            const interval = setInterval(loadSyncData, 30000) // 30 segundos
-            return () => clearInterval(interval)
-        }
-    }, [autoRefresh])
-
-    // Simular operação de sincronização em andamento
-    const simulateSync = async () => {
-        const operation: SyncOperation = {
-            id: Date.now().toString(),
-            type: 'bidirectional',
-            status: 'running',
-            startTime: new Date(),
-            progress: 0,
-            details: {
-                totalItems: 15,
-                processedItems: 0,
-                successItems: 0,
-                failedItems: 0
-            }
-        }
-
-        setCurrentOperation(operation)
-        setIsLoading(true)
-
-        // Simular progresso
-        for (let i = 0; i <= 15; i++) {
-            await new Promise(resolve => setTimeout(resolve, 200))
-
-            const updatedOperation: SyncOperation = {
-                ...operation,
-                progress: (i / 15) * 100,
-                details: {
-                    ...operation.details,
-                    processedItems: i,
-                    successItems: Math.max(0, i - Math.floor(Math.random() * 2)),
-                    failedItems: Math.floor(Math.random() * 2),
-                    currentItem: i < 15 ? `Evento ${i + 1}` : undefined
-                }
-            }
-
-            if (i === 15) {
-                updatedOperation.status = 'completed'
-                updatedOperation.endTime = new Date()
-            }
-
-            setCurrentOperation(updatedOperation)
-        }
-
-        // Adicionar à lista de operações recentes
-        setRecentOperations(prev => [operation, ...prev.slice(0, 4)])
-        setCurrentOperation(null)
-        setIsLoading(false)
-
-        // Atualizar métricas
-        setMetrics(prev => ({
-            ...prev,
-            totalSyncs: prev.totalSyncs + 1,
-            successfulSyncs: prev.successfulSyncs + 1,
-            lastSuccessfulSync: new Date(),
-            eventsInSync: prev.eventsInSync + 3
-        }))
-    }
+    const {
+        currentOperation,
+        recentOperations,
+        metrics,
+        loading,
+        error,
+        syncAllAppointments,
+        loadSyncMetrics,
+        clearError
+    } = useRealCalendarSync(autoRefresh)
 
     const handleManualSync = async () => {
         try {
-            await onSyncTrigger?.()
-            await simulateSync()
+            const result = await syncAllAppointments()
+
+            if (result) {
+                const { syncedCount, results } = result
+                const failedCount = results.filter(r => !r.success).length
+
+                if (syncedCount > 0) {
+                    toast.success(`${syncedCount} agendamento(s) sincronizado(s) com sucesso!`)
+                }
+
+                if (failedCount > 0) {
+                    toast.warning(`${failedCount} agendamento(s) falharam na sincronização`)
+                }
+            } else {
+                toast.error('Erro na sincronização')
+            }
         } catch (error) {
-            console.error('Erro na sincronização manual:', error)
+            toast.error('Erro ao executar sincronização')
         }
     }
 
@@ -224,12 +77,22 @@ const SyncStatus: React.FC<SyncStatusProps> = ({
             const newState = !autoSyncEnabled
             await onToggleAutoSync?.(newState)
             setAutoSyncEnabled(newState)
+            toast.success(`Auto-sincronização ${newState ? 'ativada' : 'desativada'}`)
         } catch (error) {
-            console.error('Erro ao alterar auto-sync:', error)
+            toast.error('Erro ao alterar auto-sincronização')
         }
     }
 
-    const getStatusIcon = (status: SyncOperation['status']) => {
+    const handleRefreshStatus = async () => {
+        try {
+            await loadSyncMetrics()
+            toast.success('Status atualizado')
+        } catch (error) {
+            toast.error('Erro ao atualizar status')
+        }
+    }
+
+    const getStatusIcon = (status: string) => {
         switch (status) {
             case 'running':
                 return <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />
@@ -244,20 +107,18 @@ const SyncStatus: React.FC<SyncStatusProps> = ({
         }
     }
 
-    const getTypeLabel = (type: SyncOperation['type']) => {
+    const getTypeLabel = (type: string) => {
         switch (type) {
-            case 'bidirectional':
-                return 'Bidirecional'
-            case 'system_to_google':
+            case 'sync_to_google':
                 return 'Sistema → Google'
-            case 'google_to_system':
-                return 'Google → Sistema'
+            case 'manual_sync':
+                return 'Sincronização Manual'
             default:
-                return 'Desconhecido'
+                return 'Sincronização'
         }
     }
 
-    const getStatusBadge = (status: SyncOperation['status']) => {
+    const getStatusBadge = (status: string) => {
         const config = {
             running: { label: 'Em Andamento', variant: 'secondary' as const },
             completed: { label: 'Concluído', variant: 'default' as const },
@@ -265,7 +126,7 @@ const SyncStatus: React.FC<SyncStatusProps> = ({
             queued: { label: 'Na Fila', variant: 'secondary' as const }
         }
 
-        const { label, variant } = config[status] || config.queued
+        const { label, variant } = config[status as keyof typeof config] || config.queued
         return <Badge variant={variant}>{label}</Badge>
     }
 
@@ -279,6 +140,31 @@ const SyncStatus: React.FC<SyncStatusProps> = ({
         if (rate >= 95) return 'text-green-600'
         if (rate >= 85) return 'text-yellow-600'
         return 'text-red-600'
+    }
+
+    // Mostrar erro se existir
+    if (error) {
+        return (
+            <div className={cn("space-y-6", className)}>
+                <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                        <div className="space-y-2">
+                            <p className="font-medium">Erro na sincronização</p>
+                            <p>{error}</p>
+                            <div className="flex gap-2">
+                                <Button size="sm" onClick={clearError}>
+                                    Fechar
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={handleRefreshStatus}>
+                                    Tentar Novamente
+                                </Button>
+                            </div>
+                        </div>
+                    </AlertDescription>
+                </Alert>
+            </div>
+        )
     }
 
     return (
@@ -355,29 +241,21 @@ const SyncStatus: React.FC<SyncStatusProps> = ({
                         </div>
                     )}
 
-                    {/* Uptime */}
-                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg mb-4">
-                        <div className="flex items-center gap-2">
-                            <TrendingUp className="w-4 h-4 text-green-600" />
-                            <span className="text-sm font-medium text-green-900">Disponibilidade do serviço:</span>
-                        </div>
-                        <span className="font-bold text-green-600">{metrics.uptime}%</span>
-                    </div>
-
                     {/* Ações */}
                     <div className="flex gap-2">
                         <Button
                             onClick={handleManualSync}
-                            disabled={isLoading || !!currentOperation}
+                            disabled={loading || !!currentOperation}
                             className="flex-1"
                         >
-                            <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
-                            Sincronizar Agora
+                            <RefreshCw className={cn("w-4 h-4 mr-2", (loading || currentOperation) && "animate-spin")} />
+                            {currentOperation ? 'Sincronizando...' : 'Sincronizar Agora'}
                         </Button>
                         <Button
                             variant="outline"
-                            onClick={() => window.location.reload()}
+                            onClick={handleRefreshStatus}
                             className="flex-1"
+                            disabled={loading}
                         >
                             <RotateCcw className="w-4 h-4 mr-2" />
                             Atualizar Status
@@ -400,8 +278,8 @@ const SyncStatus: React.FC<SyncStatusProps> = ({
                             <div className="flex items-center gap-2">
                                 {getStatusIcon(currentOperation.status)}
                                 <span className="font-medium">
-                  {getTypeLabel(currentOperation.type)}
-                </span>
+                                    {getTypeLabel(currentOperation.type)}
+                                </span>
                             </div>
                             <div className="text-sm text-gray-600">
                                 {currentOperation.details.processedItems} / {currentOperation.details.totalItems}
@@ -453,6 +331,14 @@ const SyncStatus: React.FC<SyncStatusProps> = ({
                         <div className="text-center py-8 text-gray-500">
                             <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
                             <p>Nenhuma operação de sincronização recente</p>
+                            <Button
+                                variant="outline"
+                                className="mt-4"
+                                onClick={handleManualSync}
+                                disabled={loading || !!currentOperation}
+                            >
+                                Iniciar primeira sincronização
+                            </Button>
                         </div>
                     ) : (
                         <div className="space-y-3">
@@ -468,17 +354,17 @@ const SyncStatus: React.FC<SyncStatusProps> = ({
                                                 {getTypeLabel(operation.type)}
                                             </p>
                                             <div className="flex items-center gap-4 text-xs text-gray-500">
-                        <span>
-                          {format(operation.startTime, 'dd/MM HH:mm', { locale: ptBR })}
-                        </span>
+                                                <span>
+                                                    {format(operation.startTime, 'dd/MM HH:mm', { locale: ptBR })}
+                                                </span>
                                                 {operation.endTime && (
                                                     <span>
-                            Duração: {Math.round((operation.endTime.getTime() - operation.startTime.getTime()) / 1000)}s
-                          </span>
+                                                        Duração: {Math.round((operation.endTime.getTime() - operation.startTime.getTime()) / 1000)}s
+                                                    </span>
                                                 )}
                                                 <span>
-                          {operation.details.successItems}/{operation.details.totalItems} sucessos
-                        </span>
+                                                    {operation.details.successItems}/{operation.details.totalItems} sucessos
+                                                </span>
                                             </div>
                                             {operation.error && (
                                                 <p className="text-xs text-red-600 mt-1">{operation.error}</p>
@@ -491,7 +377,8 @@ const SyncStatus: React.FC<SyncStatusProps> = ({
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                onClick={() => handleManualSync()}
+                                                onClick={handleManualSync}
+                                                disabled={loading || !!currentOperation}
                                             >
                                                 <RotateCcw className="w-3 h-3" />
                                             </Button>
@@ -514,7 +401,12 @@ const SyncStatus: React.FC<SyncStatusProps> = ({
                             <p>
                                 Existem {metrics.eventsOutOfSync} eventos que não estão sincronizados entre o sistema e o Google Calendar.
                             </p>
-                            <Button size="sm" onClick={handleManualSync} className="mt-2">
+                            <Button
+                                size="sm"
+                                onClick={handleManualSync}
+                                className="mt-2"
+                                disabled={loading || !!currentOperation}
+                            >
                                 Sincronizar Agora
                             </Button>
                         </div>
@@ -525,4 +417,4 @@ const SyncStatus: React.FC<SyncStatusProps> = ({
     )
 }
 
-export default SyncStatus
+export default RealSyncStatus
