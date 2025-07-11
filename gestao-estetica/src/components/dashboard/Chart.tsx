@@ -15,12 +15,13 @@ import {
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
-    Legend, PieChart
+    Legend,
+    PieChart
 } from 'recharts';
-import { BarChart3, TrendingUp, Sparkles } from 'lucide-react';
+import { BarChart3, TrendingUp, Target, Activity } from 'lucide-react';
 
 const DEFAULT_COLORS = [
-    '#6366f1', '#ec4899', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#84cc16',
+    '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316'
 ];
 
 interface ChartData {
@@ -49,18 +50,19 @@ interface ChartProps {
 
 function getChartIcon(type: ChartProps['type']) {
     switch (type) {
-        case 'bar': return <BarChart3 className="h-5 w-5 text-white" />;
-        case 'pie': return <PieChart className="h-5 w-5 text-white" />;
-        default: return <TrendingUp className="h-5 w-5 text-white" />;
+        case 'bar': return <BarChart3 className="h-5 w-5" />;
+        case 'pie': return <Target className="h-5 w-5" />;
+        case 'area': return <Activity className="h-5 w-5" />;
+        default: return <TrendingUp className="h-5 w-5" />;
     }
 }
 
-function getChartGradient(type: ChartProps['type']) {
+function getChartColor(type: ChartProps['type']) {
     switch (type) {
-        case 'bar': return 'from-blue-500 to-indigo-600';
-        case 'pie': return 'from-purple-500 to-pink-600';
-        case 'area': return 'from-emerald-500 to-teal-600';
-        default: return 'from-violet-500 to-purple-600';
+        case 'bar': return 'text-blue-500';
+        case 'pie': return 'text-purple-500';
+        case 'area': return 'text-emerald-500';
+        default: return 'text-indigo-500';
     }
 }
 
@@ -79,24 +81,25 @@ export function Chart({
                           formatters = {},
                           className
                       }: ChartProps) {
+
     const formatNumber = (value: number) => new Intl.NumberFormat('pt-BR').format(value);
 
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
             return (
-                <div className="bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl p-4 shadow-2xl shadow-slate-900/20">
-                    <p className="font-semibold mb-3 text-slate-900 text-sm">
+                <div className="bg-white border border-slate-200 rounded-lg p-3 shadow-lg">
+                    <p className="font-medium text-slate-900 mb-2">
                         {formatters.x ? formatters.x(label) : label}
                     </p>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                         {payload.map((entry: any, index: number) => (
-                            <div key={index} className="flex items-center gap-3 text-sm">
+                            <div key={index} className="flex items-center gap-2 text-sm">
                                 <div
-                                    className="w-3 h-3 rounded-full shadow-sm"
+                                    className="w-3 h-3 rounded-full"
                                     style={{ backgroundColor: entry.color }}
                                 />
-                                <span className="capitalize text-slate-600 font-medium">{entry.name || entry.dataKey}:</span>
-                                <span className="font-bold text-slate-900">
+                                <span className="text-slate-600">{entry.name || entry.dataKey}:</span>
+                                <span className="font-medium text-slate-900">
                                     {formatters.tooltip
                                         ? formatters.tooltip(entry.value, entry.name, entry)
                                         : formatters.y
@@ -116,24 +119,26 @@ export function Chart({
     const renderChart = () => {
         const commonProps = {
             data,
-            margin: { top: 10, right: 30, left: 0, bottom: 0 }
+            margin: { top: 5, right: 5, left: 5, bottom: 5 }
         };
 
         switch (type) {
             case 'line':
                 return (
                     <LineChart {...commonProps}>
-                        {showGrid && <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200/60" />}
+                        {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />}
                         <XAxis
                             dataKey={xAxisKey}
                             tickFormatter={formatters.x}
-                            className="text-xs text-slate-600"
+                            fontSize={12}
+                            stroke="#64748b"
                             axisLine={false}
                             tickLine={false}
                         />
                         <YAxis
                             tickFormatter={formatters.y || formatNumber}
-                            className="text-xs text-slate-600"
+                            fontSize={12}
+                            stroke="#64748b"
                             axisLine={false}
                             tickLine={false}
                         />
@@ -146,9 +151,9 @@ export function Chart({
                                     type="monotone"
                                     dataKey={key}
                                     stroke={colors[index % colors.length]}
-                                    strokeWidth={3}
-                                    dot={{ fill: colors[index % colors.length], strokeWidth: 0, r: 5 }} // removido shadow
-                                    activeDot={{ r: 7, stroke: colors[index % colors.length], strokeWidth: 3, fill: 'white' }} // removido shadow
+                                    strokeWidth={2}
+                                    dot={{ fill: colors[index % colors.length], strokeWidth: 0, r: 4 }}
+                                    activeDot={{ r: 6, stroke: colors[index % colors.length], strokeWidth: 2, fill: 'white' }}
                                 />
                             ))
                         ) : (
@@ -156,9 +161,9 @@ export function Chart({
                                 type="monotone"
                                 dataKey={yAxisKey}
                                 stroke={colors[0]}
-                                strokeWidth={3}
-                                dot={{ fill: colors[0], strokeWidth: 0, r: 5 }}
-                                activeDot={{ r: 7, stroke: colors[0], strokeWidth: 3, fill: 'white' }}
+                                strokeWidth={2}
+                                dot={{ fill: colors[0], strokeWidth: 0, r: 4 }}
+                                activeDot={{ r: 6, stroke: colors[0], strokeWidth: 2, fill: 'white' }}
                             />
                         )}
                     </LineChart>
@@ -170,28 +175,30 @@ export function Chart({
                             {Array.isArray(yAxisKey) ? (
                                 yAxisKey.map((key, index) => (
                                     <linearGradient key={key} id={`gradient${key}`} x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor={colors[index % colors.length]} stopOpacity={0.8} />
-                                        <stop offset="95%" stopColor={colors[index % colors.length]} stopOpacity={0.1} />
+                                        <stop offset="5%" stopColor={colors[index % colors.length]} stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor={colors[index % colors.length]} stopOpacity={0.05} />
                                     </linearGradient>
                                 ))
                             ) : (
                                 <linearGradient id="gradientValue" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor={colors[0]} stopOpacity={0.8} />
-                                    <stop offset="95%" stopColor={colors[0]} stopOpacity={0.1} />
+                                    <stop offset="5%" stopColor={colors[0]} stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor={colors[0]} stopOpacity={0.05} />
                                 </linearGradient>
                             )}
                         </defs>
-                        {showGrid && <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200/60" />}
+                        {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />}
                         <XAxis
                             dataKey={xAxisKey}
                             tickFormatter={formatters.x}
-                            className="text-xs text-slate-600"
+                            fontSize={12}
+                            stroke="#64748b"
                             axisLine={false}
                             tickLine={false}
                         />
                         <YAxis
                             tickFormatter={formatters.y || formatNumber}
-                            className="text-xs text-slate-600"
+                            fontSize={12}
+                            stroke="#64748b"
                             axisLine={false}
                             tickLine={false}
                         />
@@ -206,7 +213,7 @@ export function Chart({
                                     stroke={colors[index % colors.length]}
                                     fillOpacity={1}
                                     fill={`url(#gradient${key})`}
-                                    strokeWidth={3}
+                                    strokeWidth={2}
                                 />
                             ))
                         ) : (
@@ -216,7 +223,7 @@ export function Chart({
                                 stroke={colors[0]}
                                 fillOpacity={1}
                                 fill="url(#gradientValue)"
-                                strokeWidth={3}
+                                strokeWidth={2}
                             />
                         )}
                     </AreaChart>
@@ -224,17 +231,19 @@ export function Chart({
             case 'bar':
                 return (
                     <BarChart {...commonProps}>
-                        {showGrid && <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200/60" />}
+                        {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />}
                         <XAxis
                             dataKey={xAxisKey}
                             tickFormatter={formatters.x}
-                            className="text-xs text-slate-600"
+                            fontSize={12}
+                            stroke="#64748b"
                             axisLine={false}
                             tickLine={false}
                         />
                         <YAxis
                             tickFormatter={formatters.y || formatNumber}
-                            className="text-xs text-slate-600"
+                            fontSize={12}
+                            stroke="#64748b"
                             axisLine={false}
                             tickLine={false}
                         />
@@ -246,14 +255,14 @@ export function Chart({
                                     key={key}
                                     dataKey={key}
                                     fill={colors[index % colors.length]}
-                                    radius={[6, 6, 0, 0]}
+                                    radius={[4, 4, 0, 0]}
                                 />
                             ))
                         ) : (
                             <Bar
                                 dataKey={yAxisKey}
                                 fill={colors[0]}
-                                radius={[6, 6, 0, 0]}
+                                radius={[4, 4, 0, 0]}
                             />
                         )}
                     </BarChart>
@@ -267,11 +276,11 @@ export function Chart({
                             cy="50%"
                             labelLine={false}
                             label={({ name, percent }) =>
-                                percent !== undefined
+                                percent !== undefined && percent > 0.05
                                     ? `${name} ${(percent * 100).toFixed(0)}%`
-                                    : name
+                                    : ''
                             }
-                            outerRadius={90}
+                            outerRadius={Math.min(height * 0.35, 120)}
                             fill="#8884d8"
                             dataKey={yAxisKey as string}
                         >
@@ -284,39 +293,30 @@ export function Chart({
                     </PieChart>
                 );
             default:
-                return <div>Tipo de gráfico não suportado</div>;
+                return <div className="text-center text-slate-500">Tipo de gráfico não suportado</div>;
         }
     };
 
     if (loading) {
         return (
-            <Card className="relative overflow-hidden border-0 shadow-2xl shadow-slate-900/10 bg-white">
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-50/80 via-white to-slate-50/80" />
-                <CardHeader className="relative bg-gradient-to-r from-slate-50/90 to-white/90 backdrop-blur-sm border-b border-slate-200/60">
-                    <CardTitle className="flex items-center gap-3 text-xl font-bold">
-                        <div className={`p-2.5 rounded-xl bg-gradient-to-br ${getChartGradient(type)} shadow-lg`}>
-                            {getChartIcon(type)}
-                        </div>
-                        <div className="flex items-center gap-3">
+            <Card className={className}>
+                {title && (
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <div className={`${getChartColor(type)}`}>
+                                {getChartIcon(type)}
+                            </div>
                             {title}
-                            <Badge className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 animate-pulse shadow-lg">
-                                <Sparkles className="w-3 h-3 mr-1" />
+                            <Badge variant="outline" className="animate-pulse">
                                 Carregando...
                             </Badge>
-                        </div>
-                    </CardTitle>
-                    {description && (
-                        <CardDescription className="text-base text-slate-600 font-medium">
-                            {description}
-                        </CardDescription>
-                    )}
-                </CardHeader>
-                <CardContent className="relative p-8">
+                        </CardTitle>
+                        {description && <CardDescription>{description}</CardDescription>}
+                    </CardHeader>
+                )}
+                <CardContent>
                     <div className="flex items-center justify-center" style={{ height }}>
-                        <div className="relative">
-                            <div className="animate-spin rounded-full h-12 w-12 border-4 border-slate-200 border-t-blue-500 shadow-lg"></div>
-                            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500/20 to-indigo-500/20 animate-pulse"></div>
-                        </div>
+                        <div className="animate-spin rounded-full h-8 w-8 border-2 border-slate-300 border-t-blue-500"></div>
                     </div>
                 </CardContent>
             </Card>
@@ -325,31 +325,28 @@ export function Chart({
 
     if (!data || data.length === 0) {
         return (
-            <Card className="relative overflow-hidden border-0 shadow-2xl shadow-slate-900/10 bg-white">
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-50/80 via-white to-slate-50/80" />
-                <CardHeader className="relative bg-gradient-to-r from-slate-50/90 to-white/90 backdrop-blur-sm border-b border-slate-200/60">
-                    <CardTitle className="flex items-center gap-3 text-xl font-bold">
-                        <div className={`p-2.5 rounded-xl bg-gradient-to-br ${getChartGradient(type)} shadow-lg`}>
-                            {getChartIcon(type)}
-                        </div>
-                        {title}
-                    </CardTitle>
-                    {description && (
-                        <CardDescription className="text-base text-slate-600 font-medium">
-                            {description}
-                        </CardDescription>
-                    )}
-                </CardHeader>
-                <CardContent className="relative p-8">
+            <Card className={className}>
+                {title && (
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <div className={`${getChartColor(type)}`}>
+                                {getChartIcon(type)}
+                            </div>
+                            {title}
+                        </CardTitle>
+                        {description && <CardDescription>{description}</CardDescription>}
+                    </CardHeader>
+                )}
+                <CardContent>
                     <div
-                        className="flex flex-col items-center justify-center text-slate-500 bg-slate-50/80 rounded-2xl border-2 border-dashed border-slate-200"
+                        className="flex flex-col items-center justify-center text-slate-500 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200"
                         style={{ height }}
                     >
-                        <div className={`p-4 rounded-2xl bg-gradient-to-br ${getChartGradient(type)} shadow-lg mb-4 opacity-60`}>
+                        <div className={`${getChartColor(type)} mb-3`}>
                             {getChartIcon(type)}
                         </div>
-                        <p className="font-semibold text-lg">Nenhum dado disponível</p>
-                        <p className="text-sm text-slate-400 mt-1">Os dados aparecerão aqui quando disponíveis</p>
+                        <p className="font-medium">Nenhum dado disponível</p>
+                        <p className="text-sm text-slate-400">Os dados aparecerão aqui quando disponíveis</p>
                     </div>
                 </CardContent>
             </Card>
@@ -357,22 +354,19 @@ export function Chart({
     }
 
     return (
-        <Card className="relative overflow-hidden border-0 shadow-2xl shadow-slate-900/10 bg-white hover:shadow-3xl hover:shadow-slate-900/15 transition-all duration-300">
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-50/80 via-white to-slate-50/80" />
-            <CardHeader className="relative bg-gradient-to-r from-slate-50/90 to-white/90 backdrop-blur-sm border-b border-slate-200/60">
-                <CardTitle className="flex items-center gap-3 text-xl font-bold text-slate-900">
-                    <div className={`p-2.5 rounded-xl bg-gradient-to-br ${getChartGradient(type)} shadow-lg transition-transform duration-200 hover:scale-110`}>
-                        {getChartIcon(type)}
-                    </div>
-                    {title}
-                </CardTitle>
-                {description && (
-                    <CardDescription className="text-base text-slate-600 font-medium">
-                        {description}
-                    </CardDescription>
-                )}
-            </CardHeader>
-            <CardContent className="relative p-8">
+        <Card className={className}>
+            {title && (
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <div className={`${getChartColor(type)}`}>
+                            {getChartIcon(type)}
+                        </div>
+                        {title}
+                    </CardTitle>
+                    {description && <CardDescription>{description}</CardDescription>}
+                </CardHeader>
+            )}
+            <CardContent>
                 <ResponsiveContainer width="100%" height={height}>
                     {renderChart()}
                 </ResponsiveContainer>

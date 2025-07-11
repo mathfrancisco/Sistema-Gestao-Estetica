@@ -3,8 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
 import {
     Calendar,
     DollarSign,
@@ -14,17 +13,12 @@ import {
     XCircle,
     AlertCircle,
     ArrowRight,
-    TrendingUp,
     Activity,
-    Filter,
     Search,
     Eye,
     EyeOff,
     RefreshCw,
-    Download,
-    Zap,
-    Timer,
-    Sparkles
+    Download
 } from 'lucide-react';
 import { cn } from '@/lib/utils/utils';
 
@@ -68,34 +62,28 @@ export function RecentActivity({
                                    showSearch = true,
                                    className
                                }: RecentActivityProps) {
-    const [selectedType, setSelectedType] = useState<string>('all');
-    const [selectedStatus, setSelectedStatus] = useState<string>('all');
     const [searchTerm, setSearchTerm] = useState('');
     const [showDetails, setShowDetails] = useState(false);
 
     // Filtrar atividades
     const filteredActivities = activities.filter(activity => {
-        const matchesType = selectedType === 'all' || activity.type === selectedType;
-        const matchesStatus = selectedStatus === 'all' || activity.status === selectedStatus;
-        const matchesSearch = searchTerm === '' ||
-            activity.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        if (searchTerm === '') return true;
+        return activity.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
             activity.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
             activity.client?.name.toLowerCase().includes(searchTerm.toLowerCase());
-
-        return matchesType && matchesStatus && matchesSearch;
     });
 
     const displayActivities = showAll ? filteredActivities : filteredActivities.slice(0, limit);
 
-    const getActivityIcon = (type: Activity['type'], status?: Activity['status']) => {
+    const getActivityIcon = (type: Activity['type']) => {
         const icons = {
             appointment: Calendar,
             payment: DollarSign,
             client: User,
-            procedure: TrendingUp
+            procedure: Activity
         };
         const IconComponent = icons[type] || Activity;
-        return <IconComponent className="h-5 w-5" />;
+        return <IconComponent className="h-4 w-4" />;
     };
 
     const getStatusIcon = (status?: Activity['status']) => {
@@ -113,34 +101,14 @@ export function RecentActivity({
         }
     };
 
-    const getActivityGradient = (type: Activity['type']) => {
-        const gradients = {
-            appointment: 'from-blue-500 to-indigo-600',
-            payment: 'from-emerald-500 to-green-600',
-            client: 'from-purple-500 to-pink-600',
-            procedure: 'from-indigo-500 to-purple-600'
+    const getTypeColor = (type: Activity['type']) => {
+        const colors = {
+            appointment: 'bg-blue-100 text-blue-700',
+            payment: 'bg-emerald-100 text-emerald-700',
+            client: 'bg-purple-100 text-purple-700',
+            procedure: 'bg-orange-100 text-orange-700'
         };
-        return gradients[type] || 'from-slate-500 to-slate-600';
-    };
-
-    const getStatusBadgeStyle = (status?: Activity['status']) => {
-        const styles = {
-            success: 'bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-lg shadow-emerald-500/25',
-            error: 'bg-gradient-to-r from-red-500 to-rose-500 text-white border-0 shadow-lg shadow-red-500/25',
-            warning: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-lg shadow-amber-500/25',
-            info: 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-0 shadow-lg shadow-blue-500/25'
-        };
-        return styles[status || 'info'];
-    };
-
-    const getTypeLabel = (type: Activity['type']) => {
-        const labels = {
-            appointment: 'Agendamentos',
-            payment: 'Pagamentos',
-            client: 'Clientes',
-            procedure: 'Procedimentos'
-        };
-        return labels[type];
+        return colors[type] || 'bg-slate-100 text-slate-700';
     };
 
     const formatTimestamp = (timestamp: string) => {
@@ -167,50 +135,26 @@ export function RecentActivity({
         }).format(value);
     };
 
-    const getActivityStats = () => {
-        const types = ['appointment', 'payment', 'client', 'procedure'];
-        const statuses = ['success', 'warning', 'error', 'info'];
-
-        return {
-            byType: types.map(type => ({
-                type,
-                count: activities.filter(a => a.type === type).length,
-                label: getTypeLabel(type as Activity['type'])
-            })),
-            byStatus: statuses.map(status => ({
-                status,
-                count: activities.filter(a => a.status === status).length,
-                label: status === 'success' ? 'Concluído' :
-                    status === 'error' ? 'Erro' :
-                        status === 'warning' ? 'Atenção' : 'Info'
-            }))
-        };
-    };
-
     if (loading) {
         return (
-            <Card className={cn("border-0 shadow-2xl shadow-slate-200/60 overflow-hidden bg-gradient-to-br from-white via-slate-50/30 to-white", className)}>
-                <CardHeader className="bg-gradient-to-r from-slate-50/80 to-white/80 backdrop-blur-sm border-b border-slate-100">
-                    <CardTitle className="flex items-center gap-3 text-xl">
-                        <div className="p-2.5 rounded-xl bg-gradient-to-br from-slate-400 to-slate-500 shadow-lg animate-pulse">
-                            <Activity className="w-6 h-6 text-white" />
-                        </div>
+            <Card className={className}>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Activity className="w-5 h-5 text-blue-500" />
                         Atividades Recentes
                     </CardTitle>
-                    <CardDescription className="mt-1">
-                        Carregando últimas movimentações...
-                    </CardDescription>
+                    <CardDescription>Carregando últimas movimentações...</CardDescription>
                 </CardHeader>
-                <CardContent className="p-6">
+                <CardContent>
                     <div className="space-y-4">
                         {Array.from({ length: 5 }).map((_, i) => (
-                            <div key={i} className="flex items-center space-x-4 p-4 rounded-2xl bg-slate-50/50 animate-pulse">
-                                <div className="w-12 h-12 bg-slate-200 rounded-2xl" />
+                            <div key={i} className="flex items-center space-x-4 animate-pulse">
+                                <div className="w-10 h-10 bg-slate-200 rounded-full" />
                                 <div className="flex-1 space-y-2">
-                                    <div className="h-4 bg-slate-200 rounded-lg w-3/4" />
-                                    <div className="h-3 bg-slate-200 rounded-lg w-1/2" />
+                                    <div className="h-4 bg-slate-200 rounded w-3/4" />
+                                    <div className="h-3 bg-slate-200 rounded w-1/2" />
                                 </div>
-                                <div className="h-6 bg-slate-200 rounded-lg w-16" />
+                                <div className="h-6 bg-slate-200 rounded w-16" />
                             </div>
                         ))}
                     </div>
@@ -219,48 +163,30 @@ export function RecentActivity({
         );
     }
 
-    const stats = getActivityStats();
-
     return (
-        <Card className={cn("border-0 shadow-2xl shadow-slate-200/60 overflow-hidden bg-gradient-to-br from-white via-slate-50/30 to-white", className)}>
-            <CardHeader className="bg-gradient-to-r from-slate-50/80 to-white/80 backdrop-blur-sm border-b border-slate-100">
+        <Card className={className}>
+            <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle className="flex items-center gap-3 text-xl">
-                            <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
-                                <Activity className="w-6 h-6 text-white" />
-                            </div>
-                            <div>
-                                <h2 className="text-xl font-bold">Atividades Recentes</h2>
-                                <CardDescription className="mt-1">
-                                    Últimas movimentações do sistema
-                                </CardDescription>
-                            </div>
+                        <CardTitle className="flex items-center gap-2">
+                            <Activity className="w-5 h-5 text-blue-500" />
+                            Atividades Recentes
                         </CardTitle>
+                        <CardDescription>Últimas movimentações do sistema</CardDescription>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Badge className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 shadow-lg shadow-blue-500/25">
-                            <Sparkles className="w-3 h-3 mr-1" />
+                        <Badge variant="outline" className="text-xs">
                             {displayActivities.length} atividades
                         </Badge>
+
                         <div className="flex items-center gap-1">
                             {onRefresh && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={onRefresh}
-                                    className="hover:bg-slate-100 rounded-xl"
-                                >
+                                <Button variant="ghost" size="sm" onClick={onRefresh}>
                                     <RefreshCw className="w-4 h-4" />
                                 </Button>
                             )}
                             {onExport && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={onExport}
-                                    className="hover:bg-slate-100 rounded-xl"
-                                >
+                                <Button variant="ghost" size="sm" onClick={onExport}>
                                     <Download className="w-4 h-4" />
                                 </Button>
                             )}
@@ -268,18 +194,13 @@ export function RecentActivity({
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setShowDetails(!showDetails)}
-                                className="hover:bg-slate-100 rounded-xl"
                             >
                                 {showDetails ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </Button>
                         </div>
+
                         {!showAll && filteredActivities.length > limit && onViewAll && (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={onViewAll}
-                                className="rounded-xl bg-white hover:bg-slate-50 shadow-sm"
-                            >
+                            <Button variant="outline" size="sm" onClick={onViewAll}>
                                 Ver tudo
                                 <ArrowRight className="h-4 w-4 ml-1" />
                             </Button>
@@ -288,85 +209,28 @@ export function RecentActivity({
                 </div>
             </CardHeader>
 
-            <CardContent className="p-6 space-y-6">
-                {/* Filtros e Busca */}
-                {(showFilters || showSearch) && (
-                    <div className="space-y-4">
-                        {showSearch && (
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Buscar atividades..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
-                                />
-                            </div>
-                        )}
-
-                        {showFilters && (
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="flex items-center gap-2">
-                                    <Filter className="w-4 h-4 text-slate-500" />
-                                    <span className="text-sm font-medium text-slate-700">Filtros:</span>
-                                </div>
-                                <Tabs value={selectedType} onValueChange={setSelectedType}>
-                                    <TabsList className="bg-slate-100/80 backdrop-blur-sm">
-                                        <TabsTrigger value="all">Todos</TabsTrigger>
-                                        <TabsTrigger value="appointment">Agendamentos</TabsTrigger>
-                                        <TabsTrigger value="payment">Pagamentos</TabsTrigger>
-                                        <TabsTrigger value="client">Clientes</TabsTrigger>
-                                        <TabsTrigger value="procedure">Procedimentos</TabsTrigger>
-                                    </TabsList>
-                                </Tabs>
-                                <Tabs value={selectedStatus} onValueChange={setSelectedStatus}>
-                                    <TabsList className="bg-slate-100/80 backdrop-blur-sm">
-                                        <TabsTrigger value="all">Status</TabsTrigger>
-                                        <TabsTrigger value="success">Sucesso</TabsTrigger>
-                                        <TabsTrigger value="warning">Atenção</TabsTrigger>
-                                        <TabsTrigger value="error">Erro</TabsTrigger>
-                                    </TabsList>
-                                </Tabs>
-                            </div>
-                        )}
+            <CardContent className="space-y-4">
+                {/* Busca */}
+                {showSearch && (
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <Input
+                            placeholder="Buscar atividades..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10"
+                        />
                     </div>
-                )}
-
-                {/* Estatísticas */}
-                {showDetails && (
-                    <>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {stats.byType.map(({ type, count, label }) => (
-                                <div key={type} className="text-center p-4 bg-slate-50/80 rounded-2xl border border-slate-100">
-                                    <div className={cn(
-                                        "w-8 h-8 rounded-xl bg-gradient-to-br mx-auto mb-2 flex items-center justify-center shadow-lg",
-                                        getActivityGradient(type as Activity['type'])
-                                    )}>
-                                        {getActivityIcon(type as Activity['type'])}
-                                    </div>
-                                    <div className="text-2xl font-bold text-slate-900 mb-1">{count}</div>
-                                    <div className="text-sm text-slate-600 font-medium">{label}</div>
-                                </div>
-                            ))}
-                        </div>
-                        <Separator />
-                    </>
                 )}
 
                 {/* Lista de Atividades */}
                 {displayActivities.length === 0 ? (
-                    <div className="text-center py-16">
-                        <div className="w-20 h-20 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                            <Activity className="w-10 h-10 text-slate-400" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-slate-900 mb-3">
-                            {searchTerm || selectedType !== 'all' || selectedStatus !== 'all'
-                                ? 'Nenhuma atividade encontrada'
-                                : 'Nenhuma atividade recente'
-                            }
+                    <div className="text-center py-8">
+                        <Activity className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                        <h3 className="font-medium text-slate-900 mb-2">
+                            {searchTerm ? 'Nenhuma atividade encontrada' : 'Nenhuma atividade recente'}
                         </h3>
-                        <p className="text-slate-500 mb-6 max-w-md mx-auto">
+                        <p className="text-sm text-slate-500">
                             {searchTerm
                                 ? `Não encontramos atividades para "${searchTerm}"`
                                 : 'As atividades aparecerão aqui quando ocorrerem'
@@ -375,8 +239,9 @@ export function RecentActivity({
                         {searchTerm && (
                             <Button
                                 variant="outline"
+                                size="sm"
+                                className="mt-4"
                                 onClick={() => setSearchTerm('')}
-                                className="rounded-xl"
                             >
                                 Limpar busca
                             </Button>
@@ -384,92 +249,102 @@ export function RecentActivity({
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        {displayActivities.map((activity, index) => (
+                        {displayActivities.map((activity) => (
                             <div
                                 key={activity.id}
-                                className="group relative p-5 rounded-2xl bg-white/80 backdrop-blur-sm border border-slate-200/60 hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-500 hover:-translate-y-1 hover:scale-[1.02]"
+                                className="flex items-start gap-4 p-4 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
                             >
-                                {/* Background gradient effect */}
-                                <div className={cn(
-                                    "absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-5 transition-all duration-500 rounded-2xl",
-                                    getActivityGradient(activity.type)
-                                )} />
-
-                                <div className="flex items-start gap-4 relative z-10">
-                                    <div className="flex-shrink-0">
-                                        {activity.client ? (
-                                            <div className="relative">
-                                                <Avatar className="h-14 w-14 ring-2 ring-white shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
-                                                    <AvatarImage src={activity.client.avatar} />
-                                                    <AvatarFallback className={cn(
-                                                        "bg-gradient-to-br text-white font-bold text-lg",
-                                                        getActivityGradient(activity.type)
-                                                    )}>
-                                                        {activity.client.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div className={cn(
-                                                    "absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-br rounded-xl flex items-center justify-center shadow-lg ring-2 ring-white group-hover:scale-110 transition-all duration-300",
-                                                    getActivityGradient(activity.type)
-                                                )}>
-                                                    {getActivityIcon(activity.type, activity.status)}
-                                                </div>
-                                            </div>
-                                        ) : (
+                                <div className="flex-shrink-0">
+                                    {activity.client ? (
+                                        <div className="relative">
+                                            <Avatar className="h-10 w-10">
+                                                <AvatarImage src={activity.client.avatar} />
+                                                <AvatarFallback className={getTypeColor(activity.type)}>
+                                                    {activity.client.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                                </AvatarFallback>
+                                            </Avatar>
                                             <div className={cn(
-                                                "w-14 h-14 bg-gradient-to-br rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300",
-                                                getActivityGradient(activity.type)
+                                                "absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center border-2 border-white",
+                                                getTypeColor(activity.type)
                                             )}>
-                                                {getActivityIcon(activity.type, activity.status)}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <h4 className="text-base font-bold text-slate-900 group-hover:text-slate-800 transition-colors duration-300">
-                                                {activity.title}
-                                            </h4>
-                                            {getStatusIcon(activity.status)}
-                                        </div>
-                                        <p className="text-sm text-slate-600 mb-3 leading-relaxed group-hover:text-slate-700 transition-colors duration-300">
-                                            {activity.description}
-                                        </p>
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <Timer className="w-3 h-3 text-slate-400" />
-                                                <span className="text-xs text-slate-500 font-medium">
-                                                    {formatTimestamp(activity.timestamp)}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                {activity.value && (
-                                                    <Badge className="bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-lg shadow-emerald-500/25 text-xs font-bold px-3 py-1">
-                                                        {formatValue(activity.value)}
-                                                    </Badge>
-                                                )}
-                                                {activity.status && (
-                                                    <Badge className={cn(getStatusBadgeStyle(activity.status), "text-xs font-bold px-3 py-1")}>
-                                                        {activity.status === 'success' ? 'Concluído' :
-                                                            activity.status === 'error' ? 'Erro' :
-                                                                activity.status === 'warning' ? 'Atenção' : 'Info'}
-                                                    </Badge>
-                                                )}
+                                                {getActivityIcon(activity.type)}
                                             </div>
                                         </div>
-                                    </div>
-
-                                    <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                                        <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-slate-600 group-hover:translate-x-1 transition-all duration-300" />
-                                    </div>
+                                    ) : (
+                                        <div className={cn(
+                                            "w-10 h-10 rounded-full flex items-center justify-center",
+                                            getTypeColor(activity.type)
+                                        )}>
+                                            {getActivityIcon(activity.type)}
+                                        </div>
+                                    )}
                                 </div>
 
-                                {/* Hover shine effect */}
-                                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <h4 className="font-medium text-slate-900 truncate">
+                                            {activity.title}
+                                        </h4>
+                                        {getStatusIcon(activity.status)}
+                                    </div>
+                                    <p className="text-sm text-slate-600 mb-2">
+                                        {activity.description}
+                                    </p>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500">
+                                            {formatTimestamp(activity.timestamp)}
+                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            {activity.value && (
+                                                <Badge variant="outline" className="text-xs">
+                                                    {formatValue(activity.value)}
+                                                </Badge>
+                                            )}
+                                            {activity.status && (
+                                                <Badge
+                                                    variant={activity.status === 'success' ? 'default' : 'outline'}
+                                                    className="text-xs"
+                                                >
+                                                    {activity.status === 'success' ? 'Concluído' :
+                                                        activity.status === 'error' ? 'Erro' :
+                                                            activity.status === 'warning' ? 'Atenção' : 'Info'}
+                                                </Badge>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         ))}
+                    </div>
+                )}
+
+                {/* Estatísticas detalhadas */}
+                {showDetails && displayActivities.length > 0 && (
+                    <div className="pt-4 border-t border-slate-200">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {['appointment', 'payment', 'client', 'procedure'].map((type) => {
+                                const count = activities.filter(a => a.type === type).length;
+                                const labels = {
+                                    appointment: 'Agendamentos',
+                                    payment: 'Pagamentos',
+                                    client: 'Clientes',
+                                    procedure: 'Procedimentos'
+                                };
+
+                                return (
+                                    <div key={type} className="text-center p-3 bg-slate-50 rounded-lg">
+                                        <div className={cn(
+                                            "w-8 h-8 rounded-full mx-auto mb-2 flex items-center justify-center",
+                                            getTypeColor(type as Activity['type'])
+                                        )}>
+                                            {getActivityIcon(type as Activity['type'])}
+                                        </div>
+                                        <div className="text-lg font-bold text-slate-900">{count}</div>
+                                        <div className="text-xs text-slate-600">{labels[type]}</div>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
                 )}
             </CardContent>

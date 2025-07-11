@@ -1,12 +1,19 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useParams, useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Input } from '@/components/ui/input'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip'
 import {
     Calendar,
     ArrowLeft,
@@ -25,30 +32,25 @@ import {
     CreditCard,
     FileText,
     User,
-    BarChart3,
-    PieChart,
-    Target,
     Zap,
     Gift,
-    RefreshCw
+    RefreshCw,
+    Heart,
+    Brain,
+    Keyboard,
+    Loader2,
+    XCircle,
+    ArrowUpRight,
 } from 'lucide-react'
+import { cn } from '@/lib/utils/utils'
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
-import { format, subDays, isBefore, parseISO } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
-import Link from 'next/link'
-import { useParams } from 'next/navigation'
-import { toast } from 'sonner'
-import type { Database } from '@/lib/database/supabase/types'
-import { useClient } from "@/lib/hooks/useClients"
+    useClient,
+    useClientHistory,
+    useClientStats
+} from '@/lib/hooks/useClients'
+import { useAppointments } from "@/lib/hooks/useAppointment"
 import { Sidebar } from '@/components/layout/sidebar'
-
-type Client = Database['public']['Tables']['clients']['Row']
+import { toast } from 'sonner'
 
 interface HistoryEvent {
     id: string
@@ -62,162 +64,276 @@ interface HistoryEvent {
     metadata?: Record<string, any>
 }
 
+interface SmartInsight {
+    type: 'opportunity' | 'warning' | 'success' | 'info'
+    title: string
+    description: string
+    action?: {
+        label: string
+        onClick: () => void
+    }
+    value?: string | number
+}
+
 const ClientHistoryPage: React.FC = () => {
     const params = useParams()
+    const router = useRouter()
     const clientId = params.id as string
 
+    // Estados principais
     const [activeTab, setActiveTab] = useState('timeline')
     const [filterType, setFilterType] = useState<string>('all')
     const [filterPeriod, setFilterPeriod] = useState<string>('all')
     const [searchTerm, setSearchTerm] = useState('')
+    const [showShortcuts, setShowShortcuts] = useState(false)
+    const [focusedEventIndex, setFocusedEventIndex] = useState(-1)
+
+    // Refs para navegação
+    const searchRef = useRef<HTMLInputElement>(null)
 
     // Hooks
-    const { data: client, isLoading, error } = useClient(clientId)
+    const {
+        data: client,
+        isLoading: clientLoading,
+        error: clientError
+    } = useClient(clientId)
 
-    // Mock data para histórico completo
-    const [historyEvents] = useState<HistoryEvent[]>([
-        {
-            id: '1',
-            type: 'appointment',
-            date: '2024-04-25T14:00:00',
-            title: 'Limpeza de Pele Profunda',
-            description: 'Procedimento realizado com sucesso. Cliente muito satisfeita com o resultado.',
-            value: 150.00,
-            status: 'completed',
-            rating: 5,
-            metadata: { duration: 90, professional: 'Dra. Maria Silva' }
-        },
-        {
-            id: '2',
-            type: 'payment',
-            date: '2024-04-25T14:30:00',
-            title: 'Pagamento Recebido - PIX',
-            description: 'Pagamento via PIX processado automaticamente.',
-            value: 150.00,
-            status: 'completed'
-        },
-        {
-            id: '3',
-            type: 'communication',
-            date: '2024-04-24T10:00:00',
-            title: 'WhatsApp - Lembrete de Consulta',
-            description: 'Lembrete automático enviado 24h antes da consulta.',
-            metadata: { channel: 'whatsapp', read: true }
-        },
-        {
-            id: '4',
-            type: 'appointment',
-            date: '2024-03-20T15:30:00',
-            title: 'Hidratação Facial',
-            description: 'Primeira hidratação. Cliente relatou pele ressecada.',
-            value: 120.00,
-            status: 'completed',
-            rating: 4,
-            metadata: { duration: 60, professional: 'Dra. Ana Costa' }
-        },
-        {
-            id: '5',
-            type: 'campaign',
-            date: '2024-03-15T09:00:00',
-            title: 'Email - Promoção Março',
-            description: 'Campanha promocional de março enviada. Taxa de abertura registrada.',
-            metadata: { channel: 'email', opened: true, clicked: false }
-        },
-        {
-            id: '6',
-            type: 'note',
-            date: '2024-03-20T16:00:00',
-            title: 'Observação Adicionada',
-            description: 'Cliente prefere horários vespertinos. Alérgica a produtos com álcool.',
-            metadata: { author: 'Dra. Ana Costa' }
-        },
-        {
-            id: '7',
-            type: 'appointment',
-            date: '2024-02-15T14:00:00',
-            title: 'Peeling Químico',
-            description: 'Primeira consulta da cliente. Avaliação inicial realizada.',
-            value: 250.00,
-            status: 'completed',
-            rating: 5,
-            metadata: { duration: 120, professional: 'Dra. Maria Silva', isFirstVisit: true }
-        },
-        {
-            id: '8',
-            type: 'communication',
-            date: '2024-02-14T18:00:00',
-            title: 'WhatsApp - Confirmação de Agendamento',
-            description: 'Cliente confirmou presença para primeira consulta.',
-            metadata: { channel: 'whatsapp', read: true }
-        }
-    ])
+    const {
+        data: clientHistory,
+        isLoading: historyLoading,
+        refetch: refetchHistory
+    } = useClientHistory(clientId)
 
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
-                <Sidebar />
-                <div className="lg:ml-64">
-                    <div className="flex items-center justify-center h-64">
-                        <RefreshCw className="w-8 h-8 animate-spin text-blue-500" />
-                    </div>
-                </div>
-            </div>
-        )
-    }
+    const {
+        data: clientStats,
+        isLoading: statsLoading
+    } = useClientStats(client?.user_id)
 
-    if (error || !client) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
-                <Sidebar />
-                <div className="lg:ml-64">
-                    <div className="flex items-center justify-center h-64">
-                        <div className="text-center">
-                            <h2 className="text-xl font-semibold text-slate-900 mb-2">Cliente não encontrado</h2>
-                            <p className="text-slate-600 mb-4">Não foi possível carregar o histórico.</p>
-                            <Link href="/clientes">
-                                <Button>Voltar para Clientes</Button>
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
-    // Filtrar eventos
-    const filteredEvents = historyEvents.filter(event => {
-        // Filtro por tipo
-        if (filterType !== 'all' && event.type !== filterType) return false
-
-        // Filtro por período
-        if (filterPeriod !== 'all') {
-            const eventDate = parseISO(event.date)
-            const now = new Date()
-            switch (filterPeriod) {
-                case '7days':
-                    if (isBefore(eventDate, subDays(now, 7))) return false
-                    break
-                case '30days':
-                    if (isBefore(eventDate, subDays(now, 30))) return false
-                    break
-                case '90days':
-                    if (isBefore(eventDate, subDays(now, 90))) return false
-                    break
-            }
-        }
-
-        // Filtro por busca
-        if (searchTerm) {
-            const searchLower = searchTerm.toLowerCase()
-            if (!event.title.toLowerCase().includes(searchLower) &&
-                !event.description.toLowerCase().includes(searchLower)) {
-                return false
-            }
-        }
-
-        return true
+    const {
+        appointmentsWithDetails: appointments,
+        loading: appointmentsLoading,
+        fetchAppointmentsWithDetails,
+        stats: appointmentStats
+    } = useAppointments({
+        initialLimit: 50,
+        initialFilters: { clientId },
+        autoFetch: !!clientId,
+        userId: client?.user_id
     })
 
+    const isLoading = clientLoading || historyLoading || statsLoading || appointmentsLoading
+
+    // Convert appointments to history events
+    const historyEvents: HistoryEvent[] = useMemo(() => {
+        if (!appointments) return []
+
+        return appointments.map(appointment => ({
+            id: appointment.id,
+            type: 'appointment' as const,
+            date: appointment.scheduled_datetime,
+            title: appointment.procedure?.name || 'Procedimento',
+            description: appointment.notes || 'Consulta realizada',
+            value: appointment.price || 0,
+            status: appointment.status as any,
+            rating: appointment.rating || undefined,
+            metadata: {
+                duration: appointment.duration_minutes,
+                professional: appointment.professional_name,
+                procedure_id: appointment.procedure_id
+            }
+        }))
+    }, [appointments])
+
+    // Navegação por teclado
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key) {
+                    case 'k':
+                        e.preventDefault()
+                        searchRef.current?.focus()
+                        break
+                    case 'r':
+                        e.preventDefault()
+                        handleRefreshData()
+                        break
+                    case '/':
+                        e.preventDefault()
+                        setShowShortcuts(!showShortcuts)
+                        break
+                    case 'b':
+                        e.preventDefault()
+                        router.back()
+                        break
+                }
+            }
+
+            // Navegação nos eventos
+            if (activeTab === 'timeline' && filteredEvents.length > 0) {
+                switch (e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault()
+                        setFocusedEventIndex(prev =>
+                            prev < filteredEvents.length - 1 ? prev + 1 : prev
+                        )
+                        break
+                    case 'ArrowUp':
+                        e.preventDefault()
+                        setFocusedEventIndex(prev => prev > 0 ? prev - 1 : prev)
+                        break
+                    case 'Escape':
+                        setFocusedEventIndex(-1)
+                        break
+                }
+            }
+        }
+
+        document.addEventListener('keydown', handleKeyDown)
+        return () => document.removeEventListener('keydown', handleKeyDown)
+    }, [showShortcuts, activeTab, focusedEventIndex, router])
+
+    // Filtrar eventos
+    const filteredEvents = useMemo(() => {
+        let filtered = historyEvents
+
+        if (filterType !== 'all') {
+            filtered = filtered.filter(event => event.type === filterType)
+        }
+
+        if (searchTerm) {
+            const searchLower = searchTerm.toLowerCase()
+            filtered = filtered.filter(event =>
+                event.title.toLowerCase().includes(searchLower) ||
+                event.description.toLowerCase().includes(searchLower)
+            )
+        }
+
+        return filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    }, [historyEvents, filterType, searchTerm])
+
+    // Estatísticas calculadas
+    const stats = useMemo(() => {
+        const totalEvents = filteredEvents.length
+        const appointments = filteredEvents.filter(e => e.type === 'appointment').length
+        const payments = filteredEvents.filter(e => e.type === 'payment').length
+        const communications = filteredEvents.filter(e => e.type === 'communication').length
+        const totalValue = filteredEvents.filter(e => e.value).reduce((sum, e) => sum + (e.value || 0), 0)
+        const ratedEvents = filteredEvents.filter(e => e.rating)
+        const avgRating = ratedEvents.length > 0
+            ? ratedEvents.reduce((sum, e) => sum + (e.rating || 0), 0) / ratedEvents.length
+            : 0
+
+        return {
+            totalEvents,
+            appointments,
+            payments,
+            communications,
+            totalValue,
+            avgRating
+        }
+    }, [filteredEvents])
+
+    // Smart Insights baseados em dados reais
+    const smartInsights: SmartInsight[] = useMemo(() => {
+        const insights: SmartInsight[] = []
+
+        if (stats.avgRating >= 4.5) {
+            insights.push({
+                type: 'success',
+                title: 'Cliente Muito Satisfeito',
+                description: `Avaliação média de ${stats.avgRating.toFixed(1)} estrelas indica alta satisfação.`,
+                value: `${stats.avgRating.toFixed(1)}/5`
+            })
+        }
+
+        if (stats.appointments > 5) {
+            insights.push({
+                type: 'opportunity',
+                title: 'Cliente Fiel',
+                description: `${stats.appointments} consultas realizadas. Considere ofertar programa de fidelidade.`,
+                action: {
+                    label: 'Ver Programas',
+                    onClick: () => console.log('Abrindo programas de fidelidade')
+                }
+            })
+        }
+
+        if (historyEvents.length > 0) {
+            const daysSinceLastVisit = Math.floor((Date.now() - new Date(historyEvents[0]?.date || 0).getTime()) / (1000 * 60 * 60 * 24))
+            if (daysSinceLastVisit > 30) {
+                insights.push({
+                    type: 'warning',
+                    title: 'Cliente Ausente',
+                    description: `Última visita há ${daysSinceLastVisit} dias. Considere campanha de reativação.`,
+                    action: {
+                        label: 'Criar Campanha',
+                        onClick: () => console.log('Criando campanha de reativação')
+                    }
+                })
+            }
+        }
+
+        return insights
+    }, [stats, historyEvents])
+
+    // Métricas principais baseadas em dados reais
+    const metricsData = useMemo(() => [
+        {
+            title: 'Total de Eventos',
+            value: stats.totalEvents,
+            icon: Activity,
+            gradient: 'from-blue-500 to-blue-600',
+            trend: { value: 15, isPositive: true },
+            onClick: () => setFilterType('all')
+        },
+        {
+            title: 'Valor Total',
+            value: `R$ ${stats.totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+            icon: DollarSign,
+            gradient: 'from-green-500 to-emerald-500',
+            trend: { value: 25, isPositive: true },
+            onClick: () => setFilterType('payment')
+        },
+        {
+            title: 'Agendamentos',
+            value: stats.appointments,
+            icon: CalendarDays,
+            gradient: 'from-purple-500 to-purple-600',
+            trend: { value: 8, isPositive: true },
+            onClick: () => setFilterType('appointment')
+        },
+        {
+            title: 'Avaliação Média',
+            value: stats.avgRating > 0 ? stats.avgRating.toFixed(1) : 'N/A',
+            icon: Star,
+            gradient: 'from-amber-500 to-orange-500',
+            trend: { value: 5, isPositive: true },
+            onClick: () => setActiveTab('analytics')
+        }
+    ], [stats])
+
+    // Handlers
+    const handleRefreshData = useCallback(async () => {
+        try {
+            await Promise.all([
+                refetchHistory(),
+                fetchAppointmentsWithDetails()
+            ])
+            toast.success('Dados atualizados!')
+        } catch (error) {
+            toast.error('Erro ao atualizar dados')
+        }
+    }, [refetchHistory, fetchAppointmentsWithDetails])
+
+    const handleExportHistory = useCallback(() => {
+        toast.info('Funcionalidade de exportação em desenvolvimento')
+    }, [])
+
+    const handleScheduleAppointment = useCallback(() => {
+        router.push(`/agendamentos/novo?clientId=${clientId}`)
+    }, [router, clientId])
+
+    // Utilitários
     const getEventIcon = (type: HistoryEvent['type']) => {
         const icons = {
             appointment: CalendarDays,
@@ -247,553 +363,541 @@ const ClientHistoryPage: React.FC = () => {
             completed: { label: 'Concluído', variant: 'default' as const },
             cancelled: { label: 'Cancelado', variant: 'destructive' as const },
             no_show: { label: 'Não Compareceu', variant: 'destructive' as const },
-            pending: { label: 'Pendente', variant: 'secondary' as const }
+            pending: { label: 'Pendente', variant: 'secondary' as const },
+            scheduled: { label: 'Agendado', variant: 'secondary' as const },
+            confirmed: { label: 'Confirmado', variant: 'default' as const }
         }
 
         const config = statusConfig[status as keyof typeof statusConfig]
         return config ? <Badge variant={config.variant}>{config.label}</Badge> : null
     }
 
-    const getInitials = (name: string) => {
-        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    const formatDateTime = (dateString: string) => {
+        const date = new Date(dateString)
+        return {
+            date: date.toLocaleDateString('pt-BR'),
+            time: date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+        }
     }
 
-    // Estatísticas do histórico
-    const stats = {
-        totalEvents: filteredEvents.length,
-        appointments: filteredEvents.filter(e => e.type === 'appointment').length,
-        payments: filteredEvents.filter(e => e.type === 'payment').length,
-        communications: filteredEvents.filter(e => e.type === 'communication').length,
-        totalValue: filteredEvents.filter(e => e.value).reduce((sum, e) => sum + (e.value || 0), 0),
-        avgRating: filteredEvents.filter(e => e.rating).length > 0
-            ? filteredEvents.filter(e => e.rating).reduce((sum, e) => sum + (e.rating || 0), 0) / filteredEvents.filter(e => e.rating).length
-            : 0
+    // Loading state
+    if (isLoading) {
+        return (
+            <TooltipProvider>
+                <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+                    <Sidebar />
+                    <div className="lg:ml-64">
+                        <div className="flex flex-col items-center justify-center h-96 space-y-4">
+                            <div className="relative">
+                                <Loader2 className="w-12 h-12 animate-spin text-blue-500" />
+                                <div className="absolute inset-0 rounded-full bg-blue-500/20 animate-ping"></div>
+                            </div>
+                            <div className="text-center">
+                                <h3 className="text-lg font-semibold text-slate-900 mb-2">Carregando Histórico</h3>
+                                <p className="text-slate-600">Preparando cronologia do cliente...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </TooltipProvider>
+        )
+    }
+
+    if (clientError || !client) {
+        return (
+            <TooltipProvider>
+                <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+                    <Sidebar />
+                    <div className="lg:ml-64">
+                        <div className="flex flex-col items-center justify-center h-96 space-y-4">
+                            <XCircle className="w-12 h-12 text-red-500" />
+                            <div className="text-center">
+                                <h3 className="text-lg font-semibold text-slate-900 mb-2">Cliente não encontrado</h3>
+                                <p className="text-slate-600">O cliente solicitado não foi encontrado.</p>
+                                <Button className="mt-4" onClick={() => router.push('/clientes')}>
+                                    <ArrowLeft className="w-4 h-4 mr-2" />
+                                    Voltar para Clientes
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </TooltipProvider>
+        )
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
-            <Sidebar />
+        <TooltipProvider>
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+                <Sidebar />
 
-            <div className="lg:ml-64">
-                {/* Header */}
-                <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
-                    <div className="px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                            <div className="flex items-center gap-4">
-                                <Link href={`/clientes/${clientId}`}>
-                                    <Button variant="ghost" size="sm" className="p-2">
-                                        <ArrowLeft className="w-4 h-4" />
-                                    </Button>
-                                </Link>
+                <div className="lg:ml-64">
+                    {/* Header */}
+                    <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
+                        <div className="px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                 <div className="flex items-center gap-4">
-                                    <Avatar className="w-12 h-12">
-                                        <AvatarImage src="" />
-                                        <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold">
-                                            {getInitials(client.name)}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-                                            Histórico - {client.name}
-                                        </h1>
-                                        <p className="text-slate-600 text-xs sm:text-sm font-medium">
-                                            Cronologia completa de interações e atividades
-                                        </p>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="p-2"
+                                                onClick={() => router.push(`/clientes/${clientId}`)}
+                                            >
+                                                <ArrowLeft className="w-4 h-4" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Voltar para perfil (Ctrl+B)</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+                                            {client.name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                                                Histórico - {client.name}
+                                            </h1>
+                                            <p className="text-slate-600 text-xs sm:text-sm font-medium">
+                                                Cronologia completa de interações e atividades
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                        toast.info('Exportando histórico...')
-                                    }}
-                                    className="bg-white border-slate-200 hover:bg-slate-50"
-                                >
-                                    <Download className="w-4 h-4 mr-2" />
-                                    Exportar
-                                </Button>
+                                <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1">
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={handleRefreshData}
+                                                    className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200"
+                                                >
+                                                    <RefreshCw className="w-4 h-4 text-slate-600" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Atualizar dados (Ctrl+R)</p>
+                                            </TooltipContent>
+                                        </Tooltip>
 
-                                <Link href={`/agendamentos/novo?clientId=${clientId}`}>
-                                    <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg shadow-blue-500/25 border-0">
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={handleExportHistory}
+                                                    className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200"
+                                                >
+                                                    <Download className="w-4 h-4 text-slate-600" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Exportar histórico</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => setShowShortcuts(!showShortcuts)}
+                                                    className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200"
+                                                >
+                                                    <Keyboard className="w-4 h-4 text-slate-600" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Atalhos (Ctrl+/)</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </div>
+
+                                    <Button
+                                        onClick={handleScheduleAppointment}
+                                        className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg shadow-blue-500/25 border-0"
+                                    >
                                         <Calendar className="w-4 h-4 mr-2" />
                                         Agendar
                                     </Button>
-                                </Link>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </header>
+                    </header>
 
-                {/* Content */}
-                <main className="px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-                    <div className="max-w-7xl mx-auto space-y-6 lg:space-y-8">
-
-                        {/* Estatísticas do Histórico */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-                            <Card className="relative overflow-hidden border-0 shadow-xl shadow-slate-200/60">
-                                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 opacity-5" />
-                                <CardContent className="p-4 lg:p-6 relative">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="p-2 lg:p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
-                                            <Activity className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
+                    {/* Keyboard Shortcuts Panel */}
+                    {showShortcuts && (
+                        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                            <Card className="w-full max-w-md">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Keyboard className="w-5 h-5" />
+                                        Atalhos do Teclado
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-3">
+                                    <div className="grid grid-cols-1 gap-2 text-sm">
+                                        <div className="flex justify-between">
+                                            <span>Buscar</span>
+                                            <kbd className="px-2 py-1 bg-slate-100 rounded text-xs">Ctrl+K</kbd>
                                         </div>
-                                        <TrendingUp className="w-4 h-4 text-emerald-500" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-xs lg:text-sm font-medium text-slate-600">Total de Eventos</p>
-                                        <p className="text-xl lg:text-3xl font-bold text-slate-900">{stats.totalEvents}</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            <Card className="relative overflow-hidden border-0 shadow-xl shadow-slate-200/60">
-                                <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-500 opacity-5" />
-                                <CardContent className="p-4 lg:p-6 relative">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="p-2 lg:p-3 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg">
-                                            <DollarSign className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
+                                        <div className="flex justify-between">
+                                            <span>Voltar</span>
+                                            <kbd className="px-2 py-1 bg-slate-100 rounded text-xs">Ctrl+B</kbd>
                                         </div>
-                                        <TrendingUp className="w-4 h-4 text-emerald-500" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-xs lg:text-sm font-medium text-slate-600">Valor Total</p>
-                                        <p className="text-xl lg:text-3xl font-bold text-slate-900">
-                                            R$ {stats.totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                        </p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            <Card className="relative overflow-hidden border-0 shadow-xl shadow-slate-200/60">
-                                <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-600 opacity-5" />
-                                <CardContent className="p-4 lg:p-6 relative">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="p-2 lg:p-3 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg">
-                                            <CalendarDays className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
+                                        <div className="flex justify-between">
+                                            <span>Atualizar</span>
+                                            <kbd className="px-2 py-1 bg-slate-100 rounded text-xs">Ctrl+R</kbd>
                                         </div>
-                                        <TrendingUp className="w-4 h-4 text-emerald-500" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-xs lg:text-sm font-medium text-slate-600">Agendamentos</p>
-                                        <p className="text-xl lg:text-3xl font-bold text-slate-900">{stats.appointments}</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            <Card className="relative overflow-hidden border-0 shadow-xl shadow-slate-200/60">
-                                <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-500 opacity-5" />
-                                <CardContent className="p-4 lg:p-6 relative">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="p-2 lg:p-3 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg">
-                                            <Star className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
+                                        <div className="flex justify-between">
+                                            <span>Navegar</span>
+                                            <kbd className="px-2 py-1 bg-slate-100 rounded text-xs">↑ ↓</kbd>
                                         </div>
-                                        <TrendingUp className="w-4 h-4 text-emerald-500" />
                                     </div>
-                                    <div className="space-y-1">
-                                        <p className="text-xs lg:text-sm font-medium text-slate-600">Avaliação Média</p>
-                                        <p className="text-xl lg:text-3xl font-bold text-slate-900">
-                                            {stats.avgRating > 0 ? stats.avgRating.toFixed(1) : 'N/A'}
-                                        </p>
-                                    </div>
+                                    <Button
+                                        onClick={() => setShowShortcuts(false)}
+                                        className="w-full"
+                                    >
+                                        Fechar
+                                    </Button>
                                 </CardContent>
                             </Card>
                         </div>
+                    )}
 
-                        {/* Filtros */}
-                        <Card className="border-0 shadow-xl shadow-slate-200/60">
-                            <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
-                                <CardTitle className="flex items-center gap-2">
-                                    <Filter className="w-5 h-5 text-indigo-500" />
-                                    Filtros de Histórico
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-6">
-                                <div className="flex flex-col lg:flex-row gap-4">
-                                    <div className="flex-1">
-                                        <div className="relative">
-                                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-                                            <Input
-                                                placeholder="Buscar no histórico..."
-                                                value={searchTerm}
-                                                onChange={(e) => setSearchTerm(e.target.value)}
-                                                className="pl-10 border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-col sm:flex-row gap-3">
-                                        <Select value={filterType} onValueChange={setFilterType}>
-                                            <SelectTrigger className="w-full sm:w-48">
-                                                <SelectValue placeholder="Tipo de evento" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="all">Todos os tipos</SelectItem>
-                                                <SelectItem value="appointment">Agendamentos</SelectItem>
-                                                <SelectItem value="payment">Pagamentos</SelectItem>
-                                                <SelectItem value="communication">Comunicação</SelectItem>
-                                                <SelectItem value="note">Observações</SelectItem>
-                                                <SelectItem value="campaign">Campanhas</SelectItem>
-                                            </SelectContent>
-                                        </Select>
+                    {/* Content */}
+                    <main className="px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+                        <div className="max-w-7xl mx-auto space-y-6 lg:space-y-8">
 
-                                        <Select value={filterPeriod} onValueChange={setFilterPeriod}>
-                                            <SelectTrigger className="w-full sm:w-48">
-                                                <SelectValue placeholder="Período" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="all">Todos os períodos</SelectItem>
-                                                <SelectItem value="7days">Últimos 7 dias</SelectItem>
-                                                <SelectItem value="30days">Últimos 30 dias</SelectItem>
-                                                <SelectItem value="90days">Últimos 90 dias</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
+                            {/* Smart Insights */}
+                            {smartInsights.length > 0 && (
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                    {smartInsights.slice(0, 2).map((insight, index) => (
+                                        <Alert key={index} className={cn(
+                                            "border-l-4 animate-in slide-in-from-left-4",
+                                            insight.type === 'opportunity' && "border-l-blue-500 bg-blue-50/50",
+                                            insight.type === 'warning' && "border-l-amber-500 bg-amber-50/50",
+                                            insight.type === 'success' && "border-l-green-500 bg-green-50/50",
+                                            insight.type === 'info' && "border-l-purple-500 bg-purple-50/50"
+                                        )}>
+                                            <Zap className="h-4 w-4" />
+                                            <AlertDescription className="flex items-center justify-between">
+                                                <div>
+                                                    <div className="font-medium">{insight.title}</div>
+                                                    <div className="text-sm text-slate-600">{insight.description}</div>
+                                                </div>
+                                                {insight.action && (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={insight.action.onClick}
+                                                    >
+                                                        {insight.action.label}
+                                                        <ArrowUpRight className="w-3 h-3 ml-1" />
+                                                    </Button>
+                                                )}
+                                            </AlertDescription>
+                                        </Alert>
+                                    ))}
                                 </div>
-                            </CardContent>
-                        </Card>
+                            )}
 
-                        {/* Tabs de Visualização */}
-                        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                            <TabsList className="grid w-full grid-cols-3 bg-slate-100 p-1 rounded-xl">
-                                <TabsTrigger value="timeline" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg">
-                                    Timeline
-                                </TabsTrigger>
-                                <TabsTrigger value="analytics" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg">
-                                    Analytics
-                                </TabsTrigger>
-                                <TabsTrigger value="summary" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg">
-                                    Resumo
-                                </TabsTrigger>
-                            </TabsList>
-
-                            {/* Tab: Timeline */}
-                            <TabsContent value="timeline" className="space-y-6">
-                                <Card className="border-0 shadow-xl shadow-slate-200/60">
-                                    <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
-                                        <div className="flex items-center justify-between">
-                                            <CardTitle className="flex items-center gap-2">
-                                                <Clock className="w-5 h-5 text-blue-500" />
-                                                Timeline de Atividades
-                                            </CardTitle>
-                                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                                {filteredEvents.length} eventos
-                                            </Badge>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="p-6">
-                                        {filteredEvents.length === 0 ? (
-                                            <div className="text-center py-12">
-                                                <Clock className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                                                <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                                                    Nenhum evento encontrado
-                                                </h3>
-                                                <p className="text-slate-500">
-                                                    Tente ajustar os filtros para ver mais eventos.
+                            {/* Métricas do Histórico */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+                                {metricsData.map((metric, index) => (
+                                    <Card
+                                        key={index}
+                                        className="relative overflow-hidden border-0 shadow-xl shadow-slate-200/60 hover:shadow-2xl hover:shadow-slate-300/60 transition-all duration-300 hover:-translate-y-1 cursor-pointer group"
+                                        onClick={metric.onClick}
+                                    >
+                                        <div className={`absolute inset-0 bg-gradient-to-br ${metric.gradient} opacity-5 group-hover:opacity-10 transition-opacity duration-300`} />
+                                        <CardContent className="p-4 lg:p-6 relative">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div className={`p-2 lg:p-3 rounded-2xl bg-gradient-to-br ${metric.gradient} shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                                                    <metric.icon className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
+                                                </div>
+                                                <TrendingUp className="w-4 h-4 text-emerald-500" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-xs lg:text-sm font-medium text-slate-600">{metric.title}</p>
+                                                <p className="text-xl lg:text-3xl font-bold text-slate-900 group-hover:text-2xl lg:group-hover:text-4xl transition-all duration-300">
+                                                    {metric.value}
                                                 </p>
                                             </div>
-                                        ) : (
-                                            <div className="space-y-6">
-                                                {filteredEvents.map((event, index) => {
-                                                    const Icon = getEventIcon(event.type)
-                                                    const isLast = index === filteredEvents.length - 1
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
 
-                                                    return (
-                                                        <div key={event.id} className="relative">
-                                                            {/* Timeline line */}
-                                                            {!isLast && (
-                                                                <div className="absolute left-6 top-12 w-0.5 h-16 bg-slate-200"></div>
-                                                            )}
+                            {/* Filtros */}
+                            <Card className="border-0 shadow-xl shadow-slate-200/60">
+                                <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Filter className="w-5 h-5 text-indigo-500" />
+                                        Filtros de Histórico
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="p-6">
+                                    <div className="flex flex-col lg:flex-row gap-4">
+                                        <div className="flex-1">
+                                            <div className="relative">
+                                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                                                <Input
+                                                    ref={searchRef}
+                                                    placeholder="Buscar no histórico... (Ctrl+K)"
+                                                    value={searchTerm}
+                                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                                    className="pl-10 border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20"
+                                                />
+                                                {searchTerm && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                                                        onClick={() => setSearchTerm('')}
+                                                    >
+                                                        <XCircle className="w-3 h-3" />
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Tabs value={filterType} onValueChange={setFilterType}>
+                                                <TabsList className="bg-slate-100 border-0">
+                                                    <TabsTrigger value="all" className="data-[state=active]:bg-white">Todos</TabsTrigger>
+                                                    <TabsTrigger value="appointment" className="data-[state=active]:bg-white">Consultas</TabsTrigger>
+                                                    <TabsTrigger value="payment" className="data-[state=active]:bg-white">Pagamentos</TabsTrigger>
+                                                    <TabsTrigger value="communication" className="data-[state=active]:bg-white">Comunicação</TabsTrigger>
+                                                </TabsList>
+                                            </Tabs>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
 
-                                                            <div className="flex gap-4">
-                                                                {/* Icon */}
-                                                                <div className={`flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br ${getEventColor(event.type)} flex items-center justify-center shadow-lg`}>
-                                                                    <Icon className="w-6 h-6 text-white" />
-                                                                </div>
+                            {/* Timeline de Atividades */}
+                            <Card className="border-0 shadow-xl shadow-slate-200/60">
+                                <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle className="flex items-center gap-2">
+                                            <Clock className="w-5 h-5 text-blue-500" />
+                                            Timeline de Atividades
+                                        </CardTitle>
+                                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                            {filteredEvents.length} eventos
+                                        </Badge>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="p-6">
+                                    {filteredEvents.length === 0 ? (
+                                        <div className="text-center py-12">
+                                            <Clock className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                                            <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                                                Nenhum evento encontrado
+                                            </h3>
+                                            <p className="text-slate-500">
+                                                {searchTerm || filterType !== 'all'
+                                                    ? 'Tente ajustar os filtros para ver mais eventos.'
+                                                    : 'Nenhuma atividade registrada ainda.'
+                                                }
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-6">
+                                            {filteredEvents.map((event, index) => {
+                                                const Icon = getEventIcon(event.type)
+                                                const isLast = index === filteredEvents.length - 1
+                                                const datetime = formatDateTime(event.date)
 
-                                                                {/* Content */}
-                                                                <div className="flex-1 min-w-0">
-                                                                    <Card className="border border-slate-200 hover:shadow-md transition-shadow">
-                                                                        <CardContent className="p-4">
-                                                                            <div className="flex items-start justify-between mb-2">
-                                                                                <div>
-                                                                                    <h3 className="font-semibold text-slate-900">{event.title}</h3>
-                                                                                    <p className="text-sm text-slate-500">
-                                                                                        {format(parseISO(event.date), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
-                                                                                    </p>
-                                                                                </div>
-                                                                                <div className="flex items-center gap-2">
-                                                                                    {event.value && (
-                                                                                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                                                                            R$ {event.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                                                                        </Badge>
-                                                                                    )}
-                                                                                    {getStatusBadge(event.status)}
+                                                return (
+                                                    <div
+                                                        key={event.id}
+                                                        className={cn(
+                                                            "relative",
+                                                            index === focusedEventIndex && "ring-2 ring-blue-500 rounded-lg"
+                                                        )}
+                                                    >
+                                                        {/* Timeline line */}
+                                                        {!isLast && (
+                                                            <div className="absolute left-6 top-12 w-0.5 h-16 bg-slate-200"></div>
+                                                        )}
+
+                                                        <div className="flex gap-4">
+                                                            {/* Icon */}
+                                                            <div className={`flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br ${getEventColor(event.type)} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-200`}>
+                                                                <Icon className="w-6 h-6 text-white" />
+                                                            </div>
+
+                                                            {/* Content */}
+                                                            <div className="flex-1 min-w-0">
+                                                                <Card className="border border-slate-200 hover:shadow-md transition-all duration-200 hover:-translate-y-1 group">
+                                                                    <CardContent className="p-4">
+                                                                        <div className="flex items-start justify-between mb-2">
+                                                                            <div>
+                                                                                <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
+                                                                                    {event.title}
+                                                                                </h3>
+                                                                                <p className="text-sm text-slate-500">
+                                                                                    {datetime.date} às {datetime.time}
+                                                                                </p>
+                                                                            </div>
+                                                                            <div className="flex items-center gap-2">
+                                                                                {event.value && (
+                                                                                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                                                                        R$ {event.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                                                    </Badge>
+                                                                                )}
+                                                                                {getStatusBadge(event.status)}
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <p className="text-sm text-slate-700 mb-3">{event.description}</p>
+
+                                                                        {/* Rating */}
+                                                                        {event.rating && (
+                                                                            <div className="flex items-center gap-2 mb-3">
+                                                                                <span className="text-sm font-medium text-slate-600">Avaliação:</span>
+                                                                                <div className="flex items-center gap-1">
+                                                                                    {[...Array(5)].map((_, i) => (
+                                                                                        <Star
+                                                                                            key={i}
+                                                                                            className={`w-4 h-4 ${
+                                                                                                i < event.rating! ? 'text-yellow-400 fill-current' : 'text-slate-300'
+                                                                                            }`}
+                                                                                        />
+                                                                                    ))}
+                                                                                    <span className="text-sm text-slate-600 ml-1">
+                                                                                        {event.rating}/5
+                                                                                    </span>
                                                                                 </div>
                                                                             </div>
+                                                                        )}
 
-                                                                            <p className="text-sm text-slate-700 mb-3">{event.description}</p>
-
-                                                                            {/* Rating */}
-                                                                            {event.rating && (
-                                                                                <div className="flex items-center gap-2 mb-3">
-                                                                                    <span className="text-sm font-medium text-slate-600">Avaliação:</span>
-                                                                                    <div className="flex items-center gap-1">
-                                                                                        {[...Array(5)].map((_, i) => (
-                                                                                            <Star
-                                                                                                key={i}
-                                                                                                className={`w-4 h-4 ${
-                                                                                                    i < event.rating! ? 'text-yellow-400 fill-current' : 'text-slate-300'
-                                                                                                }`}
-                                                                                            />
-                                                                                        ))}
-                                                                                        <span className="text-sm text-slate-600 ml-1">
-                                                                                            {event.rating}/5
-                                                                                        </span>
-                                                                                    </div>
+                                                                        {/* Metadata */}
+                                                                        {event.metadata && Object.keys(event.metadata).length > 0 && (
+                                                                            <div className="border-t pt-3 mt-3">
+                                                                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                                                                    {Object.entries(event.metadata).map(([key, value]) => (
+                                                                                        <div key={key} className="flex justify-between">
+                                                                                            <span className="text-slate-500 capitalize">{key}:</span>
+                                                                                            <span className="text-slate-700 font-medium">
+                                                                                                {typeof value === 'boolean' ? (value ? 'Sim' : 'Não') : String(value)}
+                                                                                            </span>
+                                                                                        </div>
+                                                                                    ))}
                                                                                 </div>
-                                                                            )}
-
-                                                                            {/* Metadata */}
-                                                                            {event.metadata && Object.keys(event.metadata).length > 0 && (
-                                                                                <div className="border-t pt-3 mt-3">
-                                                                                    <div className="grid grid-cols-2 gap-2 text-xs">
-                                                                                        {Object.entries(event.metadata).map(([key, value]) => (
-                                                                                            <div key={key} className="flex justify-between">
-                                                                                                <span className="text-slate-500 capitalize">{key}:</span>
-                                                                                                <span className="text-slate-700 font-medium">
-                                                                                                    {typeof value === 'boolean' ? (value ? 'Sim' : 'Não') : String(value)}
-                                                                                                </span>
-                                                                                            </div>
-                                                                                        ))}
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                        </CardContent>
-                                                                    </Card>
-                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                    </CardContent>
+                                                                </Card>
                                                             </div>
-                                                        </div>
-                                                    )
-                                                })}
-                                            </div>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-
-                            {/* Tab: Analytics */}
-                            <TabsContent value="analytics" className="space-y-6">
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    {/* Distribuição por Tipo */}
-                                    <Card className="border-0 shadow-xl shadow-slate-200/60">
-                                        <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
-                                            <CardTitle className="flex items-center gap-2">
-                                                <PieChart className="w-5 h-5 text-purple-500" />
-                                                Distribuição por Tipo
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="p-6">
-                                            <div className="space-y-4">
-                                                {[
-                                                    { type: 'appointment', label: 'Agendamentos', count: stats.appointments, color: 'bg-blue-500' },
-                                                    { type: 'payment', label: 'Pagamentos', count: stats.payments, color: 'bg-green-500' },
-                                                    { type: 'communication', label: 'Comunicação', count: stats.communications, color: 'bg-purple-500' },
-                                                    { type: 'note', label: 'Observações', count: filteredEvents.filter(e => e.type === 'note').length, color: 'bg-amber-500' },
-                                                    { type: 'campaign', label: 'Campanhas', count: filteredEvents.filter(e => e.type === 'campaign').length, color: 'bg-pink-500' }
-                                                ].map(({ type, label, count, color }) => {
-                                                    const percentage = stats.totalEvents > 0 ? (count / stats.totalEvents * 100) : 0
-
-                                                    return (
-                                                        <div key={type} className="flex items-center justify-between">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className={`w-3 h-3 rounded-full ${color}`} />
-                                                                <span className="text-sm font-medium text-slate-700">{label}</span>
-                                                            </div>
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="text-sm text-slate-500">{percentage.toFixed(1)}%</span>
-                                                                <span className="text-sm font-semibold text-slate-900">{count}</span>
-                                                            </div>
-                                                        </div>
-                                                    )
-                                                })}
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-
-                                    {/* Atividade por Mês */}
-                                    <Card className="border-0 shadow-xl shadow-slate-200/60">
-                                        <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
-                                            <CardTitle className="flex items-center gap-2">
-                                                <BarChart3 className="w-5 h-5 text-indigo-500" />
-                                                Atividade por Mês
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="p-6">
-                                            <div className="space-y-4">
-                                                {[
-                                                    { month: 'Abril 2024', events: 4, value: 150 },
-                                                    { month: 'Março 2024', events: 3, value: 120 },
-                                                    { month: 'Fevereiro 2024', events: 3, value: 250 }
-                                                ].map((month, index) => (
-                                                    <div key={index} className="space-y-2">
-                                                        <div className="flex justify-between items-center">
-                                                            <span className="text-sm font-medium text-slate-700">{month.month}</span>
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="text-sm text-slate-500">{month.events} eventos</span>
-                                                                <span className="text-sm font-semibold text-green-600">
-                                                                    R$ {month.value.toFixed(0)}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        <div className="w-full bg-slate-200 rounded-full h-2">
-                                                            <div
-                                                                className="bg-gradient-to-r from-indigo-500 to-purple-600 h-2 rounded-full transition-all"
-                                                                style={{ width: `${(month.events / Math.max(...[4, 3, 3])) * 100}%` }}
-                                                            ></div>
                                                         </div>
                                                     </div>
-                                                ))}
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </div>
+                                                )
+                                            })}
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
 
-                                {/* Métricas de Engajamento */}
+                            {/* Quick Actions */}
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 <Card className="border-0 shadow-xl shadow-slate-200/60">
-                                    <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
-                                        <CardTitle className="flex items-center gap-2">
-                                            <Target className="w-5 h-5 text-green-500" />
-                                            Métricas de Engajamento
+                                    <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
+                                        <CardTitle className="flex items-center gap-2 text-blue-800">
+                                            <User className="w-5 h-5" />
+                                            Jornada do Cliente
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="p-6">
-                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                            <div className="text-center p-4 bg-blue-50 rounded-lg">
-                                                <div className="text-2xl font-bold text-blue-600 mb-1">100%</div>
-                                                <div className="text-sm text-blue-800">Taxa de Comparecimento</div>
-                                            </div>
-                                            <div className="text-center p-4 bg-green-50 rounded-lg">
-                                                <div className="text-2xl font-bold text-green-600 mb-1">4.7</div>
-                                                <div className="text-sm text-green-800">Avaliação Média</div>
-                                            </div>
-                                            <div className="text-center p-4 bg-purple-50 rounded-lg">
-                                                <div className="text-2xl font-bold text-purple-600 mb-1">95%</div>
-                                                <div className="text-sm text-purple-800">Taxa de Resposta</div>
-                                            </div>
-                                            <div className="text-center p-4 bg-amber-50 rounded-lg">
-                                                <div className="text-2xl font-bold text-amber-600 mb-1">3</div>
-                                                <div className="text-sm text-amber-800">Meses de Relacionamento</div>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-
-                            {/* Tab: Resumo */}
-                            <TabsContent value="summary" className="space-y-6">
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    {/* Jornada do Cliente */}
-                                    <Card className="border-0 shadow-xl shadow-slate-200/60">
-                                        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
-                                            <CardTitle className="flex items-center gap-2 text-blue-800">
-                                                <User className="w-5 h-5" />
-                                                Jornada do Cliente
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="p-6">
-                                            <div className="space-y-4">
-                                                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-                                                    <CheckCircle className="w-5 h-5 text-green-600" />
-                                                    <div>
-                                                        <p className="font-medium text-green-800">Primeira Consulta</p>
-                                                        <p className="text-sm text-green-600">15/02/2024 - Peeling Químico</p>
-                                                    </div>
+                                        <div className="space-y-4">
+                                            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                                                <CheckCircle className="w-5 h-5 text-green-600" />
+                                                <div>
+                                                    <p className="font-medium text-green-800">Primeira Consulta</p>
+                                                    <p className="text-sm text-green-600">Cliente desde {formatDateTime(client.created_at).date}</p>
                                                 </div>
-                                                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                                                    <CheckCircle className="w-5 h-5 text-blue-600" />
-                                                    <div>
-                                                        <p className="font-medium text-blue-800">Cliente Regular</p>
-                                                        <p className="text-sm text-blue-600">Retornou após 33 dias</p>
-                                                    </div>
+                                            </div>
+                                            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                                                <CheckCircle className="w-5 h-5 text-blue-600" />
+                                                <div>
+                                                    <p className="font-medium text-blue-800">Cliente Ativo</p>
+                                                    <p className="text-sm text-blue-600">{stats.appointments} consultas realizadas</p>
                                                 </div>
+                                            </div>
+                                            {stats.avgRating > 0 && (
                                                 <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
-                                                    <CheckCircle className="w-5 h-5 text-purple-600" />
+                                                    <Heart className="w-5 h-5 text-purple-600" />
                                                     <div>
-                                                        <p className="font-medium text-purple-800">Cliente Fidelizado</p>
-                                                        <p className="text-sm text-purple-600">3 consultas realizadas</p>
+                                                        <p className="font-medium text-purple-800">Satisfação</p>
+                                                        <p className="text-sm text-purple-600">Avaliação média: {stats.avgRating.toFixed(1)}/5</p>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-
-                                    {/* Próximas Ações Sugeridas */}
-                                    <Card className="border-0 shadow-xl shadow-slate-200/60">
-                                        <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100">
-                                            <CardTitle className="flex items-center gap-2 text-amber-800">
-                                                <Zap className="w-5 h-5" />
-                                                Próximas Ações Sugeridas
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="p-6">
-                                            <div className="space-y-3">
-                                                <div className="flex items-center gap-3 p-3 bg-white border border-amber-200 rounded-lg">
-                                                    <Calendar className="w-5 h-5 text-amber-600" />
-                                                    <div>
-                                                        <p className="font-medium text-slate-900">Agendar Retorno</p>
-                                                        <p className="text-sm text-slate-600">Sugerido para próxima semana</p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-3 p-3 bg-white border border-green-200 rounded-lg">
-                                                    <Gift className="w-5 h-5 text-green-600" />
-                                                    <div>
-                                                        <p className="font-medium text-slate-900">Programa de Fidelidade</p>
-                                                        <p className="text-sm text-slate-600">Oferecer desconto por fidelidade</p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-3 p-3 bg-white border border-blue-200 rounded-lg">
-                                                    <MessageSquare className="w-5 h-5 text-blue-600" />
-                                                    <div>
-                                                        <p className="font-medium text-slate-900">Pesquisa de Satisfação</p>
-                                                        <p className="text-sm text-slate-600">Enviar após última consulta</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </div>
-
-                                {/* Resumo Geral */}
-                                <Card className="border-0 shadow-xl shadow-slate-200/60">
-                                    <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
-                                        <CardTitle className="flex items-center gap-2">
-                                            <FileText className="w-5 h-5 text-indigo-500" />
-                                            Resumo Executivo
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="p-6">
-                                        <div className="prose prose-sm max-w-none">
-                                            <p className="text-slate-700 leading-relaxed">
-                                                <strong>{client.name}</strong> é uma cliente muito engajada que iniciou sua jornada conosco em
-                                                fevereiro de 2024. Com um histórico de <strong>3 consultas realizadas</strong> e valor total
-                                                investido de <strong>R$ {stats.totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>,
-                                                demonstra alta satisfação com nossos serviços (avaliação média de <strong>{stats.avgRating.toFixed(1)} estrelas</strong>).
-                                            </p>
-                                            <p className="text-slate-700 leading-relaxed mt-4">
-                                                A cliente apresenta excelente taxa de comparecimento (100%) e responde positivamente às
-                                                nossas comunicações. Recomendamos manter o relacionamento próximo e oferecer novos
-                                                tratamentos baseados em suas preferências registradas.
-                                            </p>
+                                            )}
                                         </div>
                                     </CardContent>
                                 </Card>
-                            </TabsContent>
-                        </Tabs>
-                    </div>
-                </main>
+
+                                <Card className="border-0 shadow-xl shadow-slate-200/60">
+                                    <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100">
+                                        <CardTitle className="flex items-center gap-2 text-amber-800">
+                                            <Zap className="w-5 h-5" />
+                                            Próximas Ações
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="p-6">
+                                        <div className="space-y-3">
+                                            <Button
+                                                variant="outline"
+                                                className="w-full justify-start h-auto p-3 hover:bg-amber-50 border-amber-200"
+                                                onClick={handleScheduleAppointment}
+                                            >
+                                                <Calendar className="w-5 h-5 text-amber-600 mr-3" />
+                                                <div className="text-left">
+                                                    <p className="font-medium text-slate-900">Agendar Retorno</p>
+                                                    <p className="text-sm text-slate-600">Próxima consulta</p>
+                                                </div>
+                                            </Button>
+
+                                            <Button
+                                                variant="outline"
+                                                className="w-full justify-start h-auto p-3 hover:bg-green-50 border-green-200"
+                                                onClick={() => toast.info('Funcionalidade em desenvolvimento')}
+                                            >
+                                                <Gift className="w-5 h-5 text-green-600 mr-3" />
+                                                <div className="text-left">
+                                                    <p className="font-medium text-slate-900">Programa de Fidelidade</p>
+                                                    <p className="text-sm text-slate-600">Oferecer benefícios</p>
+                                                </div>
+                                            </Button>
+
+                                            <Button
+                                                variant="outline"
+                                                className="w-full justify-start h-auto p-3 hover:bg-blue-50 border-blue-200"
+                                                onClick={() => toast.info('Funcionalidade em desenvolvimento')}
+                                            >
+                                                <MessageSquare className="w-5 h-5 text-blue-600 mr-3" />
+                                                <div className="text-left">
+                                                    <p className="font-medium text-slate-900">Pesquisa de Satisfação</p>
+                                                    <p className="text-sm text-slate-600">Coletar feedback</p>
+                                                </div>
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </div>
+                    </main>
+                </div>
             </div>
-        </div>
+        </TooltipProvider>
     )
 }
+
 export default ClientHistoryPage

@@ -162,62 +162,57 @@ export function QuickActions({
         }
     };
 
-    const getPriorityStyle = (priority?: string) => {
+    // Removida a função getPriorityStyle que estava causando os anéis
+    const getPriorityBorder = (priority?: string) => {
         switch (priority) {
             case 'high':
-                return 'ring-2 ring-blue-200 ring-offset-2 ring-offset-white';
+                return 'border-l-4 border-l-blue-500';
             case 'medium':
-                return 'ring-1 ring-purple-200';
+                return 'border-l-4 border-l-purple-500';
             default:
-                return '';
+                return 'border-l-2 border-l-slate-200';
         }
     };
 
     const ActionButton = ({ action }: { action: QuickAction }) => (
         <div
             className={cn(
-                "group relative overflow-hidden rounded-2xl bg-white/80 backdrop-blur-sm border border-slate-200/60 hover:shadow-2xl hover:shadow-slate-300/60 transition-all duration-500 hover:-translate-y-2 cursor-pointer",
-                getPriorityStyle(action.priority),
+                "group relative overflow-hidden rounded-xl bg-white border border-slate-200 hover:shadow-lg hover:shadow-slate-200/50 transition-all duration-300 hover:-translate-y-1 cursor-pointer",
+                getPriorityBorder(action.priority),
                 action.disabled && "opacity-50 cursor-not-allowed",
                 action.loading && "pointer-events-none"
             )}
             onClick={() => handleAction(action)}
         >
-            {/* Gradient Background Effect */}
+            {/* Hover Background Effect - mais sutil */}
             <div className={cn(
-                "absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-all duration-500",
+                "absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-5 transition-all duration-300",
                 action.gradient || 'from-slate-500 to-slate-600'
             )} />
 
-            {/* Animated Border Gradient */}
-            <div className={cn(
-                "absolute inset-0 rounded-2xl bg-gradient-to-r opacity-0 group-hover:opacity-20 transition-all duration-500 -z-10",
-                action.gradient || 'from-slate-500 to-slate-600'
-            )} />
-
-            <div className="relative p-6 z-10">
-                <div className="flex items-start justify-between mb-4">
+            <div className="relative p-4 z-10">
+                <div className="flex items-start justify-between mb-3">
                     <div className={cn(
-                        "p-3 rounded-2xl bg-gradient-to-br shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500",
+                        "p-2.5 rounded-lg bg-gradient-to-br shadow-sm group-hover:scale-105 transition-transform duration-300",
                         action.gradient || 'from-slate-500 to-slate-600'
                     )}>
-                        <action.icon className="w-6 h-6 text-white drop-shadow-sm" />
+                        <action.icon className="w-5 h-5 text-white" />
                     </div>
 
                     <div className="flex items-center gap-2">
                         {action.priority === 'high' && (
-                            <div className="flex items-center gap-1 bg-gradient-to-r from-amber-100 to-orange-100 px-2 py-1 rounded-lg border border-amber-200">
-                                <Star className="w-3 h-3 text-amber-600 fill-amber-400" />
-                                <span className="text-xs text-amber-700 font-medium">Alta</span>
+                            <div className="flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-md border border-blue-100">
+                                <Star className="w-3 h-3 text-blue-600 fill-blue-200" />
+                                <span className="text-xs text-blue-700 font-medium">Alta</span>
                             </div>
                         )}
                         {action.badge && (
                             <Badge className={cn(
-                                "text-xs font-semibold px-3 py-1 shadow-lg transition-all duration-300 group-hover:scale-105",
+                                "text-xs font-medium px-2 py-1 transition-all duration-300",
                                 action.priority === 'high'
-                                    ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-0 shadow-blue-500/25'
+                                    ? 'bg-blue-100 text-blue-700 border-blue-200'
                                     : action.priority === 'medium'
-                                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 shadow-purple-500/25'
+                                        ? 'bg-purple-100 text-purple-700 border-purple-200'
                                         : 'bg-slate-100 text-slate-600 border-slate-200'
                             )}>
                                 {action.badge.text}
@@ -227,26 +222,26 @@ export function QuickActions({
                     </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-2">
                     <div>
-                        <p className="text-base font-bold text-slate-900 group-hover:text-slate-800 transition-colors duration-300">
+                        <p className="text-sm font-semibold text-slate-900 group-hover:text-slate-800 transition-colors">
                             {action.title}
                         </p>
-                        <p className="text-sm text-slate-600 leading-relaxed group-hover:text-slate-700 transition-colors duration-300 mt-1">
+                        <p className="text-xs text-slate-600 leading-relaxed group-hover:text-slate-700 transition-colors">
                             {action.description}
                         </p>
                     </div>
 
                     {showShortcuts && action.shortcut && (
-                        <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
                             <Badge
                                 variant="outline"
-                                className="bg-slate-50/80 text-slate-600 border-slate-200 text-xs font-mono px-3 py-1 group-hover:bg-white group-hover:shadow-sm transition-all duration-300"
+                                className="bg-slate-50 text-slate-600 border-slate-200 text-xs font-mono px-2 py-1"
                             >
                                 {action.shortcut}
                             </Badge>
                             {action.category && showCategories && (
-                                <span className="text-xs text-slate-500 font-medium bg-slate-100/50 px-2 py-1 rounded-lg">
+                                <span className="text-xs text-slate-500 font-medium bg-slate-100/50 px-2 py-1 rounded">
                                     {action.category}
                                 </span>
                             )}
@@ -256,48 +251,43 @@ export function QuickActions({
 
                 {/* Loading Overlay */}
                 {action.loading && (
-                    <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center rounded-2xl z-20">
+                    <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center rounded-xl z-20">
                         <div className="flex items-center gap-2">
-                            <div className="w-5 h-5 border-2 border-slate-300 border-t-blue-500 rounded-full animate-spin" />
-                            <span className="text-sm text-slate-600 font-medium">Carregando...</span>
+                            <div className="w-4 h-4 border-2 border-slate-300 border-t-blue-500 rounded-full animate-spin" />
+                            <span className="text-xs text-slate-600 font-medium">Carregando...</span>
                         </div>
                     </div>
                 )}
 
                 {/* Disabled Overlay */}
                 {action.disabled && (
-                    <div className="absolute inset-0 bg-slate-100/60 backdrop-blur-sm rounded-2xl z-20" />
+                    <div className="absolute inset-0 bg-slate-100/60 backdrop-blur-sm rounded-xl z-20" />
                 )}
-
-                {/* Hover Shine Effect */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                </div>
             </div>
         </div>
     );
 
     return (
-        <Card className={cn("border-0 shadow-2xl shadow-slate-200/60 overflow-hidden bg-gradient-to-br from-white via-slate-50/30 to-white", className)}>
-            <CardHeader className="bg-gradient-to-r from-slate-50/80 to-white/80 backdrop-blur-sm border-b border-slate-100">
+        <Card className={cn("border-0 shadow-lg shadow-slate-200/40 overflow-hidden bg-white", className)}>
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle className="flex items-center gap-3 text-xl">
-                            <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg">
-                                <Zap className="w-6 h-6 text-white" />
+                        <CardTitle className="flex items-center gap-3 text-lg">
+                            <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 shadow-sm">
+                                <Zap className="w-5 h-5 text-white" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-bold">{title}</h2>
+                                <h2 className="text-lg font-bold">{title}</h2>
                                 {description && (
-                                    <CardDescription className="mt-1 text-slate-600">
+                                    <CardDescription className="mt-1 text-slate-600 text-sm">
                                         {description}
                                     </CardDescription>
                                 )}
                             </div>
                         </CardTitle>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-lg shadow-amber-500/25">
+                    <div className="flex items-center gap-2">
+                        <Badge className="bg-blue-100 text-blue-700 border-blue-200">
                             <Sparkles className="w-3 h-3 mr-1" />
                             {filteredActions.length} ações
                         </Badge>
@@ -305,7 +295,7 @@ export function QuickActions({
                             variant="ghost"
                             size="sm"
                             onClick={() => setShowDetails(!showDetails)}
-                            className="hover:bg-slate-100 rounded-xl"
+                            className="hover:bg-slate-100 rounded-lg"
                         >
                             {showDetails ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </Button>
@@ -323,7 +313,7 @@ export function QuickActions({
                             placeholder="Buscar ações..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
+                            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
                         />
                     </div>
 
@@ -336,9 +326,9 @@ export function QuickActions({
                                     size="sm"
                                     onClick={() => setSelectedCategory(category)}
                                     className={cn(
-                                        "whitespace-nowrap rounded-xl transition-all duration-300",
+                                        "whitespace-nowrap rounded-lg transition-all duration-200",
                                         selectedCategory === category
-                                            ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/25"
+                                            ? "bg-blue-500 text-white shadow-sm"
                                             : "bg-white hover:bg-slate-50"
                                     )}
                                 >
@@ -353,7 +343,7 @@ export function QuickActions({
                             variant={layout === 'grid' ? 'default' : 'outline'}
                             size="sm"
                             onClick={() => setLayout('grid')}
-                            className="rounded-xl"
+                            className="rounded-lg"
                         >
                             <Grid3X3 className="w-4 h-4" />
                         </Button>
@@ -361,7 +351,7 @@ export function QuickActions({
                             variant={layout === 'list' ? 'default' : 'outline'}
                             size="sm"
                             onClick={() => setLayout('list')}
-                            className="rounded-xl"
+                            className="rounded-lg"
                         >
                             <List className="w-4 h-4" />
                         </Button>
@@ -371,7 +361,7 @@ export function QuickActions({
                 {/* Actions Grid/List */}
                 {layout === 'grid' ? (
                     <div className={cn(
-                        "grid gap-6",
+                        "grid gap-4",
                         columns === 2 && "grid-cols-1 sm:grid-cols-2",
                         columns === 3 && "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
                         columns === 4 && "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
@@ -381,7 +371,7 @@ export function QuickActions({
                         ))}
                     </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                         {filteredActions.map((action) => (
                             <ActionButton key={action.id} action={action} />
                         ))}
@@ -390,7 +380,7 @@ export function QuickActions({
 
                 {filteredActions.length === 0 && (
                     <div className="text-center py-12">
-                        <div className="w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <div className="w-16 h-16 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-4">
                             <Search className="w-8 h-8 text-slate-400" />
                         </div>
                         <p className="text-slate-500 font-medium mb-2">Nenhuma ação encontrada</p>
@@ -418,7 +408,7 @@ export function QuickActions({
                                     .map((action) => (
                                         <div
                                             key={action.id}
-                                            className="flex items-center justify-between p-3 bg-slate-50/80 rounded-xl border border-slate-100 hover:bg-slate-100/80 transition-all duration-300 hover:scale-[1.02]"
+                                            className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 hover:bg-slate-100 transition-colors"
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div className={cn(
@@ -433,7 +423,7 @@ export function QuickActions({
                                             </div>
                                             <Badge
                                                 variant="outline"
-                                                className="bg-white text-slate-600 border-slate-200 text-xs font-mono px-3 py-1 shadow-sm"
+                                                className="bg-white text-slate-600 border-slate-200 text-xs font-mono px-2 py-1"
                                             >
                                                 {action.shortcut}
                                             </Badge>

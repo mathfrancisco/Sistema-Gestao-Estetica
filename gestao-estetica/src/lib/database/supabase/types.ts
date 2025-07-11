@@ -19,6 +19,12 @@ export type ProfitCategory = 'pro_labore' | 'equipment_reserve' | 'emergency_res
 export type GoalType = 'revenue' | 'profit' | 'clients' | 'appointments' | 'procedures'
 export type PeriodType = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly'
 
+// Novos tipos para campanhas
+export type CampaignType = 'email' | 'sms' | 'whatsapp' | 'calendar' | 'birthday'
+export type CampaignStatus = 'draft' | 'active' | 'paused' | 'completed' | 'cancelled'
+export type CampaignTrigger = 'manual' | 'automatic' | 'scheduled' | 'event_based'
+export type CampaignTargetType = 'all_clients' | 'segment' | 'custom_list' | 'individual'
+
 export type Database = {
     public: {
         Tables: {
@@ -502,6 +508,175 @@ export type Database = {
                     updated_at?: string
                 }
             }
+            // ========== NOVAS TABELAS PARA CAMPANHAS ==========
+            campaigns: {
+                Row: {
+                    id: string
+                    user_id: string
+                    name: string
+                    description: string | null
+                    type: CampaignType
+                    status: CampaignStatus
+                    trigger_type: CampaignTrigger
+                    target_type: CampaignTargetType
+                    target_segment: ClientSegment | null
+                    target_criteria: Json | null
+                    content: Json | null
+                    template_id: string | null
+                    scheduled_at: string | null
+                    started_at: string | null
+                    completed_at: string | null
+                    target_count: number
+                    sent_count: number
+                    delivered_count: number
+                    opened_count: number
+                    clicked_count: number
+                    converted_count: number
+                    revenue_generated: number
+                    cost: number
+                    is_active: boolean
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    user_id: string
+                    name: string
+                    description?: string | null
+                    type: CampaignType
+                    status?: CampaignStatus
+                    trigger_type?: CampaignTrigger
+                    target_type: CampaignTargetType
+                    target_segment?: ClientSegment | null
+                    target_criteria?: Json | null
+                    content?: Json | null
+                    template_id?: string | null
+                    scheduled_at?: string | null
+                    started_at?: string | null
+                    completed_at?: string | null
+                    target_count?: number
+                    sent_count?: number
+                    delivered_count?: number
+                    opened_count?: number
+                    clicked_count?: number
+                    converted_count?: number
+                    revenue_generated?: number
+                    cost?: number
+                    is_active?: boolean
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    user_id?: string
+                    name?: string
+                    description?: string | null
+                    type?: CampaignType
+                    status?: CampaignStatus
+                    trigger_type?: CampaignTrigger
+                    target_type?: CampaignTargetType
+                    target_segment?: ClientSegment | null
+                    target_criteria?: Json | null
+                    content?: Json | null
+                    template_id?: string | null
+                    scheduled_at?: string | null
+                    started_at?: string | null
+                    completed_at?: string | null
+                    target_count?: number
+                    sent_count?: number
+                    delivered_count?: number
+                    opened_count?: number
+                    clicked_count?: number
+                    converted_count?: number
+                    revenue_generated?: number
+                    cost?: number
+                    is_active?: boolean
+                    updated_at?: string
+                }
+            }
+            campaign_recipients: {
+                Row: {
+                    id: string
+                    campaign_id: string
+                    client_id: string
+                    contact_info: Json | null
+                    sent_at: string | null
+                    delivered_at: string | null
+                    opened_at: string | null
+                    clicked_at: string | null
+                    converted_at: string | null
+                    bounce_reason: string | null
+                    status: 'pending' | 'sent' | 'delivered' | 'opened' | 'clicked' | 'converted' | 'bounced' | 'failed'
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    campaign_id: string
+                    client_id: string
+                    contact_info?: Json | null
+                    sent_at?: string | null
+                    delivered_at?: string | null
+                    opened_at?: string | null
+                    clicked_at?: string | null
+                    converted_at?: string | null
+                    bounce_reason?: string | null
+                    status?: 'pending' | 'sent' | 'delivered' | 'opened' | 'clicked' | 'converted' | 'bounced' | 'failed'
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    campaign_id?: string
+                    client_id?: string
+                    contact_info?: Json | null
+                    sent_at?: string | null
+                    delivered_at?: string | null
+                    opened_at?: string | null
+                    clicked_at?: string | null
+                    converted_at?: string | null
+                    bounce_reason?: string | null
+                    status?: 'pending' | 'sent' | 'delivered' | 'opened' | 'clicked' | 'converted' | 'bounced' | 'failed'
+                }
+            }
+            campaign_templates: {
+                Row: {
+                    id: string
+                    user_id: string
+                    name: string
+                    description: string | null
+                    type: CampaignType
+                    content: Json
+                    variables: Json | null
+                    is_default: boolean
+                    is_active: boolean
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    user_id: string
+                    name: string
+                    description?: string | null
+                    type: CampaignType
+                    content: Json
+                    variables?: Json | null
+                    is_default?: boolean
+                    is_active?: boolean
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    user_id?: string
+                    name?: string
+                    description?: string | null
+                    type?: CampaignType
+                    content?: Json
+                    variables?: Json | null
+                    is_default?: boolean
+                    is_active?: boolean
+                    updated_at?: string
+                }
+            }
         }
         Views: {
             [_ in never]: never
@@ -520,6 +695,10 @@ export type Database = {
             profit_category_enum: ProfitCategory
             goal_type_enum: GoalType
             period_type_enum: PeriodType
+            campaign_type_enum: CampaignType
+            campaign_status_enum: CampaignStatus
+            campaign_trigger_enum: CampaignTrigger
+            campaign_target_type_enum: CampaignTargetType
         }
         CompositeTypes: {
             [_ in never]: never

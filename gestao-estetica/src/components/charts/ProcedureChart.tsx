@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import {
     BarChart,
     Bar,
@@ -34,8 +35,8 @@ interface ProcedureChartProps {
 }
 
 const COLORS = [
-    '#8B5CF6', '#06B6D4', '#10B981', '#F59E0B', '#EF4444',
-    '#EC4899', '#6366F1', '#84CC16', '#F97316', '#8B5A2B'
+    '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+    '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#6366f1'
 ]
 
 const ProcedureChart: React.FC<ProcedureChartProps> = ({
@@ -44,17 +45,27 @@ const ProcedureChart: React.FC<ProcedureChartProps> = ({
                                                            type,
                                                            className = ''
                                                        }) => {
-    // Componente de tooltip customizado
+    const formatCurrency = (value: number) => {
+        return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(value)
+    }
+
+    // Componente de tooltip simplificado
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
             return (
                 <div className="bg-white p-3 border border-slate-200 rounded-lg shadow-lg">
-                    <p className="font-medium text-slate-900">{label}</p>
+                    <p className="font-medium text-slate-900 mb-2">{label}</p>
                     {payload.map((entry: any, index: number) => (
                         <p key={index} className="text-sm" style={{ color: entry.color }}>
-                            {entry.name}: {entry.dataKey === 'revenue' || entry.dataKey === 'price'
-                            ? `R$ ${entry.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
-                            : entry.value.toLocaleString()
+                            {entry.name}: {
+                            entry.dataKey === 'revenue' || entry.dataKey === 'price'
+                                ? formatCurrency(entry.value)
+                                : entry.value.toLocaleString()
                         }
                         </p>
                     ))}
@@ -64,158 +75,183 @@ const ProcedureChart: React.FC<ProcedureChartProps> = ({
         return null
     }
 
-    // Chart de overview geral
+    // Loading Component simplificado
+    const LoadingState = () => (
+        <div className="flex items-center justify-center h-[300px]">
+            <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-slate-300 border-t-blue-500 mx-auto mb-3"></div>
+                <p className="text-sm text-slate-500">Carregando dados...</p>
+            </div>
+        </div>
+    )
+
+    // Empty State simplificado
+    const EmptyState = ({ message }: { message: string }) => (
+        <div className="flex items-center justify-center h-[300px]">
+            <div className="text-center">
+                <Activity className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-500">{message}</p>
+            </div>
+        </div>
+    )
+
+    // Chart de overview simplificado
     const renderOverviewChart = () => {
-        if (!stats) return <div className="text-center py-8 text-slate-500">Carregando dados...</div>
+        if (!stats) return <LoadingState />
 
         const data = [
-            { name: 'Total', value: stats.total, color: COLORS[0] },
-            { name: 'Ativos', value: stats.active, color: COLORS[1] },
-            { name: 'Inativos', value: stats.inactive, color: COLORS[2] }
+            { name: 'Total', value: stats.total },
+            { name: 'Ativos', value: stats.active },
+            { name: 'Inativos', value: stats.inactive }
         ]
 
         return (
             <div className="space-y-6">
-                {/* Métricas principais */}
+                {/* Métricas principais simplificadas */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="text-center">
-                        <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-2">
-                            <Activity className="w-6 h-6 text-white" />
-                        </div>
+                    <div className="text-center p-4 bg-slate-50 rounded-lg">
+                        <Activity className="w-8 h-8 text-blue-500 mx-auto mb-2" />
                         <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
-                        <p className="text-sm text-slate-500">Total</p>
+                        <p className="text-sm text-slate-600">Total</p>
                     </div>
-                    <div className="text-center">
-                        <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-2">
-                            <Zap className="w-6 h-6 text-white" />
-                        </div>
+                    <div className="text-center p-4 bg-slate-50 rounded-lg">
+                        <Zap className="w-8 h-8 text-green-500 mx-auto mb-2" />
                         <p className="text-2xl font-bold text-slate-900">{stats.active}</p>
-                        <p className="text-sm text-slate-500">Ativos</p>
+                        <p className="text-sm text-slate-600">Ativos</p>
                     </div>
-                    <div className="text-center">
-                        <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-2">
-                            <DollarSign className="w-6 h-6 text-white" />
-                        </div>
-                        <p className="text-2xl font-bold text-slate-900">
-                            R$ {stats.averagePrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    <div className="text-center p-4 bg-slate-50 rounded-lg">
+                        <DollarSign className="w-8 h-8 text-orange-500 mx-auto mb-2" />
+                        <p className="text-lg font-bold text-slate-900">
+                            {formatCurrency(stats.averagePrice)}
                         </p>
-                        <p className="text-sm text-slate-500">Preço Médio</p>
+                        <p className="text-sm text-slate-600">Preço Médio</p>
                     </div>
-                    <div className="text-center">
-                        <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-2">
-                            <Award className="w-6 h-6 text-white" />
-                        </div>
-                        <p className="text-2xl font-bold text-slate-900">
-                            {stats.mostPopular?.name.slice(0, 8)}...
+                    <div className="text-center p-4 bg-slate-50 rounded-lg">
+                        <Award className="w-8 h-8 text-purple-500 mx-auto mb-2" />
+                        <p className="text-sm font-bold text-slate-900 truncate">
+                            {stats.mostPopular?.name || 'N/A'}
                         </p>
-                        <p className="text-sm text-slate-500">Mais Popular</p>
+                        <p className="text-sm text-slate-600">Mais Popular</p>
                     </div>
                 </div>
 
-                {/* Gráfico de barras */}
-                <ResponsiveContainer width="100%" height={200}>
+                {/* Gráfico simplificado */}
+                <ResponsiveContainer width="100%" height={250}>
                     <BarChart data={data}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                        <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                        <YAxis tick={{ fontSize: 12 }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis dataKey="name" fontSize={12} />
+                        <YAxis fontSize={12} />
                         <Tooltip content={<CustomTooltip />} />
-                        <Bar dataKey="value" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                     </BarChart>
                 </ResponsiveContainer>
             </div>
         )
     }
 
-    // Chart de receita por categoria
+    // Chart de receita simplificado
     const renderRevenueChart = () => {
         if (!stats?.revenueByCategory?.length) {
-            return <div className="text-center py-8 text-slate-500">Nenhum dado de receita disponível</div>
-        }
-
-        return (
-            <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                    <Pie
-                        data={stats.revenueByCategory}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="revenue"
-                    >
-                        {stats.revenueByCategory.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                    </Pie>
-                    <Tooltip
-                        formatter={(value: number) => [`R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Receita']}
-                    />
-                </PieChart>
-            </ResponsiveContainer>
-        )
-    }
-
-    // Chart de performance (top 10 procedimentos)
-    const renderPerformanceChart = () => {
-        if (!procedures.length) {
-            return <div className="text-center py-8 text-slate-500">Nenhum procedimento encontrado</div>
-        }
-
-        const topProcedures = procedures
-            .sort((a, b) => b.price - a.price)
-            .slice(0, 10)
-            .map(proc => ({
-                name: proc.name.length > 15 ? proc.name.slice(0, 15) + '...' : proc.name,
-                price: proc.price,
-                duration: proc.duration_minutes,
-                margin: proc.cost ? ((proc.price - proc.cost) / proc.price) * 100 : 0
-            }))
-
-        return (
-            <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={topProcedures} layout="horizontal">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis type="number" tick={{ fontSize: 12 }} />
-                    <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 11 }} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="price" fill="#8B5CF6" radius={[0, 4, 4, 0]} />
-                </BarChart>
-            </ResponsiveContainer>
-        )
-    }
-
-    // Chart de categorias
-    const renderCategoriesChart = () => {
-        if (!stats?.revenueByCategory?.length) {
-            return <div className="text-center py-8 text-slate-500">Nenhuma categoria encontrada</div>
+            return <EmptyState message="Nenhum dado de receita disponível" />
         }
 
         return (
             <div className="space-y-4">
                 <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                        <Pie
+                            data={stats.revenueByCategory}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ name, percent }) => percent > 0.05 ? `${name} ${(percent * 100).toFixed(0)}%` : ''}
+                            outerRadius={90}
+                            fill="#8884d8"
+                            dataKey="revenue"
+                        >
+                            {stats.revenueByCategory.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                        </Pie>
+                        <Tooltip
+                            formatter={(value: number) => [formatCurrency(value), 'Receita']}
+                        />
+                    </PieChart>
+                </ResponsiveContainer>
+
+                {/* Lista resumida */}
+                <div className="space-y-2">
+                    {stats.revenueByCategory.slice(0, 5).map((category, index) => (
+                        <div key={category.category} className="flex items-center justify-between p-2 bg-slate-50 rounded">
+                            <div className="flex items-center gap-2">
+                                <div
+                                    className="w-3 h-3 rounded-full"
+                                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                                />
+                                <span className="text-sm font-medium">{category.category}</span>
+                            </div>
+                            <span className="text-sm font-semibold">
+                                {formatCurrency(category.revenue)}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        )
+    }
+
+    // Chart de performance simplificado
+    const renderPerformanceChart = () => {
+        if (!procedures.length) {
+            return <EmptyState message="Nenhum procedimento encontrado" />
+        }
+
+        const topProcedures = procedures
+            .sort((a, b) => b.price - a.price)
+            .slice(0, 8)
+            .map(proc => ({
+                name: proc.name.length > 20 ? proc.name.slice(0, 20) + '...' : proc.name,
+                price: proc.price
+            }))
+
+        return (
+            <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={topProcedures} layout="horizontal">
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis type="number" fontSize={12} />
+                    <YAxis dataKey="name" type="category" width={120} fontSize={11} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="price" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+                </BarChart>
+            </ResponsiveContainer>
+        )
+    }
+
+    // Chart de categorias simplificado
+    const renderCategoriesChart = () => {
+        if (!stats?.revenueByCategory?.length) {
+            return <EmptyState message="Nenhuma categoria encontrada" />
+        }
+
+        return (
+            <div className="space-y-4">
+                <ResponsiveContainer width="100%" height={200}>
                     <AreaChart data={stats.revenueByCategory}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                        <XAxis dataKey="category" tick={{ fontSize: 12 }} />
-                        <YAxis tick={{ fontSize: 12 }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis dataKey="category" fontSize={12} />
+                        <YAxis fontSize={12} />
                         <Tooltip content={<CustomTooltip />} />
                         <Area
                             type="monotone"
                             dataKey="revenue"
-                            stroke="#8B5CF6"
-                            fill="url(#colorRevenue)"
+                            stroke="#8b5cf6"
+                            fill="#8b5cf6"
+                            fillOpacity={0.2}
                         />
-                        <defs>
-                            <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
-                                <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0.1}/>
-                            </linearGradient>
-                        </defs>
                     </AreaChart>
                 </ResponsiveContainer>
 
-                {/* Lista de categorias */}
+                {/* Lista compacta */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {stats.revenueByCategory.map((category, index) => (
                         <div key={category.category} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
@@ -224,13 +260,13 @@ const ProcedureChart: React.FC<ProcedureChartProps> = ({
                                     className="w-3 h-3 rounded-full"
                                     style={{ backgroundColor: COLORS[index % COLORS.length] }}
                                 />
-                                <span className="text-sm font-medium text-slate-700">{category.category}</span>
+                                <span className="text-sm font-medium">{category.category}</span>
                             </div>
                             <div className="text-right">
-                                <p className="text-sm font-semibold text-slate-900">
-                                    R$ {category.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                <p className="text-sm font-semibold">
+                                    {formatCurrency(category.revenue)}
                                 </p>
-                                <p className="text-xs text-slate-500">{category.count} procedimentos</p>
+                                <p className="text-xs text-slate-500">{category.count} proc.</p>
                             </div>
                         </div>
                     ))}
@@ -239,10 +275,10 @@ const ProcedureChart: React.FC<ProcedureChartProps> = ({
         )
     }
 
-    // Chart de margens
+    // Chart de margens simplificado
     const renderMarginsChart = () => {
         if (!procedures.length) {
-            return <div className="text-center py-8 text-slate-500">Nenhum dado de margem disponível</div>
+            return <EmptyState message="Nenhum dado de margem disponível" />
         }
 
         const proceduresWithMargin = procedures
@@ -258,11 +294,10 @@ const ProcedureChart: React.FC<ProcedureChartProps> = ({
 
         if (!proceduresWithMargin.length) {
             return (
-                <div className="text-center py-8 text-slate-500">
-                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <DollarSign className="w-8 h-8 text-slate-400" />
-                    </div>
-                    <p>Adicione custos aos procedimentos para ver a análise de margem</p>
+                <div className="text-center py-8">
+                    <DollarSign className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                    <p className="text-slate-500 mb-2">Nenhum dado de margem disponível</p>
+                    <p className="text-sm text-slate-400">Adicione custos aos procedimentos para ver a análise</p>
                 </div>
             )
         }
@@ -270,32 +305,28 @@ const ProcedureChart: React.FC<ProcedureChartProps> = ({
         return (
             <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={proceduresWithMargin}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                    <YAxis tick={{ fontSize: 12 }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="name" fontSize={11} />
+                    <YAxis fontSize={12} />
                     <Tooltip
                         content={({ active, payload, label }) => {
                             if (active && payload && payload.length) {
                                 const data = payload[0].payload
                                 return (
                                     <div className="bg-white p-3 border border-slate-200 rounded-lg shadow-lg">
-                                        <p className="font-medium text-slate-900">{label}</p>
-                                        <p className="text-sm text-green-600">
-                                            Margem: {data.margin.toFixed(1)}%
-                                        </p>
-                                        <p className="text-sm text-blue-600">
-                                            Preço: R$ {data.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                        </p>
-                                        <p className="text-sm text-red-600">
-                                            Custo: R$ {data.cost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                        </p>
+                                        <p className="font-medium mb-2">{label}</p>
+                                        <div className="space-y-1 text-sm">
+                                            <p className="text-green-600">Margem: {data.margin.toFixed(1)}%</p>
+                                            <p className="text-blue-600">Preço: {formatCurrency(data.price)}</p>
+                                            <p className="text-red-600">Custo: {formatCurrency(data.cost)}</p>
+                                        </div>
                                     </div>
                                 )
                             }
                             return null
                         }}
                     />
-                    <Bar dataKey="margin" fill="#10B981" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="margin" fill="#10b981" radius={[4, 4, 0, 0]} />
                 </BarChart>
             </ResponsiveContainer>
         )
@@ -321,11 +352,11 @@ const ProcedureChart: React.FC<ProcedureChartProps> = ({
     const getChartTitle = () => {
         switch (type) {
             case 'overview':
-                return 'Visão Geral dos Procedimentos'
+                return 'Visão Geral'
             case 'revenue':
                 return 'Receita por Categoria'
             case 'performance':
-                return 'Top 10 Procedimentos por Preço'
+                return 'Top Procedimentos'
             case 'categories':
                 return 'Análise por Categorias'
             case 'margins':
@@ -353,8 +384,8 @@ const ProcedureChart: React.FC<ProcedureChartProps> = ({
     }
 
     return (
-        <Card className={`border-0 shadow-xl shadow-slate-200/60 ${className}`}>
-            <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
+        <Card className={`${className}`}>
+            <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     {getChartIcon()}
                     {getChartTitle()}
