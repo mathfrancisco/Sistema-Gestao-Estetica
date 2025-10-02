@@ -1,764 +1,1832 @@
-# 💆‍♀️ Sistema de Gestão Estética Completo 
+# 📋 Sistema de Gestão de Clínica de Estética - Documentação Completa
 
-> **Transforme sua clínica de estética em um negócio digital profissional**
-> 
-> Da planilha ao sistema completo: gestão financeira inteligente, agendamento sincronizado com Google Calendar, controle de estoque e muito mais.
-
-## 🎯 Visão Geral do Sistema
-
-### O Que Este Sistema Resolve
-
-**ANTES (Google Sheets):**
-- ❌ Dados espalhados em múltiplas planilhas
-- ❌ Cálculos manuais propensos a erros
-- ❌ Agendamentos desorganizados
-- ❌ Controle de estoque inexistente
-- ❌ Análises limitadas e demoradas
-- ❌ Acesso apenas no computador
-
-**DEPOIS (Sistema Profissional):**
-- ✅ Dashboard unificado em tempo real
-- ✅ Cálculos automáticos e precisos
-- ✅ Agendamento integrado com Google Calendar
-- ✅ Controle total do estoque
-- ✅ Insights avançados e automáticos
-- ✅ Acesso em qualquer dispositivo
+## 📑 Índice
+1. [Visão Geral](#visao-geral)
+2. [Arquitetura](#arquitetura)
+3. [Diagramas](#diagramas)
+4. [Estrutura COMPLETA Backend](#estrutura-backend)
+5. [Estrutura COMPLETA Frontend](#estrutura-frontend)
+6. [Modelos de Dados](#modelos-dados)
+7. [Endpoints API](#endpoints-api)
+8. [Docker e Configurações](#docker)
+9. [Scripts SQL](#scripts-sql)
+10. [Regras de Negócio](#regras-negocio)
 
 ---
 
-## 📋 Funcionalidades Principais
+## 🎯 1. Visão Geral
 
-### 1. 📊 **DASHBOARD FINANCEIRO INTELIGENTE**
+### 1.1 Descrição
+Sistema simplificado para gestão de clínica de estética com 2 esteticistas, focado em: clientes, agendamentos, procedimentos, estoque básico e controle financeiro.
 
-**Métricas em Tempo Real:**
-- Receita diária/semanal/mensal
-- Lucro líquido com distribuição automática
-- Ticket médio por cliente
-- Taxa de conversão de agendamentos
-- ROI por procedimento
-- Projeções baseadas em histórico
+### 1.2 Stack Tecnológico
 
-**Gráficos Interativos:**
-- Evolução de receita (linha temporal)
-- Distribuição de lucros (pizza)
-- Performance por procedimento (barras)
-- Fluxo de caixa projetado (área)
-- Sazonalidade do negócio (heat map)
+**Backend:**
+```
+├── Java 17
+├── Spring Boot 3.2.5
+│   ├── Spring Data JPA
+│   ├── Spring Security
+│   ├── Spring Validation
+│   └── Spring Cache
+├── PostgreSQL 15
+├── Flyway
+├── Lombok
+├── MapStruct
+└── Maven
+```
 
-### 2. 📅 **SISTEMA DE AGENDAMENTO COM GOOGLE CALENDAR**
+**Frontend:**
+```
+├── React 18.2
+├── TypeScript 5.0
+├── Vite
+├── React Router DOM 6
+├── TanStack Query
+├── Axios
+├── Tailwind CSS 3.4
+├── Shadcn/ui
+├── React Hook Form + Zod
+├── Date-fns
+├── Recharts
+└── React-Toastify
+```
 
-**Integração Total com Google Calendar:**
-- Sincronização bidirecional automática
-- Agendamentos aparecem no Google Calendar e no sistema
-- Clientes recebem convites do Google Calendar
-- Confirmação automática via Google Calendar
-- Notificações nativas do Google
+**Infraestrutura:**
+```
+├── Docker & Docker Compose
+├── Nginx
+└── GitHub Actions
+```
 
-**Calendário Visual Integrado:**
-- Interface sincronizada com Google Calendar
-- Visualização por dia/semana/mês
-- Cores por tipo de procedimento
-- Bloqueio automático de conflitos
-- Tempo de duração automático por procedimento
+### 1.3 Módulos do Sistema
 
-**Gestão de Agendamentos:**
-- Criação de eventos no Google Calendar
-- Envio automático de convites para clientes
-- Sistema de confirmação via Google
-- Reagendamento sincronizado
-- Histórico completo de agendamentos
+#### 📋 Clientes
+- Cadastro completo com CPF
+- Histórico de procedimentos
+- Observações e alergias
+- Controle de aniversariantes
+- Busca avançada
 
-### 3. 📦 **CONTROLE DE ESTOQUE SIMPLIFICADO**
+#### 📅 Agendamentos
+- Calendário visual
+- Confirmação automática (SMS/Email)
+- Reagendamento
+- Lista de espera
+- Controle de não comparecimento
 
-**Gestão Completa de Produtos:**
-- Cadastro de produtos e materiais
-- Entrada/saída automática por procedimento
+#### 💆 Procedimentos
+- Catálogo de serviços
+- Categorias
+- Produtos utilizados
+- Fotos antes/depois
+- Duração e preço
+
+#### 📦 Estoque (Simplificado)
+- Controle de entrada/saída
 - Alertas de estoque mínimo
-- Controle de validade de produtos
-- Histórico completo de movimentações
+- Produtos utilizados por procedimento
+- Sem controle de fornecedor complexo
 
-**Análises de Estoque:**
-- Giro de estoque por produto
-- Custo real por procedimento
-- Previsão de necessidades
-- Análise ABC de produtos
-- Relatório de desperdícios
-
-**Controle de Custos:**
-- Cálculo automático de custo por atendimento
-- Margem de lucro por procedimento
-- Relatórios de consumo
-- Alertas de produtos vencidos
-
-### 4. 🎯 **CRM E RELACIONAMENTO COM CLIENTES**
-
-**Segmentação Automática:**
-- Clientes VIP (maior valor gasto)
-- Clientes em risco (sem retorno há 60+ dias)
-- Novos clientes (primeiros 90 dias)
-- Clientes sazonais
-- Score de propensão à compra
-
-**Campanhas via Google Calendar:**
-- Agendamentos de retorno automáticos
-- Lembretes de aniversário via calendar
-- Campanhas de reativação
-- Follow-up pós-atendimento
-- Programa de indicação
-
-**Histórico Completo:**
-- Todos os atendimentos realizados
-- Eventos do calendar sincronizados
-- Preferências e observações
-- Evolução do perfil do cliente
-- Lifetime value (LTV)
-
-### 5. 💰 **GESTÃO FINANCEIRA COMPLETA**
-
-**🎯 Distribuição Automática de Lucros:**
-```
-Configuração Padrão Inteligente:
-┌─────────────────────────┬──────────┬─────────────┐
-│ Destino                 │ Valor    │ % do Lucro  │
-├─────────────────────────┼──────────┼─────────────┤
-│ Pró-labore (Salário)    │ R$ 2.840 │    60%      │
-│ Reserva Equipamentos    │ R$ 947   │    20%      │
-│ Reserva Emergência      │ R$ 473   │    10%      │
-│ Investimento/Marketing  │ R$ 473   │    10%      │
-└─────────────────────────┴──────────┴─────────────┘
-```
-
-**Fluxo de Caixa Inteligente:**
-- Projeção de 90 dias automatizada
-- Análise de sazonalidade
-- Alertas de liquidez
-- Planejamento tributário básico
-- Controle de contas a pagar/receber
-
-**Precificação Dinâmica:**
-- Sugestão de preços baseada em demanda
-- Análise de elasticidade
-- Promoções para horários vazios
-- Comparativo com mercado
-- Simulador de cenários
-
-### 6. 📈 **ANÁLISES E RELATÓRIOS AVANÇADOS**
-
-**Dashboards Executivos:**
-- KPIs principais do negócio
-- Comparativos mês a mês
-- Análise de tendências
-- Metas vs realizado
-- Benchmarks do setor
-
-**Relatórios Automáticos:**
-- Relatório mensal de performance
-- Análise de rentabilidade por procedimento
-- Relatório de clientes (retenção, churn)
-- Análise de estoque e custos
-- Relatório fiscal simplificado
+#### 💰 Financeiro
+- Contas a receber
+- Contas a pagar
+- Fluxo de caixa
+- Formas de pagamento
+- Relatórios de faturamento
 
 ---
 
-## 🏗️ Arquitetura Técnica Avançada
+## 🏗️ 2. Arquitetura
 
-### Stack Tecnológica Premium
+### 2.1 Diagrama de Arquitetura
 
-```typescript
-Frontend:     Next.js 14 (App Router) + TypeScript
-Styling:      Tailwind CSS + shadcn/ui + Framer Motion
-Database:     Supabase (PostgreSQL) + Redis Cache
-Auth:         Supabase Auth + Google OAuth
-Calendar:     Google Calendar API v3
-Charts:       Recharts + D3.js para gráficos avançados
-PDF:          React-PDF + jsPDF
-State:        Zustand + React Query (TanStack)
-Realtime:     Supabase Realtime
-Deploy:       Vercel Edge Functions
-Mobile:       PWA com offline-first
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   PRESENTATION LAYER                         │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │         React Application (Port 3000)                 │  │
+│  │  ┌────────┐ ┌──────────┐ ┌─────────┐ ┌──────────┐  │  │
+│  │  │Dashboard│ │Clientes  │ │Agenda   │ │Financeiro│  │  │
+│  │  │         │ │          │ │         │ │          │  │  │
+│  │  └────────┘ └──────────┘ └─────────┘ └──────────┘  │  │
+│  └───────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+                            ↕ HTTP/REST
+┌─────────────────────────────────────────────────────────────┐
+│                   API GATEWAY - Nginx (Port 80)              │
+│         SSL, Rate Limiting, CORS, Compression                │
+└─────────────────────────────────────────────────────────────┘
+                            ↕
+┌─────────────────────────────────────────────────────────────┐
+│               APPLICATION LAYER - Spring Boot                │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │                   CONTROLLERS                         │  │
+│  │  Cliente │ Agendamento │ Procedimento │ Estoque      │  │
+│  │  Produto │ ContaReceber │ ContaPagar │ Dashboard     │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                            ↕                                 │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │                    SERVICES                           │  │
+│  │  Business Logic │ Validations │ Transactions          │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                            ↕                                 │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │                  REPOSITORIES                         │  │
+│  │  Spring Data JPA │ Custom Queries │ Specifications    │  │
+│  └───────────────────────────────────────────────────────┘  │
+│                            ↕                                 │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │                    ENTITIES                           │  │
+│  │  Cliente │ Agendamento │ Procedimento │ Produto       │  │
+│  └───────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+                            ↕
+┌─────────────────────────────────────────────────────────────┐
+│              PERSISTENCE - PostgreSQL (Port 5432)            │
+│                   Database: clinica_db                       │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### 🗄️ Estrutura Simplificada do Banco de Dados
+---
+
+## 📊 3. Diagramas
+
+### 3.1 Diagrama ER Simplificado
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        CLIENTE                              │
+├─────────────────────────────────────────────────────────────┤
+│ PK │ id                    BIGSERIAL                        │
+│    │ nome                  VARCHAR(200)    NOT NULL         │
+│    │ cpf                   VARCHAR(14)     UNIQUE NOT NULL  │
+│    │ email                 VARCHAR(150)                     │
+│    │ telefone              VARCHAR(20)                      │
+│    │ celular               VARCHAR(20)                      │
+│    │ data_nascimento       DATE                             │
+│    │ sexo                  VARCHAR(1)                       │
+│    │ endereco              VARCHAR(255)                     │
+│    │ cidade                VARCHAR(100)                     │
+│    │ estado                VARCHAR(2)                       │
+│    │ cep                   VARCHAR(9)                       │
+│    │ observacoes           TEXT                             │
+│    │ restricoes_alergias   TEXT                             │
+│    │ foto_perfil_url       VARCHAR(500)                     │
+│    │ status                VARCHAR(20)     DEFAULT 'ATIVO'  │
+│    │ data_cadastro         DATE            DEFAULT NOW()    │
+│    │ ultima_visita         DATE                             │
+│    │ total_gasto           DECIMAL(10,2)   DEFAULT 0        │
+│    │ created_at            TIMESTAMP       DEFAULT NOW()    │
+│    │ updated_at            TIMESTAMP       DEFAULT NOW()    │
+└─────────────────────────────────────────────────────────────┘
+        │ 1
+        │
+        │ N
+        ↓
+┌─────────────────────────────────────────────────────────────┐
+│                       AGENDAMENTO                           │
+├─────────────────────────────────────────────────────────────┤
+│ PK │ id                    BIGSERIAL                        │
+│ FK │ cliente_id            BIGINT         NOT NULL          │
+│ FK │ procedimento_id       BIGINT         NOT NULL          │
+│    │ esteticista           VARCHAR(100)   NOT NULL          │
+│    │ data_hora             TIMESTAMP      NOT NULL          │
+│    │ data_hora_fim         TIMESTAMP      NOT NULL          │
+│    │ duracao_minutos       INTEGER        NOT NULL          │
+│    │ status                VARCHAR(20)    DEFAULT 'AGENDADO'│
+│    │ valor_procedimento    DECIMAL(10,2)  NOT NULL          │
+│    │ valor_desconto        DECIMAL(10,2)  DEFAULT 0         │
+│    │ valor_total           DECIMAL(10,2)  NOT NULL          │
+│    │ forma_pagamento       VARCHAR(50)                      │
+│    │ pago                  BOOLEAN        DEFAULT FALSE     │
+│    │ observacoes           TEXT                             │
+│    │ motivo_cancelamento   TEXT                             │
+│    │ confirmado            BOOLEAN        DEFAULT FALSE     │
+│    │ lembrete_enviado      BOOLEAN        DEFAULT FALSE     │
+│    │ created_at            TIMESTAMP      DEFAULT NOW()     │
+│    │ updated_at            TIMESTAMP      DEFAULT NOW()     │
+└─────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────┐
+│                       PROCEDIMENTO                          │
+├─────────────────────────────────────────────────────────────┤
+│ PK │ id                    BIGSERIAL                        │
+│ FK │ categoria_id          BIGINT                           │
+│    │ nome                  VARCHAR(200)   NOT NULL          │
+│    │ descricao             TEXT                             │
+│    │ duracao_minutos       INTEGER        NOT NULL          │
+│    │ preco                 DECIMAL(10,2)  NOT NULL          │
+│    │ ativo                 BOOLEAN        DEFAULT TRUE      │
+│    │ preparo_necessario    TEXT                             │
+│    │ cuidados_pos          TEXT                             │
+│    │ contraindicacoes      TEXT                             │
+│    │ imagem_url            VARCHAR(500)                     │
+│    │ created_at            TIMESTAMP      DEFAULT NOW()     │
+│    │ updated_at            TIMESTAMP      DEFAULT NOW()     │
+└─────────────────────────────────────────────────────────────┘
+        │ N
+        │
+        │ M
+        ↓
+┌─────────────────────────────────────────────────────────────┐
+│                  PROCEDIMENTO_PRODUTO                       │
+├─────────────────────────────────────────────────────────────┤
+│ PK │ id                    BIGSERIAL                        │
+│ FK │ procedimento_id       BIGINT         NOT NULL          │
+│ FK │ produto_id            BIGINT         NOT NULL          │
+│    │ quantidade_utilizada  DECIMAL(10,3)  NOT NULL          │
+└─────────────────────────────────────────────────────────────┘
+        │ M
+        │
+        │ N
+        ↓
+┌─────────────────────────────────────────────────────────────┐
+│                         PRODUTO                             │
+├─────────────────────────────────────────────────────────────┤
+│ PK │ id                    BIGSERIAL                        │
+│    │ nome                  VARCHAR(200)   NOT NULL          │
+│    │ descricao             TEXT                             │
+│    │ codigo_barras         VARCHAR(50)    UNIQUE            │
+│    │ unidade_medida        VARCHAR(10)    NOT NULL          │
+│    │ estoque_minimo        DECIMAL(10,3)  DEFAULT 0         │
+│    │ estoque_atual         DECIMAL(10,3)  DEFAULT 0         │
+│    │ preco_custo           DECIMAL(10,2)  NOT NULL          │
+│    │ preco_venda           DECIMAL(10,2)                    │
+│    │ marca                 VARCHAR(100)                     │
+│    │ link_compra           VARCHAR(500)                     │
+│    │ ativo                 BOOLEAN        DEFAULT TRUE      │
+│    │ created_at            TIMESTAMP      DEFAULT NOW()     │
+│    │ updated_at            TIMESTAMP      DEFAULT NOW()     │
+└─────────────────────────────────────────────────────────────┘
+        │ 1
+        │
+        │ N
+        ↓
+┌─────────────────────────────────────────────────────────────┐
+│                  MOVIMENTACAO_ESTOQUE                       │
+├─────────────────────────────────────────────────────────────┤
+│ PK │ id                    BIGSERIAL                        │
+│ FK │ produto_id            BIGINT         NOT NULL          │
+│ FK │ agendamento_id        BIGINT                           │
+│    │ tipo                  VARCHAR(20)    NOT NULL          │
+│    │ quantidade            DECIMAL(10,3)  NOT NULL          │
+│    │ quantidade_anterior   DECIMAL(10,3)  NOT NULL          │
+│    │ quantidade_nova       DECIMAL(10,3)  NOT NULL          │
+│    │ valor_unitario        DECIMAL(10,2)                    │
+│    │ motivo                TEXT                             │
+│    │ data_movimentacao     TIMESTAMP      DEFAULT NOW()     │
+│    │ created_at            TIMESTAMP      DEFAULT NOW()     │
+└─────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────┐
+│                        CATEGORIA                            │
+├─────────────────────────────────────────────────────────────┤
+│ PK │ id                    BIGSERIAL                        │
+│    │ nome                  VARCHAR(100)   NOT NULL          │
+│    │ descricao             TEXT                             │
+│    │ icone                 VARCHAR(50)                      │
+│    │ cor                   VARCHAR(7)                       │
+│    │ ativo                 BOOLEAN        DEFAULT TRUE      │
+│    │ created_at            TIMESTAMP      DEFAULT NOW()     │
+└─────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────┐
+│                      CONTA_RECEBER                          │
+├─────────────────────────────────────────────────────────────┤
+│ PK │ id                    BIGSERIAL                        │
+│ FK │ cliente_id            BIGINT         NOT NULL          │
+│ FK │ agendamento_id        BIGINT                           │
+│    │ descricao             TEXT           NOT NULL          │
+│    │ valor                 DECIMAL(10,2)  NOT NULL          │
+│    │ data_vencimento       DATE           NOT NULL          │
+│    │ data_pagamento        DATE                             │
+│    │ status                VARCHAR(20)    DEFAULT 'PENDENTE'│
+│    │ forma_pagamento       VARCHAR(50)                      │
+│    │ observacoes           TEXT                             │
+│    │ created_at            TIMESTAMP      DEFAULT NOW()     │
+│    │ updated_at            TIMESTAMP      DEFAULT NOW()     │
+└─────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────┐
+│                        CONTA_PAGAR                          │
+├─────────────────────────────────────────────────────────────┤
+│ PK │ id                    BIGSERIAL                        │
+│    │ descricao             TEXT           NOT NULL          │
+│    │ categoria             VARCHAR(50)                      │
+│    │ valor                 DECIMAL(10,2)  NOT NULL          │
+│    │ data_vencimento       DATE           NOT NULL          │
+│    │ data_pagamento        DATE                             │
+│    │ status                VARCHAR(20)    DEFAULT 'PENDENTE'│
+│    │ forma_pagamento       VARCHAR(50)                      │
+│    │ observacoes           TEXT                             │
+│    │ created_at            TIMESTAMP      DEFAULT NOW()     │
+│    │ updated_at            TIMESTAMP      DEFAULT NOW()     │
+└─────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────┐
+│                        USUARIO                              │
+├─────────────────────────────────────────────────────────────┤
+│ PK │ id                    BIGSERIAL                        │
+│    │ nome                  VARCHAR(200)   NOT NULL          │
+│    │ username              VARCHAR(50)    UNIQUE NOT NULL   │
+│    │ password_hash         VARCHAR(255)   NOT NULL          │
+│    │ email                 VARCHAR(150)   UNIQUE NOT NULL   │
+│    │ role                  VARCHAR(20)    NOT NULL          │
+│    │ ativo                 BOOLEAN        DEFAULT TRUE      │
+│    │ created_at            TIMESTAMP      DEFAULT NOW()     │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📁 4. Estrutura COMPLETA do Backend
+
+```
+clinica-estetica-backend/
+│
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── com/
+│   │   │       └── clinica/
+│   │   │           └── estetica/
+│   │   │               │
+│   │   │               ├── ClinicaEsteticaApplication.java
+│   │   │               │
+│   │   │               ├── config/
+│   │   │               │   ├── SecurityConfig.java
+│   │   │               │   ├── JwtAuthenticationFilter.java
+│   │   │               │   ├── JwtTokenProvider.java
+│   │   │               │   ├── CorsConfig.java
+│   │   │               │   ├── SwaggerConfig.java
+│   │   │               │   ├── JpaConfig.java
+│   │   │               │   ├── CacheConfig.java
+│   │   │               │   ├── AsyncConfig.java
+│   │   │               │   └── WebConfig.java
+│   │   │               │
+│   │   │               ├── controller/
+│   │   │               │   ├── AuthController.java
+│   │   │               │   ├── ClienteController.java
+│   │   │               │   ├── AgendamentoController.java
+│   │   │               │   ├── ProcedimentoController.java
+│   │   │               │   ├── CategoriaController.java
+│   │   │               │   ├── ProdutoController.java
+│   │   │               │   ├── EstoqueController.java
+│   │   │               │   ├── MovimentacaoEstoqueController.java
+│   │   │               │   ├── ContaReceberController.java
+│   │   │               │   ├── ContaPagarController.java
+│   │   │               │   ├── FinanceiroController.java
+│   │   │               │   ├── DashboardController.java
+│   │   │               │   ├── RelatorioController.java
+│   │   │               │   └── UsuarioController.java
+│   │   │               │
+│   │   │               ├── service/
+│   │   │               │   ├── AuthService.java
+│   │   │               │   ├── ClienteService.java
+│   │   │               │   ├── AgendamentoService.java
+│   │   │               │   ├── ProcedimentoService.java
+│   │   │               │   ├── CategoriaService.java
+│   │   │               │   ├── ProdutoService.java
+│   │   │               │   ├── EstoqueService.java
+│   │   │               │   ├── MovimentacaoEstoqueService.java
+│   │   │               │   ├── ContaReceberService.java
+│   │   │               │   ├── ContaPagarService.java
+│   │   │               │   ├── FinanceiroService.java
+│   │   │               │   ├── DashboardService.java
+│   │   │               │   ├── RelatorioService.java
+│   │   │               │   ├── NotificacaoService.java
+│   │   │               │   ├── EmailService.java
+│   │   │               │   ├── SmsService.java
+│   │   │               │   └── UsuarioService.java
+│   │   │               │
+│   │   │               ├── repository/
+│   │   │               │   ├── ClienteRepository.java
+│   │   │               │   ├── AgendamentoRepository.java
+│   │   │               │   ├── ProcedimentoRepository.java
+│   │   │               │   ├── CategoriaRepository.java
+│   │   │               │   ├── ProdutoRepository.java
+│   │   │               │   ├── MovimentacaoEstoqueRepository.java
+│   │   │               │   ├── ContaReceberRepository.java
+│   │   │               │   ├── ContaPagarRepository.java
+│   │   │               │   ├── ProcedimentoProdutoRepository.java
+│   │   │               │   └── UsuarioRepository.java
+│   │   │               │
+│   │   │               ├── model/
+│   │   │               │   │
+│   │   │               │   ├── entity/
+│   │   │               │   │   ├── Cliente.java
+│   │   │               │   │   ├── Agendamento.java
+│   │   │               │   │   ├── Procedimento.java
+│   │   │               │   │   ├── Categoria.java
+│   │   │               │   │   ├── Produto.java
+│   │   │               │   │   ├── MovimentacaoEstoque.java
+│   │   │               │   │   ├── ContaReceber.java
+│   │   │               │   │   ├── ContaPagar.java
+│   │   │               │   │   ├── ProcedimentoProduto.java
+│   │   │               │   │   ├── Usuario.java
+│   │   │               │   │   └── Endereco.java (Embeddable)
+│   │   │               │   │
+│   │   │               │   ├── dto/
+│   │   │               │   │   ├── request/
+│   │   │               │   │   │   ├── LoginRequest.java
+│   │   │               │   │   │   ├── ClienteRequest.java
+│   │   │               │   │   │   ├── AgendamentoRequest.java
+│   │   │               │   │   │   ├── ProcedimentoRequest.java
+│   │   │               │   │   │   ├── ProdutoRequest.java
+│   │   │               │   │   │   ├── MovimentacaoEstoqueRequest.java
+│   │   │               │   │   │   ├── ContaReceberRequest.java
+│   │   │               │   │   │   └── ContaPagarRequest.java
+│   │   │               │   │   │
+│   │   │               │   │   ├── response/
+│   │   │               │   │   │   ├── LoginResponse.java
+│   │   │               │   │   │   ├── ClienteResponse.java
+│   │   │               │   │   │   ├── AgendamentoResponse.java
+│   │   │               │   │   │   ├── ProcedimentoResponse.java
+│   │   │               │   │   │   ├── ProdutoResponse.java
+│   │   │               │   │   │   ├── EstoqueResponse.java
+│   │   │               │   │   │   ├── ContaReceberResponse.java
+│   │   │               │   │   │   ├── ContaPagarResponse.java
+│   │   │               │   │   │   ├── DashboardResponse.java
+│   │   │               │   │   │   └── FluxoCaixaResponse.java
+│   │   │               │   │   │
+│   │   │               │   │   └── filter/
+│   │   │               │   │       ├── ClienteFiltro.java
+│   │   │               │   │       ├── AgendamentoFiltro.java
+│   │   │               │   │       ├── ProcedimentoFiltro.java
+│   │   │               │   │       ├── ProdutoFiltro.java
+│   │   │               │   │       └── FinanceiroFiltro.java
+│   │   │               │   │
+│   │   │               │   └── enums/
+│   │   │               │       ├── StatusCliente.java
+│   │   │               │       ├── StatusAgendamento.java
+│   │   │               │       ├── StatusConta.java
+│   │   │               │       ├── TipoMovimentacao.java
+│   │   │               │       ├── FormaPagamento.java
+│   │   │               │       ├── UnidadeMedida.java
+│   │   │               │       ├── TipoNotificacao.java
+│   │   │               │       └── UserRole.java
+│   │   │               │
+│   │   │               ├── mapper/
+│   │   │               │   ├── ClienteMapper.java
+│   │   │               │   ├── AgendamentoMapper.java
+│   │   │               │   ├── ProcedimentoMapper.java
+│   │   │               │   ├── ProdutoMapper.java
+│   │   │               │   ├── ContaReceberMapper.java
+│   │   │               │   └── ContaPagarMapper.java
+│   │   │               │
+│   │   │               ├── exception/
+│   │   │               │   ├── GlobalExceptionHandler.java
+│   │   │               │   ├── ResourceNotFoundException.java
+│   │   │               │   ├── BusinessException.java
+│   │   │               │   ├── ValidationException.java
+│   │   │               │   ├── UnauthorizedException.java
+│   │   │               │   └── ErrorResponse.java
+│   │   │               │
+│   │   │               ├── security/
+│   │   │               │   ├── UserDetailsServiceImpl.java
+│   │   │               │   ├── JwtTokenProvider.java
+│   │   │               │   ├── JwtAuthenticationFilter.java
+│   │   │               │   └── SecurityUtils.java
+│   │   │               │
+│   │   │               ├── util/
+│   │   │               │   ├── DateUtil.java
+│   │   │               │   ├── ValidationUtil.java
+│   │   │               │   ├── CpfValidator.java
+│   │   │               │   ├── StringUtil.java
+│   │   │               │   ├── NumberUtil.java
+│   │   │               │   └── PdfGenerator.java
+│   │   │               │
+│   │   │               └── scheduler/
+│   │   │                   ├── AgendamentoScheduler.java
+│   │   │                   ├── NotificacaoScheduler.java
+│   │   │                   └── BackupScheduler.java
+│   │   │
+│   │   └── resources/
+│   │       ├── application.properties
+│   │       ├── application-dev.properties
+│   │       ├── application-prod.properties
+│   │       │
+│   │       ├── db/
+│   │       │   └── migration/
+│   │       │       ├── V1__create_tables.sql
+│   │       │       ├── V2__create_indexes.sql
+│   │       │       ├── V3__insert_initial_data.sql
+│   │       │       └── V4__alter_tables.sql
+│   │       │
+│   │       ├── templates/
+│   │       │   ├── email/
+│   │       │   │   ├── confirmacao-agendamento.html
+│   │       │   │   ├── lembrete-agendamento.html
+│   │       │   │   └── aniversario.html
+│   │       │   │
+│   │       │   └── relatorio/
+│   │       │       ├── agendamentos.jrxml
+│   │       │       ├── faturamento.jrxml
+│   │       │       └── clientes.jrxml
+│   │       │
+│   │       └── static/
+│   │           └── logo.png
+│   │
+│   └── test/
+│       └── java/
+│           └── com/
+│               └── clinica/
+│                   └── estetica/
+│                       ├── controller/
+│                       │   ├── ClienteControllerTest.java
+│                       │   ├── AgendamentoControllerTest.java
+│                       │   ├── ProcedimentoControllerTest.java
+│                       │   └── FinanceiroControllerTest.java
+│                       │
+│                       ├── service/
+│                       │   ├── ClienteServiceTest.java
+│                       │   ├── AgendamentoServiceTest.java
+│                       │   ├── ProcedimentoServiceTest.java
+│                       │   ├── EstoqueServiceTest.java
+│                       │   └── FinanceiroServiceTest.java
+│                       │
+│                       ├── repository/
+│                       │   ├── ClienteRepositoryTest.java
+│                       │   ├── AgendamentoRepositoryTest.java
+│                       │   └── ProdutoRepositoryTest.java
+│                       │
+│                       └── integration/
+│                           ├── ClienteIntegrationTest.java
+│                           ├── AgendamentoIntegrationTest.java
+│                           └── FinanceiroIntegrationTest.java
+│
+├── docker/
+│   ├── Dockerfile
+│   └── docker-compose.yml
+│
+├── .github/
+│   └── workflows/
+│       ├── ci.yml
+│       └── deploy.yml
+│
+├── pom.xml
+├── .gitignore
+├── README.md
+└── LICENSE
+```
+
+---
+
+## 📁 5. Estrutura COMPLETA do Frontend
+
+```
+clinica-estetica-frontend/
+│
+├── public/
+│   ├── index.html
+│   ├── favicon.ico
+│   ├── logo.png
+│   ├── manifest.json
+│   └── robots.txt
+│
+├── src/
+│   ├── main.tsx
+│   ├── App.tsx
+│   ├── index.css
+│   ├── vite-env.d.ts
+│   │
+│   ├── assets/
+│   │   ├── images/
+│   │   │   ├── logo.svg
+│   │   │   ├── logo-white.svg
+│   │   │   ├── placeholder-user.png
+│   │   │   ├── placeholder-procedimento.png
+│   │   │   └── background-login.jpg
+│   │   │
+│   │   └── icons/
+│   │       ├── calendar.svg
+│   │       ├── client.svg
+│   │       ├── finance.svg
+│   │       └── product.svg
+│   │
+│   ├── components/
+│   │   │
+│   │   ├── layout/
+│   │   │   ├── AppLayout.tsx
+│   │   │   ├── Header.tsx
+│   │   │   ├── Sidebar.tsx
+│   │   │   ├── Footer.tsx
+│   │   │   ├── Breadcrumb.tsx
+│   │   │   └── MobileMenu.tsx
+│   │   │
+│   │   ├── common/
+│   │   │   ├── Button.tsx
+│   │   │   ├── Input.tsx
+│   │   │   ├── Select.tsx
+│   │   │   ├── Textarea.tsx
+│   │   │   ├── Checkbox.tsx
+│   │   │   ├── Radio.tsx
+│   │   │   ├── Switch.tsx
+│   │   │   ├── Modal.tsx
+│   │   │   ├── Dialog.tsx
+│   │   │   ├── Drawer.tsx
+│   │   │   ├── Dropdown.tsx
+│   │   │   ├── Alert.tsx
+│   │   │   ├── Badge.tsx
+│   │   │   ├── Card.tsx
+│   │   │   ├── Table.tsx
+│   │   │   ├── DataTable.tsx
+│   │   │   ├── Loading.tsx
+│   │   │   ├── Spinner.tsx
+│   │   │   ├── Skeleton.tsx
+│   │   │   ├── EmptyState.tsx
+│   │   │   ├── ErrorBoundary.tsx
+│   │   │   ├── Pagination.tsx
+│   │   │   ├── SearchBar.tsx
+│   │   │   ├── DatePicker.tsx
+│   │   │   ├── TimePicker.tsx
+│   │   │   ├── DateRangePicker.tsx
+│   │   │   ├── CurrencyInput.tsx
+│   │   │   ├── PhoneInput.tsx
+│   │   │   ├── CpfInput.tsx
+│   │   │   ├── Tooltip.tsx
+│   │   │   ├── Tabs.tsx
+│   │   │   ├── Accordion.tsx
+│   │   │   ├── Avatar.tsx
+│   │   │   └── FileUpload.tsx
+│   │   │
+│   │   ├── clientes/
+│   │   │   ├── ClienteList.tsx
+│   │   │   ├── ClienteCard.tsx
+│   │   │   ├── ClienteForm.tsx
+│   │   │   ├── ClienteDetails.tsx
+│   │   │   ├── ClienteFilter.tsx
+│   │   │   ├── ClienteHistorico.tsx
+│   │   │   ├── ClienteObservacoes.tsx
+│   │   │   └── ClienteStats.tsx
+│   │   │
+│   │   ├── agendamentos/
+│   │   │   ├── AgendamentoList.tsx
+│   │   │   ├── AgendamentoCard.tsx
+│   │   │   ├── AgendamentoForm.tsx
+│   │   │   ├── AgendamentoCalendar.tsx
+│   │   │   ├── AgendamentoDia.tsx
+│   │   │   ├── AgendamentoSemana.tsx
+│   │   │   ├── AgendamentoMes.tsx
+│   │   │   ├── AgendamentoDetails.tsx
+│   │   │   ├── AgendamentoFilter.tsx
+│   │   │   ├── ConfirmarAgendamento.tsx
+│   │   │   ├── CancelarAgendamento.tsx
+│   │   │   └── ListaEspera.tsx
+│   │   │
+│   │   ├── procedimentos/
+│   │   │   ├── ProcedimentoList.tsx
+│   │   │   ├── ProcedimentoCard.tsx
+│   │   │   ├── ProcedimentoForm.tsx
+│   │   │   ├── ProcedimentoDetails.tsx
+│   │   │   ├── ProcedimentoCategoria.tsx
+│   │   │   ├── ProcedimentoProdutos.tsx
+│   │   │   └── ProcedimentoGaleria.tsx
+│   │   │
+│   │   ├── produtos/
+│   │   │   ├── ProdutoList.tsx
+│   │   │   ├── ProdutoCard.tsx
+│   │   │   ├── ProdutoForm.tsx
+│   │   │   ├── ProdutoDetails.tsx
+│   │   │   ├── ProdutoFilter.tsx
+│   │   │   └── ProdutoAlerta.tsx
+│   │   │
+│   │   ├── estoque/
+│   │   │   ├── EstoqueList.tsx
+│   │   │   ├── EstoqueDashboard.tsx
+│   │   │   ├── MovimentacaoList.tsx
+│   │   │   ├── MovimentacaoForm.tsx
+│   │   │   ├── EntradaEstoque.tsx
+│   │   │   ├── SaidaEstoque.tsx
+│   │   │   ├── AjusteEstoque.tsx
+│   │   │   ├── AlertasEstoque.tsx
+│   │   │   └── HistoricoMovimentacao.tsx
+│   │   │
+│   │   ├── financeiro/
+│   │   │   ├── FinanceiroDashboard.tsx
+│   │   │   ├── FluxoCaixa.tsx
+│   │   │   ├── ResumoFinanceiro.tsx
+│   │   │   │
+│   │   │   ├── contas-receber/
+│   │   │   │   ├── ContasReceberList.tsx
+│   │   │   │   ├── ContaReceberCard.tsx
+│   │   │   │   ├── ContaReceberForm.tsx
+│   │   │   │   ├── RegistrarPagamento.tsx
+│   │   │   │   └── ContasVencidas.tsx
+│   │   │   │
+│   │   │   └── contas-pagar/
+│   │   │       ├── ContasPagarList.tsx
+│   │   │       ├── ContaPagarCard.tsx
+│   │   │       ├── ContaPagarForm.tsx
+│   │   │       ├── RegistrarPagamento.tsx
+│   │   │       └── ContasVencidas.tsx
+│   │   │
+│   │   ├── dashboard/
+│   │   │   ├── DashboardCards.tsx
+│   │   │   ├── CardFaturamento.tsx
+│   │   │   ├── CardAgendamentos.tsx
+│   │   │   ├── CardClientes.tsx
+│   │   │   ├── CardEstoque.tsx
+│   │   │   ├── GraficoFaturamento.tsx
+│   │   │   ├── GraficoAgendamentos.tsx
+│   │   │   ├── GraficoProcedimentos.tsx
+│   │   │   ├── TopProcedimentos.tsx
+│   │   │   ├── TopClientes.tsx
+│   │   │   ├── AgendamentosHoje.tsx
+│   │   │   ├── AtividadesRecentes.tsx
+│   │   │   └── AlertasGerais.tsx
+│   │   │
+│   │   ├── relatorios/
+│   │   │   ├── RelatorioFaturamento.tsx
+│   │   │   ├── RelatorioAgendamentos.tsx
+│   │   │   ├── RelatorioClientes.tsx
+│   │   │   ├── RelatorioProcedimentos.tsx
+│   │   │   ├── RelatorioEstoque.tsx
+│   │   │   ├── RelatorioFinanceiro.tsx
+│   │   │   ├── FiltrosRelatorio.tsx
+│   │   │   └── ExportarRelatorio.tsx
+│   │   │
+│   │   └── auth/
+│   │       ├── LoginForm.tsx
+│   │       ├── ForgotPassword.tsx
+│   │       ├── ResetPassword.tsx
+│   │       └── ProtectedRoute.tsx
+│   │
+│   ├── pages/
+│   │   ├── Login.tsx
+│   │   ├── Dashboard.tsx
+│   │   ├── Clientes.tsx
+│   │   ├── ClienteDetalhes.tsx
+│   │   ├── NovoCliente.tsx
+│   │   ├── EditarCliente.tsx
+│   │   ├── Agendamentos.tsx
+│   │   ├── Calendario.tsx
+│   │   ├── NovoAgendamento.tsx
+│   │   ├── Procedimentos.tsx
+│   │   ├── ProcedimentoDetalhes.tsx
+│   │   ├── NovoProcedimento.tsx
+│   │   ├── Produtos.tsx
+│   │   ├── ProdutoDetalhes.tsx
+│   │   ├── NovoProduto.tsx
+│   │   ├── Estoque.tsx
+│   │   ├── Movimentacoes.tsx
+│   │   ├── Financeiro.tsx
+│   │   ├── ContasReceber.tsx
+│   │   ├── ContasPagar.tsx
+│   │   ├── FluxoCaixa.tsx
+│   │   ├── Relatorios.tsx
+│   │   ├── Configuracoes.tsx
+│   │   ├── Perfil.tsx
+│   │   ├── NotFound.tsx
+│   │   └── Unauthorized.tsx
+│   │
+│   ├── services/
+│   │   ├── api.ts
+│   │   ├── authService.ts
+│   │   ├── clienteService.ts
+│   │   ├── agendamentoService.ts
+│   │   ├── procedimentoService.ts
+│   │   ├── categoriaService.ts
+│   │   ├── produtoService.ts
+│   │   ├── estoqueService.ts
+│   │   ├── movimentacaoService.ts
+│   │   ├── contaReceberService.ts
+│   │   ├── contaPagarService.ts
+│   │   ├── financeiroService.ts
+│   │   ├── dashboardService.ts
+│   │   ├── relatorioService.ts
+│   │   └── notificacaoService.ts
+│   │
+│   ├── hooks/
+│   │   ├── useAuth.ts
+│   │   ├── useClientes.ts
+│   │   ├── useAgendamentos.ts
+│   │   ├── useProcedimentos.ts
+│   │   ├── useProdutos.ts
+│   │   ├── useEstoque.ts
+│   │   ├── useFinanceiro.ts
+│   │   ├── useDashboard.ts
+│   │   ├── useDebounce.ts
+│   │   ├── useLocalStorage.ts
+│   │   ├── useMediaQuery.ts
+│   │   ├── useClickOutside.ts
+│   │   └── useNotification.ts
+│   │
+│   ├── contexts/
+│   │   ├── AuthContext.tsx
+│   │   ├── ThemeContext.tsx
+│   │   ├── NotificationContext.tsx
+│   │   └── SidebarContext.tsx
+│   │
+│   ├── types/
+│   │   ├── auth.types.ts
+│   │   ├── cliente.types.ts
+│   │   ├── agendamento.types.ts
+│   │   ├── procedimento.types.ts
+│   │   ├── produto.types.ts
+│   │   ├── estoque.types.ts
+│   │   ├── financeiro.types.ts
+│   │   ├── dashboard.types.ts
+│   │   ├── relatorio.types.ts
+│   │   ├── common.types.ts
+│   │   └── api.types.ts
+│   │
+│   ├── utils/
+│   │   ├── formatters.ts
+│   │   ├── validators.ts
+│   │   ├── constants.ts
+│   │   ├── helpers.ts
+│   │   ├── date.utils.ts
+│   │   ├── currency.utils.ts
+│   │   ├── string.utils.ts
+│   │   ├── array.utils.ts
+│   │   ├── cpf.utils.ts
+│   │   ├── phone.utils.ts
+│   │   └── storage.utils.ts
+│   │
+│   ├── lib/
+│   │   ├── axios.ts
+│   │   ├── react-query.ts
+│   │   └── zod-schemas.ts
+│   │
+│   ├── styles/
+│   │   ├── globals.css
+│   │   ├── variables.css
+│   │   └── animations.css
+│   │
+│   └── routes/
+│       ├── index.tsx
+│       ├── PrivateRoute.tsx
+│       └── PublicRoute.tsx
+│
+├── docker/
+│   ├── Dockerfile
+│   └── nginx.conf
+│
+├── .env.example
+├── .env.development
+├── .env.production
+├── .gitignore
+├── .eslintrc.json
+├── .prettierrc
+├── package.json
+├── tsconfig.json
+├── tsconfig.node.json
+├── vite.config.ts
+├── tailwind.config.js
+├── postcss.config.js
+├── README.md
+└── LICENSE
+```
+
+---
+
+## 💾 6. Modelos de Dados Completos
+
+### 6.1 Cliente
+```json
+{
+  "id": 1,
+  "nome": "Maria Silva Santos",
+  "cpf": "123.456.789-00",
+  "email": "maria.silva@email.com",
+  "telefone": "(11) 3456-7890",
+  "celular": "(11) 98765-4321",
+  "dataNascimento": "1990-05-15",
+  "sexo": "F",
+  "endereco": "Rua das Flores, 123",
+  "cidade": "São Paulo",
+  "estado": "SP",
+  "cep": "01234-567",
+  "observacoes": "Cliente VIP",
+  "restricoesAlergias": "Alergia a produtos com fragrância forte",
+  "fotoPerfilUrl": "https://storage.com/fotos/cliente-1.jpg",
+  "status": "ATIVO",
+  "dataCadastro": "2024-01-15",
+  "ultimaVisita": "2025-09-28",
+  "totalGasto": 2500.00,
+  "createdAt": "2024-01-15T10:30:00",
+  "updatedAt": "2025-09-28T14:20:00"
+}
+```
+
+### 6.2 Agendamento
+```json
+{
+  "id": 1,
+  "clienteId": 1,
+  "clienteNome": "Maria Silva Santos",
+  "procedimentoId": 5,
+  "procedimentoNome": "Limpeza de Pele Profunda",
+  "esteticista": "Ana Paula",
+  "dataHora": "2025-10-15T14:00:00",
+  "dataHoraFim": "2025-10-15T15:00:00",
+  "duracaoMinutos": 60,
+  "status": "CONFIRMADO",
+  "valorProcedimento": 150.00,
+  "valorDesconto": 15.00,
+  "valorTotal": 135.00,
+  "formaPagamento": "PIX",
+  "pago": true,
+  "observacoes": "Cliente solicitou atendimento no período da tarde",
+  "confirmado": true,
+  "lembreteEnviado": true,
+  "createdAt": "2025-10-01T09:15:00",
+  "updatedAt": "2025-10-10T16:30:00"
+}
+```
+
+### 6.3 Procedimento
+```json
+{
+  "id": 1,
+  "categoriaId": 1,
+  "categoriaNome": "Facial",
+  "nome": "Limpeza de Pele Profunda",
+  "descricao": "Limpeza completa com extração de cravos e hidratação",
+  "duracaoMinutos": 60,
+  "preco": 150.00,
+  "ativo": true,
+  "preparoNecessario": "Vir com rosto limpo, sem maquiagem",
+  "cuidadosPos": "Evitar exposição solar por 24h, usar protetor solar",
+  "contraindicacoes": "Pele com lesões ativas, acne inflamada",
+  "imagemUrl": "https://storage.com/procedimentos/limpeza-pele.jpg",
+  "produtosUtilizados": [
+    {
+      "produtoId": 3,
+      "produtoNome": "Gel de Limpeza",
+      "quantidadeUtilizada": 50.0
+    },
+    {
+      "produtoId": 5,
+      "produtoNome": "Máscara Facial",
+      "quantidadeUtilizada": 30.0
+    }
+  ],
+  "createdAt": "2024-01-01T00:00:00",
+  "updatedAt": "2024-08-15T10:00:00"
+}
+```
+
+### 6.4 Produto
+```json
+{
+  "id": 1,
+  "nome": "Creme Hidratante Facial Premium",
+  "descricao": "Hidratante com ácido hialurônico e vitamina E",
+  "codigoBarras": "7891234567890",
+  "unidadeMedida": "ML",
+  "estoqueMinimo": 10,
+  "estoqueAtual": 45,
+  "precoCusto": 35.00,
+  "precoVenda": 89.90,
+  "marca": "La Roche-Posay",
+  "linkCompra": "https://amazon.com.br/produto-xyz",
+  "ativo": true,
+  "createdAt": "2024-01-01T00:00:00",
+  "updatedAt": "2025-09-20T15:30:00"
+}
+```
+
+### 6.5 Movimentação Estoque
+```json
+{
+  "id": 1,
+  "produtoId": 1,
+  "produtoNome": "Creme Hidratante Facial Premium",
+  "agendamentoId": 45,
+  "tipo": "SAIDA",
+  "quantidade": 50.0,
+  "quantidadeAnterior": 500.0,
+  "quantidadeNova": 450.0,
+  "valorUnitario": 35.00,
+  "motivo": "Utilizado em procedimento - Hidratação Facial",
+  "dataMovimentacao": "2025-10-02T14:30:00",
+  "createdAt": "2025-10-02T14:30:00"
+}
+```
+
+### 6.6 Conta a Receber
+```json
+{
+  "id": 1,
+  "clienteId": 1,
+  "clienteNome": "Maria Silva Santos",
+  "agendamentoId": 1,
+  "descricao": "Limpeza de Pele - Maria Silva",
+  "valor": 150.00,
+  "dataVencimento": "2025-10-20",
+  "dataPagamento": "2025-10-15",
+  "status": "PAGO",
+  "formaPagamento": "PIX",
+  "observacoes": "Pagamento antecipado",
+  "createdAt": "2025-10-01T14:30:00",
+  "updatedAt": "2025-10-15T10:20:00"
+}
+```
+
+### 6.7 Conta a Pagar
+```json
+{
+  "id": 1,
+  "descricao": "Compra de produtos - Amazon",
+  "categoria": "PRODUTOS",
+  "valor": 850.00,
+  "dataVencimento": "2025-10-15",
+  "dataPagamento": null,
+  "status": "PENDENTE",
+  "formaPagamento": "CARTAO_CREDITO",
+  "observacoes": "Pedido #12345 - Produtos para o mês",
+  "createdAt": "2025-10-01T11:00:00",
+  "updatedAt": "2025-10-01T11:00:00"
+}
+```
+
+### 6.8 Dashboard Response
+```json
+{
+  "faturamentoHoje": 450.00,
+  "faturamentoMes": 12500.00,
+  "agendamentosHoje": 8,
+  "agendamentosMes": 156,
+  "clientesAtivos": 234,
+  "clientesNovos": 15,
+  "produtosEstoqueBaixo": 3,
+  "contasVencidas": 2,
+  "proximosAgendamentos": [
+    {
+      "id": 45,
+      "clienteNome": "Maria Silva",
+      "procedimentoNome": "Limpeza de Pele",
+      "dataHora": "2025-10-02T15:00:00",
+      "esteticista": "Ana Paula"
+    }
+  ],
+  "topProcedimentos": [
+    {
+      "procedimentoNome": "Limpeza de Pele Profunda",
+      "quantidade": 45,
+      "faturamento": 6750.00
+    }
+  ],
+  "graficoFaturamento": {
+    "labels": ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun"],
+    "valores": [8500, 9200, 11000, 10500, 12000, 12500]
+  }
+}
+```
+
+---
+
+## 🔌 7. Endpoints da API Completos
+
+### 7.1 Autenticação
+
+```
+POST   /api/auth/login              - Login
+POST   /api/auth/logout             - Logout
+POST   /api/auth/refresh            - Refresh Token
+POST   /api/auth/forgot-password    - Esqueci minha senha
+POST   /api/auth/reset-password     - Resetar senha
+GET    /api/auth/me                 - Dados do usuário logado
+```
+
+### 7.2 Clientes
+
+```
+GET    /api/clientes                    - Lista todos (paginado)
+GET    /api/clientes/{id}               - Busca por ID
+POST   /api/clientes                    - Cria novo
+PUT    /api/clientes/{id}               - Atualiza
+DELETE /api/clientes/{id}               - Remove
+GET    /api/clientes/cpf/{cpf}          - Busca por CPF
+POST   /api/clientes/buscar             - Busca com filtros
+GET    /api/clientes/{id}/historico     - Histórico do cliente
+GET    /api/clientes/aniversariantes    - Aniversariantes do mês
+PUT    /api/clientes/{id}/inativar      - Inativa cliente
+PUT    /api/clientes/{id}/ativar        - Ativa cliente
+```
+
+### 7.3 Agendamentos
+
+```
+GET    /api/agendamentos                       - Lista todos
+GET    /api/agendamentos/{id}                  - Busca por ID
+POST   /api/agendamentos                       - Cria novo
+PUT    /api/agendamentos/{id}                  - Atualiza
+DELETE /api/agendamentos/{id}                  - Cancela
+POST   /api/agendamentos/buscar                - Busca com filtros
+GET    /api/agendamentos/data/{data}           - Por data
+GET    /api/agendamentos/periodo               - Por período
+GET    /api/agendamentos/cliente/{id}          - Por cliente
+GET    /api/agendamentos/esteticista/{nome}    - Por esteticista
+PUT    /api/agendamentos/{id}/confirmar        - Confirma
+PUT    /api/agendamentos/{id}/cancelar         - Cancela com motivo
+PUT    /api/agendamentos/{id}/reagendar        - Reagenda
+GET    /api/agendamentos/disponibilidade       - Verifica disponibilidade
+GET    /api/agendamentos/hoje                  - Agendamentos de hoje
+```
+
+### 7.4 Procedimentos
+
+```
+GET    /api/procedimentos                - Lista todos
+GET    /api/procedimentos/{id}           - Busca por ID
+POST   /api/procedimentos                - Cria novo
+PUT    /api/procedimentos/{id}           - Atualiza
+DELETE /api/procedimentos/{id}           - Remove
+GET    /api/procedimentos/categoria/{id} - Por categoria
+GET    /api/procedimentos/ativos         - Somente ativos
+POST   /api/procedimentos/buscar         - Busca com filtros
+```
+
+### 7.5 Categorias
+
+```
+GET    /api/categorias                   - Lista todas
+GET    /api/categorias/{id}              - Busca por ID
+POST   /api/categorias                   - Cria nova
+PUT    /api/categorias/{id}              - Atualiza
+DELETE /api/categorias/{id}              - Remove
+```
+
+### 7.6 Produtos
+
+```
+GET    /api/produtos                    - Lista todos
+GET    /api/produtos/{id}               - Busca por ID
+POST   /api/produtos                    - Cria novo
+PUT    /api/produtos/{id}               - Atualiza
+DELETE /api/produtos/{id}               - Remove
+POST   /api/produtos/buscar             - Busca com filtros
+GET    /api/produtos/estoque-baixo      - Produtos com estoque baixo
+GET    /api/produtos/ativos             - Somente ativos
+```
+
+### 7.7 Estoque
+
+```
+GET    /api/estoque                          - Dashboard estoque
+GET    /api/estoque/movimentacoes            - Lista movimentações
+POST   /api/estoque/entrada                  - Registra entrada
+POST   /api/estoque/saida                    - Registra saída
+POST   /api/estoque/ajuste                   - Ajuste manual
+GET    /api/estoque/produto/{id}             - Por produto
+GET    /api/estoque/alertas                  - Alertas de estoque
+POST   /api/estoque/movimentacoes/buscar     - Busca com filtros
+```
+
+### 7.8 Contas a Receber
+
+```
+GET    /api/contas-receber                    - Lista todas
+GET    /api/contas-receber/{id}               - Busca por ID
+POST   /api/contas-receber                    - Cria nova
+PUT    /api/contas-receber/{id}               - Atualiza
+DELETE /api/contas-receber/{id}               - Remove
+PUT    /api/contas-receber/{id}/pagar         - Registra pagamento
+POST   /api/contas-receber/buscar             - Busca com filtros
+GET    /api/contas-receber/pendentes          - Pendentes
+GET    /api/contas-receber/vencidas           - Vencidas
+GET    /api/contas-receber/pagas              - Pagas
+```
+
+### 7.9 Contas a Pagar
+
+```
+GET    /api/contas-pagar                      - Lista todas
+GET    /api/contas-pagar/{id}                 - Busca por ID
+POST   /api/contas-pagar                      - Cria nova
+PUT    /api/contas-pagar/{id}                 - Atualiza
+DELETE /api/contas-pagar/{id}                 - Remove
+PUT    /api/contas-pagar/{id}/pagar           - Registra pagamento
+POST   /api/contas-pagar/buscar               - Busca com filtros
+GET    /api/contas-pagar/pendentes            - Pendentes
+GET    /api/contas-pagar/vencidas             - Vencidas
+GET    /api/contas-pagar/pagas                - Pagas
+```
+
+### 7.10 Financeiro
+
+```
+GET    /api/financeiro/fluxo-caixa           - Fluxo de caixa
+GET    /api/financeiro/resumo                - Resumo financeiro
+GET    /api/financeiro/faturamento           - Faturamento por período
+GET    /api/financeiro/despesas              - Despesas por período
+GET    /api/financeiro/lucro                 - Lucro por período
+GET    /api/financeiro/formas-pagamento      - Por forma de pagamento
+```
+
+### 7.11 Dashboard
+
+```
+GET    /api/dashboard                        - Dashboard geral
+GET    /api/dashboard/resumo                 - Resumo rápido
+GET    /api/dashboard/faturamento            - Dados faturamento
+GET    /api/dashboard/agendamentos           - Dados agendamentos
+GET    /api/dashboard/top-procedimentos      - Top procedimentos
+GET    /api/dashboard/top-clientes           - Top clientes
+```
+
+### 7.12 Relatórios
+
+```
+POST   /api/relatorios/faturamento           - Relatório faturamento
+POST   /api/relatorios/agendamentos          - Relatório agendamentos
+POST   /api/relatorios/clientes              - Relatório clientes
+POST   /api/relatorios/procedimentos         - Relatório procedimentos
+POST   /api/relatorios/estoque               - Relatório estoque
+POST   /api/relatorios/financeiro            - Relatório financeiro
+GET    /api/relatorios/{id}/pdf              - Download PDF
+GET    /api/relatorios/{id}/excel            - Download Excel
+```
+
+---
+
+## 🐳 8. Docker e Configurações
+
+### 8.1 docker-compose.yml
+
+```yaml
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: clinica-postgres
+    environment:
+      POSTGRES_DB: clinica_db
+      POSTGRES_USER: clinica_user
+      POSTGRES_PASSWORD: clinica_pass_2024
+      TZ: America/Sao_Paulo
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backup:/backup
+    networks:
+      - clinica-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clinica_user -d clinica_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./clinica-estetica-backend
+      dockerfile: docker/Dockerfile
+    container_name: clinica-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/clinica_db
+      SPRING_DATASOURCE_USERNAME: clinica_user
+      SPRING_DATASOURCE_PASSWORD: clinica_pass_2024
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: 86400000
+      SERVER_PORT: 8080
+      TZ: America/Sao_Paulo
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - clinica-network
+    volumes:
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./clinica-estetica-frontend
+      dockerfile: docker/Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8080/api
+    container_name: clinica-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - clinica-network
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: clinica-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - clinica-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  clinica-network:
+    driver: bridge
+```
+
+### 8.2 Backend Dockerfile
+
+```dockerfile
+# Build stage
+FROM maven:3.9-eclipse-temurin-17 AS build
+WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests
+
+# Run stage
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
+
+# Criar diretórios necessários
+RUN mkdir -p /app/logs /app/uploads
+
+# Expor porta
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+
+# Executar aplicação
+ENTRYPOINT ["java", "-jar", "-Xmx512m", "-Xms256m", "app.jar"]
+```
+
+### 8.3 Frontend Dockerfile
+
+```dockerfile
+# Build stage
+FROM node:18-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+RUN npm run build
+
+# Run stage
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+### 8.4 application.properties
+
+```properties
+# Application
+spring.application.name=clinica-estetica
+server.port=8080
+server.compression.enabled=true
+
+# Database
+spring.datasource.url=jdbc:postgresql://localhost:5432/clinica_db
+spring.datasource.username=clinica_user
+spring.datasource.password=clinica_pass_2024
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# JPA/Hibernate
+spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.show-sql=false
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.properties.hibernate.jdbc.time_zone=America/Sao_Paulo
+
+# Flyway
+spring.flyway.enabled=true
+spring.flyway.baseline-on-migrate=true
+spring.flyway.locations=classpath:db/migration
+
+# JWT
+jwt.secret=${JWT_SECRET:sua-chave-secreta-super-forte-aqui}
+jwt.expiration=86400000
+
+# Cache
+spring.cache.type=simple
+
+# File Upload
+spring.servlet.multipart.max-file-size=10MB
+spring.servlet.multipart.max-request-size=10MB
+
+# Logging
+logging.level.root=INFO
+logging.level.com.clinica.estetica=DEBUG
+logging.file.name=logs/application.log
+logging.pattern.console=%d{yyyy-MM-dd HH:mm:ss} - %msg%n
+
+# Actuator
+management.endpoints.web.exposure.include=health,info,metrics
+management.endpoint.health.show-details=always
+
+# Time Zone
+spring.jackson.time-zone=America/Sao_Paulo
+```
+
+### 8.5 nginx.conf
+
+```nginx
+server {
+    listen 80;
+    server_name localhost;
+
+    # Frontend
+    location / {
+        proxy_pass http://frontend:80;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Backend API
+    location /api/ {
+        proxy_pass http://backend:8080/api/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+    # Compression
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css text/xml text/javascript application/json application/javascript application/xml+rss;
+
+    # Security Headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    # Logs
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
+}
+```
+
+---
+
+## 📊 9. Scripts SQL Completos
+
+### 9.1 V1__create_tables.sql
 
 ```sql
--- ============ CORE TABLES ============
+-- TABELA: USUARIO
+CREATE TABLE usuario (
+    id BIGSERIAL PRIMARY KEY,
+    nome VARCHAR(200) NOT NULL,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    email VARCHAR(150) UNIQUE NOT NULL,
+    role VARCHAR(20) NOT NULL,
+    ativo BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
--- Usuários e Autenticação
-users (
-  id: uuid PRIMARY KEY,
-  email: varchar UNIQUE,
-  google_calendar_id: varchar,
-  google_access_token: text,
-  google_refresh_token: text,
-  created_at: timestamp,
-  updated_at: timestamp
-)
+-- TABELA: CATEGORIA
+CREATE TABLE categoria (
+    id BIGSERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    descricao TEXT,
+    icone VARCHAR(50),
+    cor VARCHAR(7),
+    ativo BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
--- Perfil do Negócio
-business_profile (
-  id: uuid PRIMARY KEY,
-  user_id: uuid REFERENCES users(id),
-  business_name: varchar NOT NULL,
-  cnpj: varchar,
-  phone: varchar,
-  address: jsonb,
-  business_hours: jsonb,
-  google_calendar_settings: jsonb,
-  settings: jsonb,
-  created_at: timestamp
-)
+-- TABELA: CLIENTE
+CREATE TABLE cliente (
+    id BIGSERIAL PRIMARY KEY,
+    nome VARCHAR(200) NOT NULL,
+    cpf VARCHAR(14) UNIQUE NOT NULL,
+    email VARCHAR(150),
+    telefone VARCHAR(20),
+    celular VARCHAR(20),
+    data_nascimento DATE,
+    sexo VARCHAR(1),
+    endereco VARCHAR(255),
+    cidade VARCHAR(100),
+    estado VARCHAR(2),
+    cep VARCHAR(9),
+    observacoes TEXT,
+    restricoes_alergias TEXT,
+    foto_perfil_url VARCHAR(500),
+    status VARCHAR(20) DEFAULT 'ATIVO',
+    data_cadastro DATE DEFAULT CURRENT_DATE,
+    ultima_visita DATE,
+    total_gasto DECIMAL(10,2) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
--- ============ PROCEDIMENTOS E SERVIÇOS ============
+-- TABELA: PROCEDIMENTO
+CREATE TABLE procedimento (
+    id BIGSERIAL PRIMARY KEY,
+    categoria_id BIGINT REFERENCES categoria(id),
+    nome VARCHAR(200) NOT NULL,
+    descricao TEXT,
+    duracao_minutos INTEGER NOT NULL,
+    preco DECIMAL(10,2) NOT NULL,
+    ativo BOOLEAN DEFAULT TRUE,
+    preparo_necessario TEXT,
+    cuidados_pos TEXT,
+    contraindicacoes TEXT,
+    imagem_url VARCHAR(500),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
--- Categorias de Procedimentos
-procedure_categories (
-  id: uuid PRIMARY KEY,
-  user_id: uuid REFERENCES users(id),
-  name: varchar NOT NULL,
-  description: text,
-  color: varchar,
-  is_active: boolean DEFAULT true
-)
+-- TABELA: PRODUTO
+CREATE TABLE produto (
+    id BIGSERIAL PRIMARY KEY,
+    nome VARCHAR(200) NOT NULL,
+    descricao TEXT,
+    codigo_barras VARCHAR(50) UNIQUE,
+    unidade_medida VARCHAR(10) NOT NULL,
+    estoque_minimo DECIMAL(10,3) DEFAULT 0,
+    estoque_atual DECIMAL(10,3) DEFAULT 0,
+    preco_custo DECIMAL(10,2) NOT NULL,
+    preco_venda DECIMAL(10,2),
+    marca VARCHAR(100),
+    link_compra VARCHAR(500),
+    ativo BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- TABELA: AGENDAMENTO
+CREATE TABLE agendamento (
+    id BIGSERIAL PRIMARY KEY,
+    cliente_id BIGINT REFERENCES cliente(id),
+    procedimento_id BIGINT REFERENCES procedimento(id),
+    esteticista VARCHAR(100) NOT NULL,
+    data_hora TIMESTAMP NOT NULL,
+    data_hora_fim TIMESTAMP NOT NULL,
+    duracao_minutos INTEGER NOT NULL,
+    status VARCHAR(20) DEFAULT 'AGENDADO',
+    valor_procedimento DECIMAL(10,2) NOT NULL,
+    valor_desconto DECIMAL(10,2) DEFAULT 0,
+    valor_total DECIMAL(10,2) NOT NULL,
+    forma_pagamento VARCHAR(50),
+    pago BOOLEAN DEFAULT FALSE,
+    observacoes TEXT,
+    motivo_cancelamento TEXT,
+    confirmado BOOLEAN DEFAULT FALSE,
+    lembrete_enviado BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- TABELA: PROCEDIMENTO_PRODUTO
+CREATE TABLE procedimento_produto (
+    id BIGSERIAL PRIMARY KEY,
+    procedimento_id BIGINT REFERENCES procedimento(id) ON DELETE CASCADE,
+    produto_id BIGINT REFERENCES produto(id) ON DELETE CASCADE,
+    quantidade_utilizada DECIMAL(10,3) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- TABELA: MOVIMENTACAO_ESTOQUE
+CREATE TABLE movimentacao_estoque (
+    id BIGSERIAL PRIMARY KEY,
+    produto_id BIGINT REFERENCES produto(id),
+    agendamento_id BIGINT REFERENCES agendamento(id),
+    tipo VARCHAR(20) NOT NULL,
+    quantidade DECIMAL(10,3) NOT NULL,
+    quantidade_anterior DECIMAL(10,3) NOT NULL,
+    quantidade_nova DECIMAL(10,3) NOT NULL,
+    valor_unitario DECIMAL(10,2),
+    motivo TEXT,
+    data_movimentacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- TABELA: CONTA_RECEBER
+CREATE TABLE conta_receber (
+    id BIGSERIAL PRIMARY KEY,
+    cliente_id BIGINT REFERENCES cliente(id),
+    agendamento_id BIGINT REFERENCES agendamento(id),
+    descricao TEXT NOT NULL,
+    valor DECIMAL(10,2) NOT NULL,
+    data_vencimento DATE NOT NULL,
+    data_pagamento DATE,
+    status VARCHAR(20) DEFAULT 'PENDENTE',
+    forma_pagamento VARCHAR(50),
+    observacoes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- TABELA: CONTA_PAGAR
+CREATE TABLE conta_pagar (
+    id BIGSERIAL PRIMARY KEY,
+    descricao TEXT NOT NULL,
+    categoria VARCHAR(50),
+    valor DECIMAL(10,2) NOT NULL,
+    data_vencimento DATE NOT NULL,
+    data_pagamento DATE,
+    status VARCHAR(20) DEFAULT 'PENDENTE',
+    forma_pagamento VARCHAR(50),
+    observacoes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### 9.2 V2__create_indexes.sql
+
+```sql
+-- Índices para melhor performance
+
+-- Cliente
+CREATE INDEX idx_cliente_cpf ON cliente(cpf);
+CREATE INDEX idx_cliente_nome ON cliente USING gin(to_tsvector('portuguese', nome));
+CREATE INDEX idx_cliente_status ON cliente(status);
+CREATE INDEX idx_cliente_data_cadastro ON cliente(data_cadastro);
+
+-- Agendamento
+CREATE INDEX idx_agendamento_cliente ON agendamento(cliente_id);
+CREATE INDEX idx_agendamento_procedimento ON agendamento(procedimento_id);
+CREATE INDEX idx_agendamento_data ON agendamento(data_hora);
+CREATE INDEX idx_agendamento_status ON agendamento(status);
+CREATE INDEX idx_agendamento_esteticista ON agendamento(esteticista);
+CREATE INDEX idx_agendamento_confirmado ON agendamento(confirmado);
+
+-- Procedimento
+CREATE INDEX idx_procedimento_categoria ON procedimento(categoria_id);
+CREATE INDEX idx_procedimento_ativo ON procedimento(ativo);
+CREATE INDEX idx_procedimento_nome ON procedimento USING gin(to_tsvector('portuguese', nome));
+
+-- Produto
+CREATE INDEX idx_produto_codigo_barras ON produto(codigo_barras);
+CREATE INDEX idx_produto_ativo ON produto(ativo);
+CREATE INDEX idx_produto_estoque_minimo ON produto(estoque_minimo, estoque_atual);
+
+-- Movimentacao Estoque
+CREATE INDEX idx_movimentacao_produto ON movimentacao_estoque(produto_id);
+CREATE INDEX idx_movimentacao_data ON movimentacao_estoque(data_movimentacao);
+CREATE INDEX idx_movimentacao_tipo ON movimentacao_estoque(tipo);
+
+-- Conta Receber
+CREATE INDEX idx_conta_receber_cliente ON conta_receber(cliente_id);
+CREATE INDEX idx_conta_receber_status ON conta_receber(status);
+CREATE INDEX idx_conta_receber_vencimento ON conta_receber(data_vencimento);
+CREATE INDEX idx_conta_receber_pagamento ON conta_receber(data_pagamento);
+
+-- Conta Pagar
+CREATE INDEX idx_conta_pagar_status ON conta_pagar(status);
+CREATE INDEX idx_conta_pagar_vencimento ON conta_pagar(data_vencimento);
+CREATE INDEX idx_conta_pagar_categoria ON conta_pagar(categoria);
+```
+
+### 9.3 V3__insert_initial_data.sql
+
+```sql
+-- Usuário Admin
+INSERT INTO usuario (nome, username, password_hash, email, role, ativo) VALUES
+('Administrador', 'admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'admin@clinica.com', 'ADMIN', true);
+-- Senha: admin123
+
+-- Categorias
+INSERT INTO categoria (nome, descricao, icone, cor) VALUES
+('Facial', 'Procedimentos faciais', 'face', '#FF6B9D'),
+('Corporal', 'Procedimentos corporais', 'body', '#4ECDC4'),
+('Depilação', 'Serviços de depilação', 'spa', '#FFE66D'),
+('Massagem', 'Massagens terapêuticas', 'massage', '#95E1D3');
 
 -- Procedimentos
-procedures (
-  id: uuid PRIMARY KEY,
-  user_id: uuid REFERENCES users(id),
-  category_id: uuid REFERENCES procedure_categories(id),
-  name: varchar NOT NULL,
-  description: text,
-  price: decimal(10,2) NOT NULL,
-  cost: decimal(10,2) DEFAULT 0,
-  duration_minutes: integer DEFAULT 60,
-  is_active: boolean DEFAULT true,
-  created_at: timestamp
-)
-
--- ============ CLIENTES E CRM ============
-
--- Clientes
-clients (
-  id: uuid PRIMARY KEY,
-  user_id: uuid REFERENCES users(id),
-  name: varchar NOT NULL,
-  email: varchar,
-  phone: varchar,
-  cpf: varchar,
-  birthday: date,
-  address: jsonb,
-  preferences: text,
-  observations: text,
-  status: client_status_enum DEFAULT 'active',
-  segment: client_segment_enum,
-  first_visit: date,
-  last_visit: date,
-  total_spent: decimal(10,2) DEFAULT 0,
-  total_visits: integer DEFAULT 0,
-  ltv_score: decimal(5,2),
-  created_at: timestamp,
-  updated_at: timestamp
-)
-
--- Segmentação de Clientes
-client_segments (
-  id: uuid PRIMARY KEY,
-  client_id: uuid REFERENCES clients(id),
-  segment_type: segment_type_enum,
-  score: decimal(5,2),
-  criteria: jsonb,
-  valid_until: timestamp,
-  created_at: timestamp
-)
-
--- ============ AGENDAMENTOS COM GOOGLE CALENDAR ============
-
--- Agendamentos
-appointments (
-  id: uuid PRIMARY KEY,
-  user_id: uuid REFERENCES users(id),
-  client_id: uuid REFERENCES clients(id),
-  procedure_id: uuid REFERENCES procedures(id),
-  google_event_id: varchar, -- ID do evento no Google Calendar
-  scheduled_datetime: timestamp NOT NULL,
-  duration_minutes: integer,
-  status: appointment_status_enum DEFAULT 'scheduled',
-  notes: text,
-  google_meet_link: varchar,
-  calendar_synced: boolean DEFAULT false,
-  created_at: timestamp,
-  updated_at: timestamp
-)
-
--- ============ ATENDIMENTOS ============
-
--- Atendimentos Realizados
-attendances (
-  id: uuid PRIMARY KEY,
-  user_id: uuid REFERENCES users(id),
-  appointment_id: uuid REFERENCES appointments(id),
-  client_id: uuid REFERENCES clients(id),
-  procedure_id: uuid REFERENCES procedures(id),
-  date: timestamp NOT NULL,
-  value: decimal(10,2) NOT NULL,
-  discount: decimal(10,2) DEFAULT 0,
-  product_cost: decimal(10,2) DEFAULT 0,
-  payment_method: payment_method_enum,
-  payment_status: payment_status_enum DEFAULT 'pending',
-  observations: text,
-  rating: integer CHECK (rating >= 1 AND rating <= 5),
-  created_at: timestamp
-)
-
--- ============ ESTOQUE SIMPLIFICADO ============
+INSERT INTO procedimento (categoria_id, nome, descricao, duracao_minutos, preco, preparo_necessario, cuidados_pos) VALUES
+(1, 'Limpeza de Pele Profunda', 'Limpeza completa com extração de cravos', 60, 150.00, 'Vir sem maquiagem', 'Evitar sol por 24h'),
+(1, 'Peeling Químico', 'Renovação celular profunda', 45, 200.00, 'Pele limpa', 'Usar protetor solar'),
+(2, 'Drenagem Linfática', 'Redução de inchaço e retenção', 60, 120.00, 'Beber água', 'Manter hidratação'),
+(3, 'Depilação a Laser Facial', 'Remoção definitiva de pelos', 30, 180.00, 'Pele depilada', 'Não se expor ao sol');
 
 -- Produtos
-products (
-  id: uuid PRIMARY KEY,
-  user_id: uuid REFERENCES users(id),
-  name: varchar NOT NULL,
-  description: text,
-  sku: varchar,
-  category: varchar,
-  unit: varchar DEFAULT 'un',
-  cost_price: decimal(10,2) NOT NULL,
-  current_stock: decimal(10,3) DEFAULT 0,
-  min_stock: decimal(10,3) DEFAULT 0,
-  expiry_date: date,
-  is_active: boolean DEFAULT true,
-  created_at: timestamp
-)
+INSERT INTO produto (nome, descricao, unidade_medida, estoque_minimo, estoque_atual, preco_custo, preco_venda, marca, link_compra) VALUES
+('Gel de Limpeza Facial', 'Gel de limpeza profunda', 'ML', 500, 2000, 25.00, 60.00, 'La Roche-Posay', 'https://amazon.com.br/gel-limpeza'),
+('Creme Hidratante', 'Hidratante facial ácido hialurônico', 'ML', 300, 1500, 35.00, 89.90, 'Neutrogena', 'https://amazon.com.br/hidratante'),
+('Máscara Facial Argila', 'Máscara purificante', 'UN', 50, 200, 15.00, 45.00, 'L''Oréal', 'https://amazon.com.br/mascara'),
+('Óleo de Massagem', 'Óleo corporal relaxante', 'ML', 1000, 3000, 20.00, 55.00, 'Weleda', 'https://amazon.com.br/oleo');
 
--- Movimentações de Estoque
-stock_movements (
-  id: uuid PRIMARY KEY,
-  user_id: uuid REFERENCES users(id),
-  product_id: uuid REFERENCES products(id),
-  movement_type: stock_movement_enum,
-  quantity: decimal(10,3) NOT NULL,
-  unit_cost: decimal(10,2),
-  reference_id: uuid, -- pode referenciar attendance
-  reference_type: varchar,
-  notes: text,
-  created_at: timestamp
-)
-
--- Uso de Produtos em Procedimentos
-procedure_products (
-  id: uuid PRIMARY KEY,
-  procedure_id: uuid REFERENCES procedures(id),
-  product_id: uuid REFERENCES products(id),
-  quantity_used: decimal(10,3) NOT NULL,
-  created_at: timestamp
-)
-
--- ============ FINANCEIRO ============
-
--- Custos Fixos
-fixed_costs (
-  id: uuid PRIMARY KEY,
-  user_id: uuid REFERENCES users(id),
-  name: varchar NOT NULL,
-  description: text,
-  category: varchar,
-  amount: decimal(10,2) NOT NULL,
-  due_day: integer, -- dia do mês
-  is_active: boolean DEFAULT true,
-  created_at: timestamp
-)
-
--- Configuração de Distribuição de Lucros
-profit_distribution_config (
-  id: uuid PRIMARY KEY,
-  user_id: uuid REFERENCES users(id),
-  category: profit_category_enum,
-  percentage: decimal(5,2) NOT NULL,
-  description: varchar,
-  is_active: boolean DEFAULT true,
-  created_at: timestamp,
-  updated_at: timestamp
-)
-
--- Histórico de Distribuição de Lucros
-profit_distributions (
-  id: uuid PRIMARY KEY,
-  user_id: uuid REFERENCES users(id),
-  period_month: integer NOT NULL,
-  period_year: integer NOT NULL,
-  total_revenue: decimal(10,2),
-  total_costs: decimal(10,2),
-  total_profit: decimal(10,2),
-  pro_labore_amount: decimal(10,2),
-  equipment_reserve_amount: decimal(10,2),
-  emergency_reserve_amount: decimal(10,2),
-  investment_amount: decimal(10,2),
-  created_at: timestamp
-)
-
--- Metas e Objetivos
-goals (
-  id: uuid PRIMARY KEY,
-  user_id: uuid REFERENCES users(id),
-  goal_type: goal_type_enum,
-  period_type: period_type_enum,
-  target_value: decimal(10,2),
-  current_value: decimal(10,2) DEFAULT 0,
-  period_start: date,
-  period_end: date,
-  is_active: boolean DEFAULT true,
-  created_at: timestamp
-)
-
--- ============ INTEGRAÇÃO GOOGLE CALENDAR ============
-
--- Configurações de Sincronização
-calendar_sync_settings (
-  id: uuid PRIMARY KEY,
-  user_id: uuid REFERENCES users(id),
-  calendar_id: varchar NOT NULL,
-  default_color: varchar,
-  auto_create_events: boolean DEFAULT true,
-  send_invites: boolean DEFAULT true,
-  remind_minutes_before: integer DEFAULT 60,
-  created_at: timestamp,
-  updated_at: timestamp
-)
-
--- Log de Sincronização
-sync_log (
-  id: uuid PRIMARY KEY,
-  user_id: uuid REFERENCES users(id),
-  action: varchar NOT NULL, -- 'create', 'update', 'delete'
-  google_event_id: varchar,
-  appointment_id: uuid REFERENCES appointments(id),
-  status: varchar, -- 'success', 'error'
-  error_message: text,
-  synced_at: timestamp
-)
-
--- ============ ANALYTICS E MÉTRICAS ============
-
--- Métricas do Negócio
-business_metrics (
-  id: uuid PRIMARY KEY,
-  user_id: uuid REFERENCES users(id),
-  metric_name: varchar NOT NULL,
-  metric_value: decimal(15,4),
-  period_date: date,
-  period_type: varchar,
-  metadata: jsonb,
-  created_at: timestamp
-)
-
--- Cache de Relatórios
-report_cache (
-  id: uuid PRIMARY KEY,
-  user_id: uuid REFERENCES users(id),
-  report_type: varchar NOT NULL,
-  parameters: jsonb,
-  data: jsonb,
-  generated_at: timestamp,
-  expires_at: timestamp
-)
-
--- ============ ENUMS ============
-
-CREATE TYPE client_status_enum AS ENUM ('active', 'inactive', 'blocked');
-CREATE TYPE client_segment_enum AS ENUM ('vip', 'regular', 'new', 'at_risk', 'lost');
-CREATE TYPE segment_type_enum AS ENUM ('value', 'frequency', 'recency', 'behavior');
-CREATE TYPE appointment_status_enum AS ENUM ('scheduled', 'confirmed', 'completed', 'cancelled', 'no_show');
-CREATE TYPE payment_method_enum AS ENUM ('cash', 'pix', 'debit', 'credit', 'installment');
-CREATE TYPE payment_status_enum AS ENUM ('pending', 'paid', 'cancelled', 'refunded');
-CREATE TYPE stock_movement_enum AS ENUM ('in', 'out', 'adjustment', 'expired', 'loss');
-CREATE TYPE profit_category_enum AS ENUM ('pro_labore', 'equipment_reserve', 'emergency_reserve', 'investment');
-CREATE TYPE goal_type_enum AS ENUM ('revenue', 'profit', 'clients', 'appointments', 'procedures');
-CREATE TYPE period_type_enum AS ENUM ('daily', 'weekly', 'monthly', 'quarterly', 'yearly');
+-- Procedimento-Produto (Associações)
+INSERT INTO procedimento_produto (procedimento_id, produto_id, quantidade_utilizada) VALUES
+(1, 1, 50.0),  -- Limpeza usa Gel de Limpeza
+(1, 2, 30.0),  -- Limpeza usa Hidratante
+(1, 3, 1.0),   -- Limpeza usa Máscara
+(3, 4, 100.0); -- Drenagem usa Óleo
 ```
 
 ---
 
-## 📱 Estrutura Simplificada do Projeto
+## ⚙️ 10. Regras de Negócio
 
-```
-src/
-├── app/
-│   ├── (auth)/
-│   │   ├── login/page.tsx
-│   │   ├── register/page.tsx
-│   │   └── connect-calendar/page.tsx    # Conectar Google Calendar
-│   ├── dashboard/
-│   │   ├── page.tsx                     # Dashboard principal
-│   │   └── components/
-│   │       ├── MetricsCards.tsx
-│   │       ├── RevenueChart.tsx
-│   │       ├── ProfitDistributionChart.tsx
-│   │       └── QuickActions.tsx
-│   ├── agendamentos/
-│   │   ├── page.tsx                     # Lista de agendamentos
-│   │   ├── calendario/page.tsx          # Calendário integrado
-│   │   ├── novo/page.tsx               # Novo agendamento + Google Calendar
-│   │   ├── [id]/
-│   │   │   ├── page.tsx                # Detalhes do agendamento
-│   │   │   └── editar/page.tsx         # Editar agendamento
-│   │   └── configuracao/page.tsx       # Config Google Calendar
-│   ├── atendimentos/
-│   │   ├── page.tsx                     # Lista de atendimentos
-│   │   ├── novo/page.tsx               # Novo atendimento
-│   │   ├── [id]/page.tsx               # Detalhes
-│   │   └── relatorio/page.tsx          # Relatório de atendimentos
-│   ├── clientes/
-│   │   ├── page.tsx                     # Lista de clientes
-│   │   ├── novo/page.tsx               # Cadastro
-│   │   ├── [id]/
-│   │   │   ├── page.tsx                # Perfil do cliente
-│   │   │   └── historico/page.tsx      # Histórico
-│   │   ├── segmentos/page.tsx          # Segmentação
-│   │   └── campanhas/page.tsx          # Campanhas de marketing
-│   ├── estoque/
-│   │   ├── page.tsx                     # Controle de estoque
-│   │   ├── produtos/
-│   │   │   ├── page.tsx                # Lista de produtos
-│   │   │   └── [id]/page.tsx           # Detalhes do produto
-│   │   ├── movimentacoes/page.tsx      # Histórico de movimentações
-│   │   └── relatorios/page.tsx         # Relatórios de estoque
-│   ├── financeiro/
-│   │   ├── page.tsx                     # Overview financeiro
-│   │   ├── fluxo-caixa/page.tsx        # Fluxo de caixa
-│   │   ├── custos-fixos/page.tsx       # Gestão de custos
-│   │   ├── metas/page.tsx              # Metas e objetivos
-│   │   └── projecoes/page.tsx          # Projeções financeiras
-│   ├── distribuicao-lucros/
-│   │   ├── page.tsx                     # Dashboard de distribuição
-│   │   ├── configuracao/page.tsx       # Configurar percentuais
-│   │   ├── historico/page.tsx          # Histórico de distribuições
-│   │   └── simulador/page.tsx          # Simulador de cenários
-│   ├── procedimentos/
-│   │   ├── page.tsx                     # Lista de procedimentos
-│   │   ├── categorias/page.tsx         # Categorias
-│   │   ├── rentabilidade/page.tsx      # Análise de rentabilidade
-│   │   └── precificacao/page.tsx       # Sugestões de preço
-│   ├── relatorios/
-│   │   ├── page.tsx                     # Central de relatórios
-│   │   ├── executivo/page.tsx          # Relatório executivo
-│   │   ├── clientes/page.tsx           # Relatórios de cliente
-│   │   ├── financeiro/page.tsx         # Relatórios financeiros
-│   │   └── operacional/page.tsx        # Relatórios operacionais
-│   ├── configuracoes/
-│   │   ├── page.tsx                     # Configurações gerais
-│   │   ├── perfil/page.tsx             # Perfil do negócio
-│   │   ├── calendar/page.tsx           # Config Google Calendar
-│   │   └── backup/page.tsx             # Backup e exportação
-│   └── api/
-│       ├── auth/[...nextauth]/route.ts
-│       ├── google-calendar/
-│       │   ├── connect/route.ts
-│       │   ├── sync/route.ts
-│       │   └── webhook/route.ts
-│       └── reports/
-│           ├── pdf/route.ts
-│           └── excel/route.ts
-├── components/
-│   ├── ui/                              # shadcn/ui components
-│   ├── layout/
-│   │   ├── Sidebar.tsx
-│   │   ├── Header.tsx
-│   │   ├── Navigation.tsx
-│   │   └── MobileMenu.tsx
-│   ├── dashboard/
-│   │   ├── MetricsCard.tsx
-│   │   ├── Chart.tsx
-│   │   └── RecentActivity.tsx
-│   ├── calendar/
-│   │   ├── GoogleCalendarView.tsx       # Integração Google Calendar
-│   │   ├── AppointmentModal.tsx
-│   │   ├── CalendarSync.tsx
-│   │   └── TimeSlots.tsx
-│   ├── forms/
-│   │   ├── ClientForm.tsx
-│   │   ├── AppointmentForm.tsx
-│   │   ├── ProcedureForm.tsx
-│   │   └── ProductForm.tsx
-│   ├── tables/
-│   │   ├── DataTable.tsx
-│   │   ├── ClientTable.tsx
-│   │   └── AppointmentTable.tsx
-│   ├── charts/
-│   │   ├── RevenueChart.tsx
-│   │   ├── ProfitChart.tsx
-│   │   └── ProcedureChart.tsx
-│   ├── profit-distribution/
-│   │   ├── DistributionConfig.tsx
-│   │   ├── DistributionChart.tsx
-│   │   ├── DistributionHistory.tsx
-│   │   └── DistributionSimulator.tsx
-│   ├── google-calendar/
-│   │   ├── CalendarConnection.tsx
-│   │   ├── SyncStatus.tsx
-│   │   └── EventManagement.tsx
-│   ├── reports/
-│   │   ├── ReportBuilder.tsx
-│   │   ├── PDFExport.tsx
-│   │   └── ExcelExport.tsx
-│   └── common/
-│       ├── LoadingSpinner.tsx
-│       ├── ErrorBoundary.tsx
-│       ├── SearchBar.tsx
-│       └── DatePicker.tsx
-├── lib/
-│   ├── supabase/
-│   │   ├── client.ts
-│   │   ├── server.ts
-│   │   └── types.ts
-│   ├── google-calendar/
-│   │   ├── client.ts
-│   │   ├── auth.ts
-│   │   ├── events.ts
-│   │   └── sync.ts
-│   ├── utils/
-│   │   ├── calculations.ts
-│   │   ├── formatting.ts
-│   │   ├── validations.ts
-│   │   └── constants.ts
-│   ├── services/
-│   │   ├── client.service.ts
-│   │   ├── appointmentService.ts
-│   │   ├── financialService.ts
-│   │   ├── stockService.ts
-│   │   └── calendarService.ts
-│   └── hooks/
-│       ├── useClients.ts
-│       ├── useAppointments.ts
-│       ├── useFinancials.ts
-│       └── useGoogleCalendar.ts
-├── store/
-│   ├── useAuthStore.ts
-│   ├── useClientStore.ts
-│   ├── useAppointmentStore.ts
-│   ├── useCalendarStore.ts
-│   └── useSettingsStore.ts
-├── types/
-│   ├── auth.ts
-│   ├── client.ts
-│   ├── appointment.ts
-│   ├── financial.ts
-│   └── google-calendar.ts
-└── styles/
-    ├── globals.css
-    └── components.css
-```
+### 10.1 Clientes
+- CPF deve ser único e válido
+- Cliente inativo não pode fazer novos agendamentos
+- Ao deletar cliente, verificar se tem agendamentos futuros
+- Total gasto é atualizado automaticamente após cada pagamento
+- Última visita é atualizada quando agendamento é realizado
+
+### 10.2 Agendamentos
+- Não permitir agendamentos em horários já ocupados
+- Duração mínima: 15 minutos
+- Ao criar agendamento, reservar produtos automaticamente
+- Ao cancelar, liberar produtos reservados
+- Enviar lembrete 24h antes do agendamento
+- Status: AGENDADO → CONFIRMADO → REALIZADO
+- Ao realizar, dar baixa nos produtos do estoque
+
+### 10.3 Procedimentos
+- Preço não pode ser negativo
+- Procedimento inativo não aparece para agendamento
+- Ao inativar, verificar agendamentos futuros
+- Produtos associados são consumidos automaticamente
+
+### 10.4 Estoque
+- Estoque não pode ficar negativo
+- Alerta quando estoque < estoque_mínimo
+- Movimentações: ENTRADA, SAIDA, AJUSTE
+- Entrada aumenta estoque
+- Saída diminui estoque (vinculada a agendamento)
+- Ajuste corrige divergências
+
+### 10.5 Financeiro
+- Conta a receber criada automaticamente com agendamento
+- Status: PENDENTE → PAGO ou VENCIDO
+- Vencido quando data_vencimento < hoje e status = PENDENTE
+- Ao pagar, atualizar total_gasto do cliente
+- Contas a pagar: despesas gerais da clínica
 
 ---
 
-## 🚀 Plano de Implementação Atualizado
+## 📝 Comandos Docker
 
-### **FASE 1: FUNDAÇÃO (Semanas 1-2)**
-
-#### Semana 1: Setup e Infraestrutura
+### Iniciar sistema
 ```bash
-# Configuração inicial
-npx create-next-app@latest gestao-estetica --typescript --tailwind --app
-cd gestao-estetica
-
-# Instalação de dependências
-npm install @supabase/supabase-js @supabase/auth-helpers-nextjs
-npm install zustand @tanstack/react-query
-npm install recharts lucide-react date-fns
-npm install framer-motion @radix-ui/react-dialog
-npm install react-hook-form @hookform/resolvers zod
-npm install googleapis google-auth-library
-npm install jspdf html2canvas react-pdf
-
-# Setup do shadcn/ui
-npx shadcn-ui@latest init
-npx shadcn-ui@latest add button input card table dialog calendar
+docker-compose up -d
 ```
 
-#### Semana 2: Autenticação e Google Calendar
-- ✅ Sistema de autenticação com Google OAuth
-- ✅ Conexão com Google Calendar API
-- ✅ Layout responsivo com sidebar
-- ✅ Setup do Supabase com RLS
-- ✅ Configuração inicial do Google Calendar
+### Ver logs
+```bash
+docker-compose logs -f
+```
 
-### **FASE 2: CORE DO SISTEMA (Semanas 3-5)**
+### Parar sistema
+```bash
+docker-compose down
+```
 
-#### Semana 3: Dashboard e Métricas
-- ✅ Dashboard principal com KPIs
-- ✅ Gráficos de receita e lucro
-- ✅ Cards de métricas em tempo real
-- ✅ Filtros por período
+### Rebuild completo
+```bash
+docker-compose down -v
+docker-compose build --no-cache
+docker-compose up -d
+```
 
-#### Semana 4: Gestão de Clientes
-- ✅ CRUD completo de clientes
-- ✅ Histórico de atendimentos
-- ✅ Sistema de segmentação
-- ✅ Campanhas básicas
-
-#### Semana 5: Procedimentos e Atendimentos
-- ✅ Cadastro de procedimentos
-- ✅ Registro de atendimentos
-- ✅ Cálculo de custos e margens
-- ✅ Análise de rentabilidade
-
-### **FASE 3: RECURSOS AVANÇADOS (Semanas 6-8)**
-
-#### Semana 6: Sistema de Agendamento + Google Calendar
-- ✅ Integração completa com Google Calendar
-- ✅ Sincronização bidirecional
-- ✅ Envio automático de convites
-- ✅ Interface de calendário integrada
-
-#### Semana 7: Controle de Estoque Simplificado
-- ✅ Cadastro de produtos
-- ✅ Movimentações automáticas
-- ✅ Alertas de estoque mínimo
-- ✅ Relatórios de consumo
-
-#### Semana 8: Distribuição de Lucros
-- ✅ Configuração de percentuais
-- ✅ Cálculo automático mensal
-- ✅ Histórico e projeções
-- ✅ Simulador de cenários
-
-### **FASE 4: OTIMIZAÇÃO E RELATÓRIOS (Semanas 9-10)**
-
-#### Semana 9: CRM Avançado
-- ✅ Segmentação automática de clientes
-- ✅ Campanhas via Google Calendar
-- ✅ Follow-up automatizado
-- ✅ Análise de LTV
-
-#### Semana 10: Relatórios e Dashboard Final
-- ✅ Sistema completo de relatórios
-- ✅ Exportação para PDF/Excel
-- ✅ Dashboard executivo
-- ✅ Otimizações finais
+### Backup banco de dados
+```bash
+docker exec clinica-postgres pg_dump -U clinica_user clinica_db > backup.sql
+```
 
 ---
 
-## 🔧 Configuração do Google Calendar
+## 🎯 Portas do Sistema
 
-### Fluxo de Integração:
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8080
+- **PostgreSQL**: localhost:5432
+- **Nginx**: http://localhost:80
+- **Swagger UI**: http://localhost:8080/swagger-ui.html
 
-1. **Conexão Inicial:**
-   - Usuário autoriza acesso ao Google Calendar
-   - Sistema obtém tokens de acesso
-   - Configuração de calendário padrão
-
-2. **Criação de Agendamentos:**
-   - Usuário cria agendamento no sistema
-   - Sistema cria evento no Google Calendar
-   - Cliente recebe convite automaticamente
-   - Confirmação via Google Calendar
-
-3. **Sincronização:**
-   - Eventos criados/editados no Google Calendar sincronizam no sistema
-   - Status de confirmação atualizado automaticamente
-   - Notificações nativas do Google
-
-4. **Benefícios:**
-   - ✅ Clientes recebem convites profissionais
-   - ✅ Confirmação via Google (mais confiável)
-   - ✅ Lembretes automáticos do Google
-   - ✅ Integração com outros calendários
-   - ✅ Acesso offline via Google Calendar
+---
 
