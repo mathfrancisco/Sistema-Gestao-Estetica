@@ -3,6 +3,7 @@ package com.clinica.estetica.service;
 import com.clinica.estetica.exception.BusinessException;
 import com.clinica.estetica.exception.ResourceNotFoundException;
 import com.clinica.estetica.model.entity.ContaPagar;
+import com.clinica.estetica.model.enums.FormaPagamento;
 import com.clinica.estetica.model.enums.StatusConta;
 import com.clinica.estetica.repository.ContaPagarRepository;
 import lombok.RequiredArgsConstructor;
@@ -117,7 +118,7 @@ public class ContaPagarService {
     }
 
     @Transactional
-    public ContaPagar registrarPagamento(Long id, LocalDate dataPagamento, String formaPagamento) {
+    public ContaPagar registrarPagamento(Long id, LocalDate dataPagamento, FormaPagamento formaPagamento) {
         log.info("Registrando pagamento da conta a pagar ID: {}", id);
 
         ContaPagar conta = buscarPorId(id);

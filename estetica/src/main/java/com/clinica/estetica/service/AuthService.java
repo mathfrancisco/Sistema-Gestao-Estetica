@@ -1,8 +1,10 @@
 package com.clinica.estetica.service;
 
-
 import com.clinica.estetica.exception.BusinessException;
 import com.clinica.estetica.exception.UnauthorizedException;
+import com.clinica.estetica.mapper.UsuarioMapper;
+import com.clinica.estetica.model.dto.response.LoginResponse;
+import com.clinica.estetica.model.dto.response.UsuarioResponse;
 import com.clinica.estetica.model.entity.Usuario;
 import com.clinica.estetica.repository.UsuarioRepository;
 import com.clinica.estetica.security.JwtTokenProvider;
@@ -17,9 +19,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -29,9 +28,10 @@ public class AuthService {
     private final JwtTokenProvider tokenProvider;
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UsuarioMapper usuarioMapper;
 
     @Transactional
-    public Map<String, Object> login(String username, String password) throws UnauthorizedException {
+    public LoginResponse login(String username, String password) {
         log.info("Tentativa de login para o usuário: {}", username);
 
         try {
@@ -54,17 +54,8 @@ public class AuthService {
             // Gerar token JWT
             String token = tokenProvider.generateToken(authentication);
 
-            // Preparar resposta
-            Map<String, Object> response = new HashMap<>();
-            response.put("token", token);
-            response.put("type", "Bearer");
-            response.put("usuario", Map.of(
-                    "id", usuario.getId(),
-                    "nome", usuario.getNome(),
-                    "username", usuario.getUsername(),
-                    "email", usuario.getEmail(),
-                    "role", usuario.getRole()
-            ));
+            // Criar resposta usando mapper
+            LoginResponse response = usuarioMapper.toLoginResponse(token, usuario);
 
             log.info("Login realizado com sucesso para o usuário: {}", username);
             return response;
@@ -87,9 +78,10 @@ public class AuthService {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException("Email não encontrado"));
 
-        // Aqui você pode implementar a lógica de envio de email
-        // com token de reset de senha
-        // Por exemplo: gerar token, salvar no banco, enviar email
+        // TODO: Implementar lógica de envio de email
+        // 1. Gerar token de reset (UUID ou JWT temporário)
+        // 2. Salvar token no banco com data de expiração
+        // 3. Enviar email com link contendo o token
 
         log.info("Email de reset de senha enviado para: {}", email);
     }
@@ -98,24 +90,23 @@ public class AuthService {
     public void resetarSenha(String token, String novaSenha) {
         log.info("Resetando senha com token");
 
-        // Aqui você deve validar o token
-        // Buscar usuário pelo token
-        // Validar se token não expirou
+        // TODO: Implementar validação de token
+        // 1. Buscar usuário pelo token
+        // 2. Verificar se token não expirou
+        // 3. Resetar senha
 
-        // Por enquanto, vou deixar uma implementação simplificada
-        // Em produção, você deve ter uma tabela de tokens de reset
-
+        // Validar nova senha
         if (novaSenha == null || novaSenha.length() < 6) {
             throw new BusinessException("Nova senha deve ter no mínimo 6 caracteres");
         }
 
-        // Implementar lógica de validação de token e reset de senha
+        // TODO: Implementar reset de senha
 
         log.info("Senha resetada com sucesso");
     }
 
     @Transactional(readOnly = true)
-    public Usuario getUsuarioLogado() throws UnauthorizedException {
+    public Usuario getUsuarioLogado() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -125,6 +116,12 @@ public class AuthService {
         String username = authentication.getName();
         return usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new UnauthorizedException("Usuário não encontrado"));
+    }
+
+    @Transactional(readOnly = true)
+    public UsuarioResponse getUsuarioLogadoResponse() {
+        Usuario usuario = getUsuarioLogado();
+        return usuarioMapper.toResponse(usuario);
     }
 
     public boolean isAuthenticated() {
@@ -142,31 +139,38 @@ public class AuthService {
     }
 
     @Transactional
-    public String refreshToken(String oldToken) throws UnauthorizedException {
+    public String refreshToken(String oldToken) {
         log.info("Renovando token JWT");
 
+        // Validar token antigo
         if (!tokenProvider.validateToken(oldToken)) {
             throw new UnauthorizedException("Token inválido ou expirado");
         }
 
+        // Extrair username do token antigo
         String username = tokenProvider.getUsernameFromToken(oldToken);
+        if (username == null) {
+            throw new UnauthorizedException("Token inválido");
+        }
+
+        // Buscar usuário
         Usuario usuario = usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new UnauthorizedException("Usuário não encontrado"));
 
+        // Verificar se usuário está ativo
         if (!usuario.getAtivo()) {
             throw new UnauthorizedException("Usuário inativo");
         }
 
         // Gerar novo token
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String newToken = tokenProvider.generateToken(authentication);
+        String newToken = tokenProvider.generateToken(username);
 
         log.info("Token renovado com sucesso para o usuário: {}", username);
         return newToken;
     }
 
     @Transactional
-    public void alterarSenhaPerfil(String senhaAtual, String novaSenha) throws UnauthorizedException {
+    public void alterarSenhaPerfil(String senhaAtual, String novaSenha, String confirmPassword) {
         log.info("Alterando senha do perfil do usuário logado");
 
         Usuario usuario = getUsuarioLogado();
@@ -181,6 +185,11 @@ public class AuthService {
             throw new BusinessException("Nova senha deve ter no mínimo 6 caracteres");
         }
 
+        // Validar confirmação de senha
+        if (!novaSenha.equals(confirmPassword)) {
+            throw new BusinessException("As senhas não coincidem");
+        }
+
         // Criptografar e salvar nova senha
         String novaSenhaCriptografada = passwordEncoder.encode(novaSenha);
         usuario.setPasswordHash(novaSenhaCriptografada);
@@ -190,17 +199,26 @@ public class AuthService {
     }
 
     @Transactional
-    public Usuario atualizarPerfil(Usuario usuarioAtualizado) throws UnauthorizedException {
+    public UsuarioResponse atualizarPerfil(String nome, String email) {
         log.info("Atualizando perfil do usuário logado");
 
         Usuario usuarioLogado = getUsuarioLogado();
 
+        // Verificar se email já existe para outro usuário
+        if (!usuarioLogado.getEmail().equals(email)) {
+            boolean emailExiste = usuarioRepository.existsByEmail(email);
+            if (emailExiste) {
+                throw new BusinessException("Email já está em uso");
+            }
+        }
+
         // Atualizar apenas campos permitidos
-        usuarioLogado.setNome(usuarioAtualizado.getNome());
-        usuarioLogado.setEmail(usuarioAtualizado.getEmail());
+        usuarioLogado.setNome(nome);
+        usuarioLogado.setEmail(email);
 
         Usuario usuarioSalvo = usuarioRepository.save(usuarioLogado);
         log.info("Perfil atualizado com sucesso para o usuário: {}", usuarioSalvo.getUsername());
-        return usuarioSalvo;
+
+        return usuarioMapper.toResponse(usuarioSalvo);
     }
 }

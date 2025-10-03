@@ -10,11 +10,20 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LoginResponse {
+
     private String token;
     private String type;
-    private Long id;
-    private String username;
-    private String nome;
-    private String email;
-    private String role;
+    private UsuarioResponse usuario;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UsuarioResponse {
+        private Long id;
+        private String nome;
+        private String username;
+        private String email;
+        private String role;
+    }
 }

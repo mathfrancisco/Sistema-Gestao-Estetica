@@ -1,20 +1,21 @@
 package com.clinica.estetica.controller;
 
-import com.clinica.estetica.exception.UnauthorizedException;
-import com.clinica.estetica.model.dto.request.LoginRequest;
-import com.clinica.estetica.model.entity.Usuario;
-import com.clinica.estetica.security.JwtTokenProvider;
+import com.clinica.estetica.model.dto.request.*;
+import com.clinica.estetica.model.dto.response.LoginResponse;
+import com.clinica.estetica.model.dto.response.MessageResponse;
+import com.clinica.estetica.model.dto.response.TokenResponse;
+import com.clinica.estetica.model.dto.response.UsuarioResponse;
 import com.clinica.estetica.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
-
+@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -22,74 +23,109 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
-    private final JwtTokenProvider tokenProvider;
 
     @PostMapping("/login")
-    @Operation(summary = "Login", description = "Autentica usuário e retorna token JWT")
-    public ResponseEntity<Map<String, Object>> login(@Valid @RequestBody LoginRequest request) throws UnauthorizedException {
-        Map<String, Object> response = authService.login(request.getUsername(), request.getPassword());
+    @Operation(
+            summary = "Realizar login",
+            description = "Autentica o usuário e retorna um token JWT para acesso às funcionalidades protegidas"
+    )
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        log.info("POST /api/auth/login - Username: {}", request.getUsername());
+
+        LoginResponse response = authService.login(request.getUsername(), request.getPassword());
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/logout")
-    @Operation(summary = "Logout", description = "Encerra sessão do usuário")
-    public ResponseEntity<Map<String, String>> logout() {
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(
+            summary = "Realizar logout",
+            description = "Encerra a sessão do usuário autenticado"
+    )
+    public ResponseEntity<MessageResponse> logout() {
+        log.info("POST /api/auth/logout");
+
         authService.logout();
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Logout realizado com sucesso");
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(MessageResponse.of("Logout realizado com sucesso"));
     }
 
     @PostMapping("/refresh")
-    @Operation(summary = "Refresh Token", description = "Renova token JWT")
-    public ResponseEntity<Map<String, String>> refreshToken(@RequestHeader("Authorization") String token) throws UnauthorizedException {
-        String oldToken = token.substring(7);
-        String newToken = authService.refreshToken(oldToken);
+    @Operation(
+            summary = "Renovar token",
+            description = "Gera um novo token JWT a partir de um token válido ainda não expirado"
+    )
+    public ResponseEntity<TokenResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
+        log.info("POST /api/auth/refresh");
 
-        Map<String, String> response = new HashMap<>();
-        response.put("token", newToken);
-        response.put("type", "Bearer");
-        return ResponseEntity.ok(response);
+        String newToken = authService.refreshToken(request.getToken());
+        return ResponseEntity.ok(TokenResponse.of(newToken));
     }
 
     @GetMapping("/me")
-    @Operation(summary = "Dados do Usuário", description = "Retorna dados do usuário logado")
-    public ResponseEntity<Usuario> getCurrentUser() throws UnauthorizedException {
-        Usuario usuario = authService.getUsuarioLogado();
-        return ResponseEntity.ok(usuario);
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(
+            summary = "Obter dados do usuário logado",
+            description = "Retorna as informações completas do usuário autenticado"
+    )
+    public ResponseEntity<UsuarioResponse> getCurrentUser() {
+        log.info("GET /api/auth/me");
+
+        UsuarioResponse response = authService.getUsuarioLogadoResponse();
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/forgot-password")
-    @Operation(summary = "Esqueci Minha Senha", description = "Solicita reset de senha")
-    public ResponseEntity<Map<String, String>> forgotPassword(@RequestParam String email) {
-        authService.solicitarResetSenha(email);
+    @Operation(
+            summary = "Esqueci minha senha",
+            description = "Solicita o envio de email com instruções para redefinir a senha"
+    )
+    public ResponseEntity<MessageResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        log.info("POST /api/auth/forgot-password - Email: {}", request.getEmail());
 
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Email de recuperação enviado");
-        return ResponseEntity.ok(response);
+        authService.solicitarResetSenha(request.getEmail());
+        return ResponseEntity.ok(MessageResponse.of("Email de recuperação enviado com sucesso"));
     }
 
     @PostMapping("/reset-password")
-    @Operation(summary = "Resetar Senha", description = "Reseta senha com token")
-    public ResponseEntity<Map<String, String>> resetPassword(
-            @RequestParam String token,
-            @RequestParam String newPassword) {
-        authService.resetarSenha(token, newPassword);
+    @Operation(
+            summary = "Redefinir senha",
+            description = "Redefine a senha do usuário usando um token de recuperação válido"
+    )
+    public ResponseEntity<MessageResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        log.info("POST /api/auth/reset-password");
 
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Senha resetada com sucesso");
-        return ResponseEntity.ok(response);
+        authService.resetarSenha(request.getToken(), request.getNewPassword());
+        return ResponseEntity.ok(MessageResponse.of("Senha redefinida com sucesso"));
     }
 
     @PutMapping("/change-password")
-    @Operation(summary = "Alterar Senha", description = "Altera senha do usuário logado")
-    public ResponseEntity<Map<String, String>> changePassword(
-            @RequestParam String currentPassword,
-            @RequestParam String newPassword) throws UnauthorizedException {
-        authService.alterarSenhaPerfil(currentPassword, newPassword);
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(
+            summary = "Alterar senha",
+            description = "Permite ao usuário autenticado alterar sua própria senha"
+    )
+    public ResponseEntity<MessageResponse> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        log.info("PUT /api/auth/change-password");
 
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Senha alterada com sucesso");
+        authService.alterarSenhaPerfil(
+                request.getCurrentPassword(),
+                request.getNewPassword(),
+                request.getConfirmPassword()
+        );
+
+        return ResponseEntity.ok(MessageResponse.of("Senha alterada com sucesso"));
+    }
+
+    @PutMapping("/profile")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @Operation(
+            summary = "Atualizar perfil",
+            description = "Atualiza as informações do perfil do usuário autenticado"
+    )
+    public ResponseEntity<UsuarioResponse> updateProfile(@Valid @RequestBody UpdateProfileRequest request) {
+        log.info("PUT /api/auth/profile");
+
+        UsuarioResponse response = authService.atualizarPerfil(request.getNome(), request.getEmail());
         return ResponseEntity.ok(response);
     }
 }

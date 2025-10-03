@@ -152,15 +152,12 @@ public class ClienteService {
 
         Cliente cliente = buscarPorId(id);
 
-        // Verificar se tem agendamentos futuros
-        LocalDateTime agora = LocalDateTime.now();
-        List<Object> agendamentosFuturos = agendamentoRepository.findByClienteId(id).stream()
-                .filter(a -> a.getDataHora().isAfter(agora))
-                .toList();
+        // Query otimizada no repository
+        long agendamentosFuturos = agendamentoRepository.countAgendamentosFuturos(id);
 
-        if (!agendamentosFuturos.isEmpty()) {
+        if (agendamentosFuturos > 0) {
             throw new BusinessException("Não é possível deletar o cliente. Existem " +
-                    agendamentosFuturos.size() + " agendamento(s) futuro(s).");
+                    agendamentosFuturos + " agendamento(s) futuro(s).");
         }
 
         clienteRepository.deleteById(id);

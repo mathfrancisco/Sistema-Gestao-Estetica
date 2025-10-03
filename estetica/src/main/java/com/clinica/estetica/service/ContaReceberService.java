@@ -4,6 +4,7 @@ import com.clinica.estetica.exception.BusinessException;
 import com.clinica.estetica.exception.ResourceNotFoundException;
 import com.clinica.estetica.model.entity.Agendamento;
 import com.clinica.estetica.model.entity.ContaReceber;
+import com.clinica.estetica.model.enums.FormaPagamento;
 import com.clinica.estetica.model.enums.StatusConta;
 import com.clinica.estetica.repository.ContaReceberRepository;
 import lombok.RequiredArgsConstructor;
@@ -156,7 +157,7 @@ public class ContaReceberService {
     }
 
     @Transactional
-    public ContaReceber registrarPagamento(Long id, LocalDate dataPagamento, String formaPagamento) {
+    public ContaReceber registrarPagamento(Long id, LocalDate dataPagamento,  FormaPagamento formaPagamento) {
         log.info("Registrando pagamento da conta a receber ID: {}", id);
 
         ContaReceber conta = buscarPorId(id);

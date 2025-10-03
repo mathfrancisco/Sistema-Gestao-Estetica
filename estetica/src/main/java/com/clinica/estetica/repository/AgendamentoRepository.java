@@ -70,4 +70,10 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
     boolean existsConflito(@Param("esteticista") String esteticista,
                           @Param("inicio") LocalDateTime inicio,
                           @Param("fim") LocalDateTime fim);
+
+    @Query("SELECT COUNT(a) FROM Agendamento a WHERE " +
+            "a.cliente.id = :clienteId AND " +
+            "a.dataHora > CURRENT_TIMESTAMP AND " +
+            "a.status != 'CANCELADO'")
+    Long countAgendamentosFuturos(@Param("clienteId") Long clienteId);
 }

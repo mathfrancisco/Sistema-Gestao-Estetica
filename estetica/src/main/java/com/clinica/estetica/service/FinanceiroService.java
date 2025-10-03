@@ -1,11 +1,14 @@
 package com.clinica.estetica.service;
 
+import com.clinica.estetica.model.entity.ContaPagar;
+import com.clinica.estetica.model.entity.ContaReceber;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.*;
@@ -135,7 +138,7 @@ public class FinanceiroService {
                 .collect(Collectors.groupingBy(
                         conta -> conta.getCategoria() != null ? conta.getCategoria() : "SEM_CATEGORIA",
                         Collectors.reducing(BigDecimal.ZERO,
-                                conta -> conta.getValor(),
+                                ContaPagar::getValor,
                                 BigDecimal::add)
                 ));
 
@@ -157,12 +160,13 @@ public class FinanceiroService {
 
         var contasReceber = contaReceberService.buscarPorPeriodo(dataInicio, dataFim);
 
+        // CORREÇÃO: Converter enum para String
         Map<String, BigDecimal> faturamentoPorFormaPagamento = contasReceber.stream()
                 .filter(conta -> conta.getFormaPagamento() != null)
                 .collect(Collectors.groupingBy(
-                        conta -> conta.getFormaPagamento(),
+                        conta -> conta.getFormaPagamento().name(), // Converter para String
                         Collectors.reducing(BigDecimal.ZERO,
-                                conta -> conta.getValor(),
+                                ContaReceber::getValor,
                                 BigDecimal::add)
                 ));
 
@@ -195,7 +199,7 @@ public class FinanceiroService {
         resultado.put("lucro", lucro);
         resultado.put("percentualLucro", percentualLucro);
         resultado.put("margemLucro", receitas.compareTo(BigDecimal.ZERO) > 0 ?
-                lucro.divide(receitas, 4, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100)) :
+                lucro.divide(receitas, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100)) :
                 BigDecimal.ZERO);
 
         return resultado;
@@ -207,7 +211,7 @@ public class FinanceiroService {
         }
 
         BigDecimal lucro = receitas.subtract(despesas);
-        return lucro.divide(receitas, 4, BigDecimal.ROUND_HALF_UP)
+        return lucro.divide(receitas, 4, RoundingMode.HALF_UP)
                 .multiply(BigDecimal.valueOf(100));
     }
 }
