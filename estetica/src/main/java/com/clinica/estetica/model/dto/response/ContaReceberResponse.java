@@ -1,0 +1,34 @@
+package com.clinica.estetica.model.dto.response;
+
+import com.clinica.estetica.model.enums.FormaPagamento;
+import com.clinica.estetica.model.enums.StatusConta;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ContaReceberResponse {
+    private Long id;
+    private Long clienteId;
+    private String clienteNome;
+    private Long agendamentoId;
+    private String descricao;
+    private BigDecimal valor;
+    private LocalDate dataVencimento;
+    private LocalDate dataPagamento;
+    private StatusConta status;
+    private FormaPagamento formaPagamento;
+    private String observacoes;
+    private Boolean vencida;
+    private Integer diasAtraso;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+}
